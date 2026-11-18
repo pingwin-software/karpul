@@ -76,7 +76,13 @@ CATEGORIES: dict[str, tuple[str, ...]] = {
 CATEGORY_OF = {kind: category for category, kinds in CATEGORIES.items() for kind in kinds}
 # Losing a seat someone counted on cannot be switched off: muting "seats"
 # silences the rest of that category, never these.
-ALWAYS_SENT = frozenset({"taken_out", "guest_taken_out", "ride_removed", "car_blocked"})
+# Nor is the shared car you asked for being approved: it is the cue to tell
+# the office, and the record of who told it is kept by that.
+ALWAYS_SENT = frozenset({"taken_out", "guest_taken_out", "ride_removed", "car_blocked", "ride_approved"})
+# Kinds whose body names the car before the "when and where", and whose tap
+# opens the mail to the office about the ride (`/ride/{id}?mail=1`): days
+# later, the driver will not remember which booking it was.
+OFFICE_MAIL_KINDS = frozenset({"ride_approved"})
 
 
 def muted(user: User) -> list[str]:
@@ -134,7 +140,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "running_late": lambda driver, minutes: f"{driver} is running {minutes} min late",
         "ride_assigned": lambda name: f"{name} put you down to drive",
         "approval_requested": lambda name: f"{name} asks for another shared car",
-        "ride_approved": lambda name: f"{name} approved your shared car",
+        "ride_approved": lambda name: f"{name} approved your shared car. Send the office the mail",
         "ride_declined": lambda name: f"{name} declined your shared car",
         "garage_plate": lambda name, plate: f"{name} comes to the Beograd office in {plate}: add it to the garage list",
         "plate_registered": lambda name, plate: f"{plate} is on the garage list ({name})",
@@ -146,6 +152,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         + (f"in {km} km" if km is not None and km > 0 and (days is None or days > 0) else "now" if (km is not None and km <= 0) or (days is not None and days <= 0) else f"in {days} days"),
         "fleet_tyres": lambda car, days=None, km=None: f"{car} still has summer tyres in the winter season",
         "when": lambda day, hhmm, origin, destination: f"{day} {hhmm}, {origin} to {destination}",
+        "back": lambda hhmm: f"back {hhmm}",
         # Not strftime: its names follow the server's locale, not the reader's.
         "day": lambda d: f"{('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')[d.weekday()]} {d.day:02d} "
         f"{('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')[d.month - 1]}",
@@ -186,7 +193,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "running_late": lambda driver, minutes: f"{driver} kasni {minutes} min",
         "ride_assigned": lambda name: f"{name} te je upisao/la kao vozača",
         "approval_requested": lambda name: f"{name} traži još jedan zajednički auto",
-        "ride_approved": lambda name: f"{name} je odobrio/la tvoj zajednički auto",
+        "ride_approved": lambda name: f"{name} je odobrio/la tvoj zajednički auto. Pošalji mejl kancelariji",
         "ride_declined": lambda name: f"{name} je odbio/la tvoj zajednički auto",
         "garage_plate": lambda name, plate: f"{name} dolazi u kancelariju u Beogradu autom {plate}: dodaj ga na spisak za garažu",
         "plate_registered": lambda name, plate: f"{plate} je na spisku za garažu ({name})",
@@ -198,6 +205,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         + (f"za {km} km" if km is not None and km > 0 and (days is None or days > 0) else "na redu sada" if (km is not None and km <= 0) or (days is not None and days <= 0) else f"za {_sr_days(days)}"),
         "fleet_tyres": lambda car, days=None, km=None: f"{car} još ima letnje gume u zimskom periodu",
         "when": lambda day, hhmm, origin, destination: f"{day} {hhmm}, {origin} do {destination}",
+        "back": lambda hhmm: f"povratak {hhmm}",
         "day": lambda d: f"{('pon', 'uto', 'sre', 'čet', 'pet', 'sub', 'ned')[d.weekday()]} {d.day}. "
         f"{('jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'avg', 'sep', 'okt', 'nov', 'dec')[d.month - 1]}",
     },
@@ -280,6 +288,12 @@ def ride_message(
         }
     if ride is None:
         return {"title": title, "body": body or "", "url": url or "/", "tag": f"{kind}-{hash(body) & 0xFFFF}"}
+    if kind in OFFICE_MAIL_KINDS:
+        when = _when(t, ride.ride_date, ride.departure_time, ride.origin, ride.destination)
+        if ride.return_time is not None:
+            when = f"{when}, {t['back'](ride.return_time.strftime('%H:%M'))}"
+        body = body if body is not None else f"{ride.car_name}: {when}"
+        url = url or f"/ride/{ride.id}?mail=1"
     return {
         "title": title,
         "body": body if body is not None else _when(t, ride.ride_date, ride.departure_time, ride.origin, ride.destination),

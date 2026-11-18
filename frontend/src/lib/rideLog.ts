@@ -107,7 +107,7 @@ export function logCsv(rides: Ride[], t: Messages): string {
   const c = t.rideLog.col
   const header = [
     c.date, c.departs, c.back, c.driver, c.phone, c.car, c.type, c.from, c.stops, c.to, c.seats, c.taken, c.passengers, c.waiting, c.km,
-    c.odoStart, c.odoEnd, c.driven, c.gap, c.atWheel, c.chipIn, c.note, c.addedBy,
+    c.odoStart, c.odoEnd, c.driven, c.gap, c.atWheel, c.chipIn, c.note, c.addedBy, c.officeMail,
   ]
   const rows = rides.map((r) => {
     const odo = odometerSpan(r)
@@ -139,9 +139,19 @@ export function logCsv(rides: Ride[], t: Messages): string {
     r.chip_in,
     r.notes,
     r.added_by_name,
+    officeMailCell(r),
     ]
   })
   return '﻿' + [header, ...rows].map((row) => row.map(cell).join(';')).join('\r\n') + '\r\n'
+}
+
+/** When the office was mailed about a shared car, as a spreadsheet reads a local date and time; "" for anything else. */
+function officeMailCell(r: Ride): string {
+  if (!r.office_mailed_at) return ''
+  const iso = /[zZ]|[+-]\d\d:?\d\d$/.test(r.office_mailed_at) ? r.office_mailed_at : `${r.office_mailed_at}Z`
+  const d = new Date(iso)
+  const two = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}`
 }
 
 function cell(value: string): string {

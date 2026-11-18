@@ -41,7 +41,7 @@ from sqlalchemy.engine import Engine
 from sqlmodel import Session, select
 
 from .database import begin_write, engine
-from .models import CarType, CorporateCar, DataMigration, Ride, User
+from .models import CarType, CorporateCar, DataMigration, Ride, User, utcnow
 from .services import corporate_car_label, ensure_car_available, fold_name
 
 log = logging.getLogger("karpul.backfill")
@@ -178,6 +178,8 @@ def backfill(session: Session, today: date) -> dict[str, list[str]]:
                     # The log says who booked the car, not that they take
                     # anyone: nobody gets in until the driver confirms it.
                     unconfirmed=day >= today,
+                    # The office keeps the paper log: it knows already.
+                    office_mailed_at=utcnow(),
                 )
             )
             session.flush()

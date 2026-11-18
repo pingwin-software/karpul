@@ -1,7 +1,8 @@
+import { owesOfficeMail } from '../lib/carMail'
 import { useT } from '../lib/i18n'
 import { mayClaim, useMe } from '../lib/me'
 import type { Ride } from '../lib/types'
-import { CarIcon, CheckIcon } from './icons'
+import { CarIcon, CheckIcon, MailIcon } from './icons'
 
 /** An admin's *Approve* / *Decline* on a shared car past its driver's share. */
 export function ApprovalAsk({ ride, busy, onApprove, onDecline }: { ride: Ride; busy: boolean; onApprove: (ride: Ride) => void; onDecline: (ride: Ride) => void }) {
@@ -15,6 +16,26 @@ export function ApprovalAsk({ ride, busy, onApprove, onDecline }: { ride: Ride; 
         </button>
         <button type="button" className="btn btn-primary" disabled={busy} onClick={() => onApprove(ride)}>
           <CheckIcon size={16} /> {t.detail.approve}
+        </button>
+      </span>
+    </div>
+  )
+}
+
+/**
+ * A shared car the office has not heard about (`Ride.office_mailed_at`):
+ * the driver, and an admin, see it on the card with *Write the mail*, which
+ * opens CarMailSheet with its *I already sent it*. Nobody else sees it.
+ */
+export function OfficeMailAsk({ ride, runsIt, isDriver, onWrite }: { ride: Ride; runsIt: boolean; isDriver: boolean; onWrite: (ride: Ride) => void }) {
+  const t = useT()
+  if (!runsIt || !owesOfficeMail(ride)) return null
+  return (
+    <div className="approval-row office-mail-row">
+      <span className="approval-ask">{isDriver ? t.detail.officeMailAsk : t.detail.officeMailAskFor(ride.driver_name)}</span>
+      <span className="approval-actions">
+        <button type="button" className="btn btn-primary" onClick={() => onWrite(ride)}>
+          <MailIcon size={16} /> {t.detail.officeMailWrite}
         </button>
       </span>
     </div>

@@ -251,7 +251,7 @@ def test_a_muted_category_is_not_sent_and_the_rest_still_is(client, configured, 
 def test_every_kind_belongs_to_a_category():
     from app.push import CATEGORY_OF, TEXTS
 
-    assert set(TEXTS["en"]) - {"when", "day"} == set(CATEGORY_OF)
+    assert set(TEXTS["en"]) - {"when", "day", "back"} == set(CATEGORY_OF)
 
 
 # --- A removed ride points at the other cars --------------------------------------

@@ -47,6 +47,8 @@ ride (`/api/rides/{id}/calendar.ics`, signed in; the app fetches it and hands it
 download) and for a person's feed (`/api/calendar/{token}.ics`, a week back to a year ahead).
 A calendar app cannot sign in, so `User.calendar_token` in the address is the credential;
 *Your rides* shows it and `POST /api/auth/me/calendar-token` rotates it.
+A shared car approved past the share (`ride_approved`) is a push that cannot be muted, names the car in its body and
+opens `/ride/{id}?mail=1`: the mail to the office (docs/features/shared-cars.md, *Which mails went out*).
 `/ride/{id}` is the shell with Open Graph tags spliced before `</head>` (`ride_preview_tags` in
 `main.py`); the app reads the path on load, opens the ride and `replaceState`s to `/`.
 `person_stats` and `corporate_usage` in `services.py` are the *Your rides* and admin *Usage*

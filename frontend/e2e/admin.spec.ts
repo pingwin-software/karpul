@@ -108,17 +108,8 @@ test('a shared car past the share is asked for, approved by an admin, and a plat
   await form.getByRole('button', { name: 'Add ride' }).click()
   await form.getByRole('button', { name: 'Ask an admin to approve it' }).click()
   await expect(toast(mila, 'Added. The admins are asked to approve it.')).toBeAttached()
-  // Taking a shared car ends with the mail to the office, the admins in copy.
-  const mail = mila.getByRole('dialog', { name: 'Let the office know' })
-  await expect(mail).toContainText('vesna.ardeljan@non.se.com')
-  await expect(mail).toContainText(`boss.admin.${tag.toLowerCase()}@se.com`)
-  await expect(mail.getByRole('link', { name: 'Open in email' })).toHaveAttribute('href', /^mailto:vesna\.ardeljan@non\.se\.com\?cc=/)
-  // It cannot be skipped: no close button, Escape does nothing; opening the mail is the way out.
-  await expect(mail.getByRole('button', { name: 'Close' })).toHaveCount(0)
-  await mila.keyboard.press('Escape')
-  await expect(mail).toBeVisible()
-  await mail.getByRole('link', { name: 'Open in email' }).click()
-  await expect(mail).toHaveCount(0)
+  // A ride waiting for approval may never go: the office hears about it once it is approved.
+  await expect(mila.getByRole('dialog', { name: 'Let the office know' })).toHaveCount(0)
   const pending = mila.getByRole('button', { name: new RegExp(`${milaName} · ${car.name}(?!\\d)`) }).filter({ hasText: 'Awaiting approval' })
   await expect(pending).toBeVisible()
 
@@ -135,6 +126,24 @@ test('a shared car past the share is asked for, approved by an admin, and a plat
 
   // Mila's board drops the tag without a reload.
   await expect(pending).toHaveCount(0)
+
+  // The approval's notification opens the mail to the office about that very ride,
+  // the admins in copy. Mila says it went out, and that is on record.
+  const today = await (await request.get(`/api/rides?date=${isoDay(0)}`, { headers })).json()
+  const approved = today.find((r: { driver_name: string; approval: string }) => r.driver_name === milaName && r.approval === 'approved')
+  await mila.goto(`/ride/${approved.id}?mail=1`)
+  const mail = mila.getByRole('dialog', { name: 'Let the office know' })
+  await expect(mail).toContainText(`${car.name}`)
+  await expect(mail).toContainText('is approved')
+  await expect(mail).toContainText('vesna.ardeljan@non.se.com')
+  await expect(mail).toContainText(`boss.admin.${tag.toLowerCase()}@se.com`)
+  await expect(mail.getByRole('link', { name: 'Open in email' })).toHaveAttribute('href', /^mailto:vesna\.ardeljan@non\.se\.com\?cc=/)
+  await mail.getByRole('link', { name: 'Open in email' }).click()
+  await mail.getByRole('button', { name: 'I sent it' }).click()
+  await expect(toast(mila, 'Noted: the office has the mail.')).toBeAttached()
+  await expect(mail).toHaveCount(0)
+  const marked = await (await request.get(`/api/rides/${approved.id}`, { headers })).json()
+  expect(marked.office_mailed_at).toBeTruthy()
 
   // An own car coming to the Beograd office gives its plate; the admin ticks it off.
   const plate = `BG-${tag}-77`

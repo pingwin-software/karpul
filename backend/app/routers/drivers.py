@@ -5,7 +5,8 @@ claiming the rides that go by a name like theirs."""
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from pydantic import BaseModel
+from sqlmodel import Session, select
 
 from .. import audit
 from ..access import booking_of, get_ride_or_404, may_run, on_behalf
@@ -13,7 +14,7 @@ from ..admin import require_admin
 from ..auth import CredsDep, require_user
 from ..database import get_session, get_write_session
 from ..events import ride_saved
-from ..models import Booking
+from ..models import Booking, CarType, Ride, utcnow
 from ..push import notify
 from ..ride_removal import remove_rides
 from ..schemas import RideRead
@@ -108,6 +109,50 @@ def approve_ride(ride_id: int, session: WriteSessionDep, creds: CredsDep):
     session.refresh(ride)
     ride_saved(ride, created=False)
     notify(session, [ride.driver_id], "ride_approved", ride, name=admin.display_name)
+    return to_ride_read_dict(ride)
+
+
+class OfficeMail(BaseModel):
+    # The mail was for the first of a weekly series and said so: the coming
+    # weeks are covered by it too.
+    series: bool = False
+
+
+@router.post("/{ride_id}/office-mail", response_model=RideRead)
+def office_mailed(ride_id: int, payload: OfficeMail, session: WriteSessionDep, creds: CredsDep):
+    """The driver (or an admin) says the mail to the office about this shared
+    car went out (`Ride.office_mailed_at`): from the sheet after taking the
+    car, or *I already sent it* later. The app cannot see the driver's own
+    mail app, so this is their word, kept as the record. Saying it twice
+    keeps the first time."""
+    user = require_user(session, creds)
+    ride = get_ride_or_404(session, ride_id)
+    if not may_run(user, ride):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the driver or an admin can say the office was told")
+    if ride.car_type != CarType.corporate:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Only a shared car's ride goes to the office")
+    if ride.approval == "pending":
+        raise HTTPException(status.HTTP_409_CONFLICT, "This ride is not approved yet")
+    rides = [ride]
+    if payload.series and ride.series_id:
+        rides += session.exec(
+            select(Ride).where(
+                Ride.series_id == ride.series_id,
+                Ride.ride_date > ride.ride_date,
+                Ride.car_type == CarType.corporate,
+                Ride.approval != "pending",
+            )
+        ).all()
+    now = utcnow()
+    told = [r for r in rides if r.office_mailed_at is None]
+    for r in told:
+        r.office_mailed_at = now
+        session.add(r)
+    session.commit()
+    for r in told:
+        session.refresh(r)
+        ride_saved(r, created=False)
+    session.refresh(ride)
     return to_ride_read_dict(ride)
 
 

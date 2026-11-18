@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { aRide } from '../test/render'
-import { adminCopies, carMail, carMailHref, companyEmail, OFFICE_EMAIL, sharedCarRides } from './carMail'
+import { adminCopies, carMail, carMailHref, companyEmail, OFFICE_EMAIL, owesOfficeMail, sharedCarRides } from './carMail'
 import type { Person } from './people'
 
 const admin = (id: number, display_name: string): Person => ({ id, display_name, is_admin: true })
@@ -32,6 +32,19 @@ describe('carMail', () => {
   it('only mails about shared cars', () => {
     expect(sharedCarRides([aRide({ car_type: 'own' })])).toEqual([])
     expect(sharedCarRides([aRide({ car_type: 'corporate' })])).toHaveLength(1)
+  })
+
+  it('leaves a ride waiting for approval until it is approved', () => {
+    expect(sharedCarRides([aRide({ car_type: 'corporate', approval: 'pending' })])).toEqual([])
+    expect(sharedCarRides([aRide({ car_type: 'corporate', approval: 'approved' })])).toHaveLength(1)
+  })
+
+  it('owes the office a mail until someone says it went out', () => {
+    expect(owesOfficeMail(aRide({ car_type: 'corporate' }))).toBe(true)
+    expect(owesOfficeMail(aRide({ car_type: 'corporate', office_mailed_at: '2026-11-18T09:02:00Z' }))).toBe(false)
+    expect(owesOfficeMail(aRide({ car_type: 'corporate', approval: 'pending' }))).toBe(false)
+    expect(owesOfficeMail(aRide({ car_type: 'corporate', needs_driver: true }))).toBe(false)
+    expect(owesOfficeMail(aRide({ car_type: 'own' }))).toBe(false)
   })
 
   it('says who has which car from when to when, in Serbian, and that the app wrote it', () => {

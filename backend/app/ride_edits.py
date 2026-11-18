@@ -171,6 +171,12 @@ def apply_edit(session: Session, user: User, ride: Ride, sent: dict) -> Applied:
     # made outright.
     if moved:
         data["proposal"] = ""
+    # The office was told which car, which day and when: another one of those
+    # is a booking it has not heard about (`Ride.office_mailed_at`).
+    if ride.office_mailed_at is not None and any(
+        data[key] != getattr(ride, key) for key in ("car_type", "corporate_car_id", "ride_date", "departure_time", "return_time")
+    ):
+        data["office_mailed_at"] = None
     for key, value in data.items():
         setattr(ride, key, value)
     new_task = garage_task(ride) and (not was_task or "plate_registered" in data)

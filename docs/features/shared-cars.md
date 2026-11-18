@@ -48,14 +48,30 @@ too. `approval` is an `ADDED_COLUMNS` column. Tests: `tests/test_shared_car_shar
 **The mail to the office** (`lib/carMail.ts`, `components/CarMailSheet.tsx`, tested in `carMail.test.ts`
 and `e2e/admin.spec.ts`). Adding a shared-car ride (and its way back, or the first of a weekly series)
 ends with one more step: *Let the office know* shows a mail and *Open in email* hands it to the driver's
-own mail app as a `mailto:` link, so it is sent from them. It cannot be skipped (`Sheet`'s `locked`: no close
-button, Escape, backdrop or back; `useBackClose` keeps the entry), and a reload brings it back (`useKept`). It goes to Vesna Ardeljan (the `org` contact in
+own mail app as a `mailto:` link, so it is sent from them. It cannot be skipped until the mail is opened (`Sheet`'s `locked`: no close
+button, Escape, backdrop or back; `useBackClose` keeps the entry), and a reload brings it back (`useKept`, the opened state too,
+`carMail.opened`, since an installed app can come back from the mail app reloaded). It goes to Vesna Ardeljan (the `org` contact in
 `lib/support.ts`, `vesna.ardeljan@non.se.com`, always the recipient) with every admin in Cc, each as
 `name.surname@se.com` from the display name (`companyEmail`: lower case, no accents, `đ` as `dj`), unless the
 name is in `KNOWN_ADDRESSES` (any word order): Vesna there is the office's own address, so as an admin she is
 not copied twice. Account emails play no part, so nobody has to give one. `GET /api/people` carries `is_admin`
 for this and no email. The mail is always Serbian whatever the app language, the date is in the subject, and its foot says
-the app wrote it. A pending ride says it waits for approval.
+the app wrote it.
+
+**Which mails went out** (`Ride.office_mailed_at`, an `ADDED_COLUMNS` column; `POST /api/rides/{id}/office-mail` in
+`routers/drivers.py`, tested in `tests/test_office_mail.py`, `CarMailSheet.test.tsx`). The app cannot see the driver's mail app, so
+the driver's word is the record: once the mail is opened the sheet asks *I sent it* / *Not yet*, and before that *I already sent
+it* records a mail written by hand. The driver or an admin (`may_run`) says it; a second time keeps the first time; with `series`
+(the mail named the weekly repeat) the coming weeks of the series are marked too. Own cars and pending rides are refused (409).
+Until it is set, the ride card shows `OfficeMailAsk` (`components/RideAsks.tsx`, `owesOfficeMail` in `lib/carMail.ts`) to the
+driver and the admins with *Write the mail*, which opens the same sheet unlocked; once set, `RideFacts` shows when, and *All rides*
+shows it under the car (and as the *Office mailed* column of the spreadsheet). Moving the ride to another car, day or time clears
+it (`apply_edit`): the office was told something else. On start, the shared-car rides from before the column count as told
+(`ADDED_FILLS` in `database.py`: they went through the locked sheet or the paper log), and `backfill.py` writes the paper log's
+rides as told. **A pending ride gets no mail when it is asked for** (`sharedCarRides` leaves it out): it may never go. Its driver is
+asked when an admin approves it: the `ride_approved` push (`OFFICE_MAIL_KINDS` in `app/push.py`, never muted, `ALWAYS_SENT`) names
+the car before the day, times and route, because days later nobody remembers which booking it was, and its tap opens
+`/ride/{id}?mail=1`, which `App.tsx` turns into the ride on its day with the sheet over it (unless the mail is already on record).
 
 **The Beograd garage list.** The Beograd office's garage lets in only the cars on its list, so an own-car
 ride whose destination is that office (`offices.needs_garage`, `GARAGE_OFFICE`; mirrored by `goesToGarage` /

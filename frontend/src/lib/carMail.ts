@@ -1,4 +1,5 @@
-import { fmtTime, parseISODate } from './dates'
+import { CLOCK, fmtTime, parseISODate } from './dates'
+import { intlTag } from './locale'
 import type { Person } from './people'
 import { SUPPORT } from './support'
 import type { Ride } from './types'
@@ -81,10 +82,14 @@ export interface CarMail {
   body: string
 }
 
-/** The shared-car rides among `rides`, in order: the ones the office hears about. */
+/**
+ * The shared-car rides among `rides`, in order: the ones the office hears
+ * about now. A ride waiting for approval may never go: its driver is asked
+ * for the mail once an admin approves it (the `ride_approved` push opens it).
+ */
 export function sharedCarRides(rides: Ride[]): Ride[] {
   return rides
-    .filter((r) => r.car_type === 'corporate')
+    .filter((r) => r.car_type === 'corporate' && r.approval !== 'pending')
     .sort((a, b) => a.ride_date.localeCompare(b.ride_date) || a.departure_time.localeCompare(b.departure_time))
 }
 
@@ -105,7 +110,6 @@ export function carMail(rides: Ride[], admins: Person[], repeatUntil?: string | 
       ['Ruta', `${r.origin} → ${r.destination}`],
     ]
     if (repeatUntil) rows.push(['Ponavlja se', `svake nedelje do ${srLongDate(repeatUntil)}`])
-    if (r.approval === 'pending') rows.push(['Status', 'čeka odobrenje administratora'])
     const width = Math.max(...rows.map(([k]) => k.length)) + 2
     return rows.map(([k, v]) => `${`${k}:`.padEnd(width)}${v}`).join('\n')
   }
@@ -126,6 +130,21 @@ export function carMail(rides: Ride[], admins: Person[], repeatUntil?: string | 
     subject: `Službeni automobil ${first.car_name}, ${srDate(first.ride_date)} (${first.driver_name})`,
     body,
   }
+}
+
+/**
+ * A shared car the office has not heard about yet (`Ride.office_mailed_at`):
+ * approved or within the share, still with its driver. The ride card asks for
+ * the mail until someone says it went out.
+ */
+export function owesOfficeMail(ride: Ride): boolean {
+  return ride.car_type === 'corporate' && ride.approval !== 'pending' && !ride.needs_driver && !ride.office_mailed_at
+}
+
+/** When the mail went out, in the reader's language: "18 Nov, 10:02". The server's times are UTC. */
+export function mailedWhen(iso: string): string {
+  const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`)
+  return d.toLocaleString(intlTag(), { day: 'numeric', month: 'short', ...CLOCK })
 }
 
 /** The mailto: link: the office in To, the admins in Cc. */

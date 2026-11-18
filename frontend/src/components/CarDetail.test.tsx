@@ -45,6 +45,7 @@ function card(ride: Ride, me: Me, extra: { isPast?: boolean; onJoin?: (...args: 
     onClaim: noop,
     onTakeOver: noop,
     onConfirmRide: noop,
+    onOfficeMail: noop,
     onAnswerChange: noop,
     onWithdrawChange: noop,
     onSuggestTime: vi.fn(async () => true),
@@ -177,5 +178,30 @@ describe('CarDetail: the driver', () => {
     act(() => view.button(t().getIn)!.click())
     expect(onJoin).toHaveBeenCalledWith(expect.objectContaining({ id: 7 }), '')
     expect(document.querySelector('.pickup-sheet')).toBeNull()
+  })
+})
+
+describe('CarDetail: the mail to the office', () => {
+  const shared = (overrides: Partial<Ride> = {}) => withBojan({ car_type: 'corporate', car_name: 'Mazda 6e (BG-1)', ...overrides })
+
+  it('asks the driver and an admin for the mail until it went out, nobody else', () => {
+    const view = card(shared(), ANA)
+    expect(view.text()).toContain(t().officeMailAsk)
+    expect(view.button(t().officeMailWrite)).not.toBeNull()
+    expect(card(shared(), BOSS).text()).toContain(t().officeMailAskFor('Ana Anić'))
+    expect(card(shared(), BOJAN).button(t().officeMailWrite)).toBeNull()
+  })
+
+  it('says nothing for an own car, a ride waiting for approval, or one in the past', () => {
+    expect(card(withBojan(), ANA).button(t().officeMailWrite)).toBeNull()
+    expect(card(shared({ approval: 'pending' }), ANA).button(t().officeMailWrite)).toBeNull()
+    expect(card(shared(), ANA, { isPast: true }).button(t().officeMailWrite)).toBeNull()
+  })
+
+  it('shows when the office was mailed to whoever runs the ride', () => {
+    const mailed = shared({ office_mailed_at: '2026-11-18T09:02:00Z' })
+    expect(card(mailed, ANA).button(t().officeMailWrite)).toBeNull()
+    expect(card(mailed, ANA).text()).toContain(t().officeMail)
+    expect(card(mailed, BOJAN).text()).not.toContain(t().officeMailed(''))
   })
 })
