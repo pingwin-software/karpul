@@ -31,14 +31,22 @@ export function Approvals({ version, busyId, onApprove, onDecline, onOpen, onClo
   const [rides, setRides] = useState<Ride[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // A decision and the live events it causes bump `version` in quick succession:
+  // only the newest load may set the list, or an older answer still in flight
+  // brings back an ask that was just approved.
   useEffect(() => {
+    let live = true
     api
       .approvals()
       .then((list) => {
+        if (!live) return
         setRides(list)
         setError(null)
       })
-      .catch((e) => setError(t.apiError(e instanceof Error ? e.message : String(e))))
+      .catch((e) => live && setError(t.apiError(e instanceof Error ? e.message : String(e))))
+    return () => {
+      live = false
+    }
   }, [version, t])
 
   return (
