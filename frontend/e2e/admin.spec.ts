@@ -129,8 +129,10 @@ test('a shared car past the share is asked for, approved by an admin, and a plat
 
   // The approval's notification opens the mail to the office about that very ride,
   // the admins in copy. Mila says it went out, and that is on record.
-  const today = await (await request.get(`/api/rides?date=${isoDay(0)}`, { headers })).json()
-  const approved = today.find((r: { driver_name: string; approval: string }) => r.driver_name === milaName && r.approval === 'approved')
+  // By this run's car rather than by today: every run's rides are on the board.
+  const week = await (await request.get(`/api/rides?from=${isoDay(-1)}&to=${isoDay(7)}`, { headers })).json()
+  const approved = week.find((r: { corporate_car_id: number | null; approval: string }) => r.corporate_car_id === car.id && r.approval === 'approved')
+  expect(approved, JSON.stringify(week.filter((r: { corporate_car_id: number | null }) => r.corporate_car_id === car.id))).toBeTruthy()
   await mila.goto(`/ride/${approved.id}?mail=1`)
   const mail = mila.getByRole('dialog', { name: 'Let the office know' })
   await expect(mail).toContainText(`${car.name}`)
