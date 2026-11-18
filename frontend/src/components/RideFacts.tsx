@@ -1,14 +1,16 @@
+import { mailedWhen } from '../lib/carMail'
 import { firstName } from '../lib/dates'
 import { useT } from '../lib/i18n'
 import type { Ride } from '../lib/types'
-import { CoffeeIcon, CoinsIcon, GarageIcon, RoadIcon, ShieldIcon } from './icons'
+import { CoffeeIcon, CoinsIcon, GarageIcon, MailIcon, RoadIcon, ShieldIcon } from './icons'
 
-/** The small facts under the car (distance, chip-in, coffee, the garage plate, who added it) and the driver's note. */
-export function RideFacts({ ride, isDriver, showPlate }: { ride: Ride; isDriver: boolean; showPlate: boolean }) {
+/** The small facts under the car (distance, chip-in, coffee, the garage plate, who added it, when the office was mailed) and the driver's note. */
+export function RideFacts({ ride, isDriver, showPlate, showMail = false }: { ride: Ride; isDriver: boolean; showPlate: boolean; showMail?: boolean }) {
   const t = useT()
+  const mailed = showMail && ride.office_mailed_at ? ride.office_mailed_at : null
   return (
     <>
-      {(ride.chip_in || ride.distance_km != null || ride.coffee_please || showPlate || ride.added_by_name) && (
+      {(ride.chip_in || ride.distance_km != null || ride.coffee_please || showPlate || ride.added_by_name || mailed) && (
         <dl className="facts">
           {ride.distance_km != null && (
             <div className="fact">
@@ -50,6 +52,14 @@ export function RideFacts({ ride, isDriver, showPlate }: { ride: Ride; isDriver:
                 <ShieldIcon size={14} /> {t.detail.addedBy}
               </dt>
               <dd>{ride.added_by_name}</dd>
+            </div>
+          )}
+          {mailed && (
+            <div className="fact">
+              <dt>
+                <MailIcon size={14} /> {t.detail.officeMail}
+              </dt>
+              <dd>{t.detail.officeMailed(mailedWhen(mailed))}</dd>
             </div>
           )}
         </dl>

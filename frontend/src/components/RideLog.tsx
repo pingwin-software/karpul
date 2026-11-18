@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
+import { mailedWhen } from '../lib/carMail'
 import { addDays, fmtTime, parseISODate, todayISO, toISODate } from '../lib/dates'
 import { messages, useT } from '../lib/i18n'
 import { intlTag } from '../lib/locale'
@@ -221,6 +222,11 @@ export function RideLog({ onClose }: Props) {
                   <td>
                     {r.car_name}
                     <span className="log-sub">{r.car_type === 'corporate' ? t.rideLog.company : t.rideLog.own}</span>
+                    {r.car_type === 'corporate' && r.approval !== 'pending' && (
+                      <span className={r.office_mailed_at ? 'log-sub' : 'log-sub log-gap'}>
+                        {r.office_mailed_at ? t.rideLog.mailed(mailedWhen(r.office_mailed_at)) : t.rideLog.notMailed}
+                      </span>
+                    )}
                   </td>
                   <td>
                     {r.origin}

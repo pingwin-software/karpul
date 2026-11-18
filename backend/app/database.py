@@ -146,7 +146,17 @@ ADDED_COLUMNS: list[tuple[str, str, str]] = [
     ("appuser", "disabled", "BOOLEAN NOT NULL DEFAULT 0"),
     ("ride", "approval_nudged", "BOOLEAN NOT NULL DEFAULT 0"),
     ("carreport", "issue_status", "VARCHAR NOT NULL DEFAULT ''"),
+    ("ride", "office_mailed_at", "DATETIME"),
 ]
+
+# What a column just added says about the rows that were already there, run
+# once, right after its ALTER TABLE: (table.column) to an UPDATE. The shared
+# cars booked before the office mail was recorded went through the sheet that
+# could not be skipped (or the paper log, which the office keeps), so they
+# count as told rather than asking every driver about them again.
+ADDED_FILLS: dict[str, str] = {
+    "ride.office_mailed_at": "UPDATE ride SET office_mailed_at = created_at WHERE car_type = 'corporate'",
+}
 
 # Columns that started out NOT NULL and are optional now. SQLite cannot drop a
 # NOT NULL with ALTER TABLE, so such a table is rebuilt from its model
@@ -189,6 +199,9 @@ def add_missing_columns(target: Engine) -> list[str]:
             for index in model.indexes if model is not None else ():
                 if column in index.columns:
                     index.create(conn, checkfirst=True)
+            fill = ADDED_FILLS.get(f"{table}.{column}")
+            if fill:
+                conn.execute(text(fill))
     return [f"{table}.{column}" for table, column, _ in missing]
 
 

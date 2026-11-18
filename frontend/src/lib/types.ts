@@ -130,6 +130,10 @@ export interface Ride {
   coffee_please: boolean
   /** The admin who added the ride in the driver's name ("" when the driver did). */
   added_by_name: string
+  /** When the driver (or an admin) said the mail to the office about this
+   *  shared car went out (`officeMailed`); null until then, and again after
+   *  the car, day or times move. Always null for an own car. */
+  office_mailed_at: string | null
   /** An own car's plate for the Beograd office's garage ("" none; lib/offices.ts `needsGarage`). */
   plate: string
   /** An admin put `plate` on the garage's list. */

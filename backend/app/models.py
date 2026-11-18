@@ -215,6 +215,12 @@ class Ride(SQLModel, table=True):
     # account (deletion nulls the id). Both empty for a ride the driver added.
     added_by_id: int | None = Field(default=None, foreign_key="appuser.id")
     added_by_name: str = Field(default="", sa_column_kwargs={"server_default": ""})
+    # When the driver (or an admin) said the mail to the office about this
+    # shared car went out (POST /api/rides/{id}/office-mail): the record of
+    # which bookings the office heard about. None until then; moving the ride
+    # to another car, day or time clears it, since the mail no longer says
+    # what the car is doing (ride_edits.apply_edit). Own cars never have one.
+    office_mailed_at: datetime | None = None
     created_at: datetime = Field(default_factory=utcnow)
 
     corporate_car: CorporateCar | None = Relationship(back_populates="rides")

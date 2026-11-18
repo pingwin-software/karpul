@@ -18,7 +18,7 @@ import { RouteEditor } from './RouteEditor'
 import { ChangeAsk, SuggestTime } from './ChangeAsk'
 import { DriverCar } from './DriverCar'
 import { LateRow } from './LateRow'
-import { ApprovalAsk, DriverAsks } from './RideAsks'
+import { ApprovalAsk, DriverAsks, OfficeMailAsk } from './RideAsks'
 import { RideFacts } from './RideFacts'
 import { TripRoute } from './TripRoute'
 import { WaitLine } from './WaitLine'
@@ -92,6 +92,8 @@ interface Props {
   onTakeOver: (ride: Ride) => void
   /** The driver (or an admin) confirms a ride from the shared car's paper log (`Ride.unconfirmed`). */
   onConfirmRide: (ride: Ride) => void
+  /** Open the mail to the office about this shared car (CarMailSheet), for one nobody said went out. */
+  onOfficeMail: (ride: Ride) => void
   /** A passenger's yes or no to the driver's change (`Ride.proposal`). */
   onAnswerChange: (ride: Ride, agree: boolean) => void
   /** Whoever asked takes it back: the driver a change, a passenger a suggestion. */
@@ -158,6 +160,7 @@ export function CarDetail({
   onClaim,
   onTakeOver,
   onConfirmRide,
+  onOfficeMail,
   onAnswerChange,
   onWithdrawChange,
   onSuggestTime,
@@ -362,6 +365,8 @@ export function CarDetail({
           onClaim={onClaim}
         />
 
+        {!isPast && <OfficeMailAsk ride={ride} runsIt={runsIt} isDriver={isDriver} onWrite={onOfficeMail} />}
+
         {ride.driver_phone && !isDriver && (
           <a className="btn btn-soft btn-block driver-call" href={telHref(ride.driver_phone)}>
             <PhoneIcon size={18} />
@@ -445,7 +450,7 @@ export function CarDetail({
 
         <DriverCar ride={ride} carState={carState} onCarState={onCarState} onGuide={onGuide} />
 
-        <RideFacts ride={ride} isDriver={isDriver} showPlate={showPlate} />
+        <RideFacts ride={ride} isDriver={isDriver} showPlate={showPlate} showMail={runsIt} />
       </article>
 
       {/* The kilometres: kept by whoever is in the car, read by the admins. */}

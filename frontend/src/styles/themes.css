@@ -761,6 +761,13 @@
   margin: 0;
   color: var(--muted);
 }
+.car-mail-about {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+.car-mail .car-mail-preview + .car-mail-wait {
+  margin-top: 0.75rem;
+}
 .car-mail-actions {
   display: flex;
   gap: 0.5rem;

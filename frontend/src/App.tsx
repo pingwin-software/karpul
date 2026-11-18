@@ -9,7 +9,7 @@ import { AuthGate } from './components/AuthGate'
 import { SharedCars, type SharedCarsTab } from './components/SharedCars'
 import { CarGuide } from './components/CarGuide'
 import { CarMailSheet } from './components/CarMailSheet'
-import { sharedCarRides } from './lib/carMail'
+import { owesOfficeMail, sharedCarRides } from './lib/carMail'
 import { HowTo } from './components/HowTo'
 import { CarCarousel } from './components/CarCarousel'
 import { CarDetail } from './components/CarDetail'
@@ -47,7 +47,7 @@ import { setUser, useSession, type Session } from './lib/auth'
 import { messages, useT } from './lib/i18n'
 import { parseISODate, todayISO } from './lib/dates'
 import { useSlideDir } from './lib/motion'
-import { drives, isMyRequest, MeContext, myBooking, type Me } from './lib/me'
+import { drives, isMyRequest, MeContext, myBooking, runs, type Me } from './lib/me'
 import { resubscribePush } from './lib/push'
 import { useUpdateNotices, useUpdateReady } from './lib/pwa'
 import type { Ride, RideInput, RideRequest } from './lib/types'
@@ -132,8 +132,10 @@ function Board({ session }: { session: Session }) {
   const [submitting, setSubmitting] = useState(false)
   const [confirmState, setConfirm] = useState<Confirm | null>(null)
   // Taking a shared car has one more step: the mail to the office (CarMailSheet).
-  // It cannot be skipped, so a reload brings it back (lib/keep.ts).
-  const [carMailFor, setCarMailFor] = useKept<{ rides: Ride[]; repeatUntil?: string | null } | null>('board.carMail', null)
+  // Right after taking it the sheet cannot be skipped (`locked`), so a reload
+  // brings it back (lib/keep.ts); the ride card and the approval's notification
+  // open it again for a ride whose mail nobody has said went out.
+  const [carMailFor, setCarMailFor] = useKept<{ rides: Ride[]; repeatUntil?: string | null; locked?: boolean } | null>('board.carMail', null)
   // Which car tile is open. null = "whatever makes sense for this day" (see `selection`).
   const [carSel, setCarSel] = useKept<number | null>('board.ride', null)
   // The Shared cars sheet's tab: a ride card opens it on the cars, the drawer where it was.
@@ -211,9 +213,12 @@ function Board({ session }: { session: Session }) {
 
   // A shared link, /ride/{id}: open that ride on its day, then tidy the URL so
   // a reload does not replay it. The server sent the shell with a preview.
+  // `?mail=1` is the approval's notification: the mail to the office as well,
+  // unless somebody already said it went out.
   useEffect(() => {
     const m = window.location.pathname.match(/^\/ride\/(\d+)\/?$/)
     if (!m) return
+    const wantsMail = new URLSearchParams(window.location.search).has('mail')
     window.history.replaceState(null, '', '/')
     api
       .ride(Number(m[1]))
@@ -221,9 +226,10 @@ function Board({ session }: { session: Session }) {
         setViewState('week')
         setSelectedDate(ride.ride_date)
         setCarSel(ride.id)
+        if (wantsMail && owesOfficeMail(ride) && runs(ride, me)) setCarMailFor({ rides: [ride] })
       })
       .catch(() => setToast({ kind: 'error', text: messages().toasts.rideNotFound }))
-  }, [setToast, setSelectedDate, setCarSel])
+  }, [setToast, setSelectedDate, setCarSel, setCarMailFor, me])
 
   /** A line of the admin's log opens its ride on the day plan, where it sits among that day's cars. */
   const openLoggedRide = (rideId: number) => {
@@ -343,7 +349,7 @@ function Board({ session }: { session: Session }) {
           }
         }
         const shared = sharedCarRides(added)
-        if (shared.length) setCarMailFor({ rides: shared, repeatUntil: input.repeat_until })
+        if (shared.length) setCarMailFor({ rides: shared, repeatUntil: input.repeat_until, locked: true })
         if (input.repeat_until) {
           // The other weeks reach this tab over the socket; a reload catches up if it is down.
           void load()
@@ -499,6 +505,7 @@ function Board({ session }: { session: Session }) {
       onClaim={(r) => void onClaim(r)}
       onTakeOver={(r) => void onTakeOver(r)}
       onConfirmRide={(r) => void onConfirmRide(r)}
+      onOfficeMail={(r) => setCarMailFor({ rides: [r] })}
       onAnswerChange={(r, agree) => void onAnswerChange(r, agree)}
       onWithdrawChange={(r) => void onWithdrawChange(r)}
       onSuggestTime={onSuggestTime}
@@ -878,7 +885,20 @@ function Board({ session }: { session: Session }) {
 
         {is('adminLog') && isAdmin && <AdminLog onOpenRide={openLoggedRide} onClose={closer('adminLog')} />}
 
-        {carMailFor && <CarMailSheet rides={carMailFor.rides} repeatUntil={carMailFor.repeatUntil} onClose={() => setCarMailFor(null)} />}
+        {carMailFor && (
+          <CarMailSheet
+            rides={carMailFor.rides}
+            repeatUntil={carMailFor.repeatUntil}
+            locked={carMailFor.locked}
+            onSent={(saved) => {
+              for (const r of saved) upsertRide(r)
+              setCarMailFor(null)
+              setToast({ kind: 'ok', text: t.toasts.officeMailed })
+            }}
+            onError={(text) => setToast({ kind: 'error', text })}
+            onClose={() => setCarMailFor(null)}
+          />
+        )}
         {is('approvals') && isAdmin && (
           <Approvals
             version={desk.tick + waiting}

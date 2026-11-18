@@ -9,7 +9,7 @@ import type { DemoKey } from '../lib/whatsNew'
 export function WhatsNewArt({ demo }: { demo: DemoKey }) {
   return (
     <div className={`wn-art wn-${demo}`} aria-hidden="true">
-      {demo === 'carMail' ? <CarMailDemo /> : demo === 'tourSpotlight' ? <TourSpotlightDemo /> : demo === 'noYou' ? <NoYouDemo /> : demo === 'pickAfter' ? <PickAfterDemo /> : demo === 'whoWhere' ? <WhoWhereDemo /> : demo === 'outOfService' ? <OutOfServiceDemo /> : demo === 'fleetUpkeep' ? <FleetUpkeepDemo /> : demo === 'monthSummary' ? <MonthSummaryDemo /> : demo === 'pickColleague' ? <PickColleagueDemo /> : demo === 'impact' ? <ImpactDemo /> : demo === 'addedBy' ? <AddedByDemo /> : demo === 'seatNotice' ? <SeatNoticeDemo /> : demo === 'carWhere' ? <CarWhereDemo /> : demo === 'carBusy' ? <CarBusyDemo /> : demo === 'prefill' ? <PrefillDemo /> : <ConsentDemo />}
+      {demo === 'officeMail' ? <OfficeMailDemo /> : demo === 'carMail' ? <CarMailDemo /> : demo === 'tourSpotlight' ? <TourSpotlightDemo /> : demo === 'noYou' ? <NoYouDemo /> : demo === 'pickAfter' ? <PickAfterDemo /> : demo === 'whoWhere' ? <WhoWhereDemo /> : demo === 'outOfService' ? <OutOfServiceDemo /> : demo === 'fleetUpkeep' ? <FleetUpkeepDemo /> : demo === 'monthSummary' ? <MonthSummaryDemo /> : demo === 'pickColleague' ? <PickColleagueDemo /> : demo === 'impact' ? <ImpactDemo /> : demo === 'addedBy' ? <AddedByDemo /> : demo === 'seatNotice' ? <SeatNoticeDemo /> : demo === 'carWhere' ? <CarWhereDemo /> : demo === 'carBusy' ? <CarBusyDemo /> : demo === 'prefill' ? <PrefillDemo /> : <ConsentDemo />}
     </div>
   )
 }
@@ -306,6 +306,27 @@ function CarMailDemo() {
           <span className="wn-field-text">{text}</span>
         </div>
       ))}
+    </div>
+  )
+}
+
+/** An approved car names itself, the mail to the office fills in, and a tick says it went out. */
+function OfficeMailDemo() {
+  return (
+    <div className="wn-card">
+      {['✓ Mazda 6e · 18.11. 08:00', '✉ vesna.ardeljan'].map((text, i) => (
+        <div key={text} className="wn-field" style={{ ['--i' as string]: i }}>
+          <span className="wn-field-empty" />
+          <span className="wn-field-text">{text}</span>
+        </div>
+      ))}
+      <div className="wn-pax">
+        <span className="wn-pax-dot" style={{ ['--i' as string]: 2 }}>
+          <svg viewBox="0 0 16 16" width="14" height="14">
+            <path d="M4 8.5 7 11l5-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
     </div>
   )
 }

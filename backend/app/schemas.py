@@ -977,6 +977,9 @@ class RideRead(BaseModel):
     unconfirmed: bool = False
     # The admin who added the ride in the driver's name, "" when the driver did.
     added_by_name: str = ""
+    # When the mail to the office about this shared car was said to be sent;
+    # None while it has not been (POST /api/rides/{id}/office-mail).
+    office_mailed_at: datetime | None = None
     # The driver's mobile number when their account has one, for "Call the driver".
     driver_phone: str | None = None
     bookings: list[BookingRead]

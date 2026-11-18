@@ -288,6 +288,9 @@ export const api = {
   approveRide: (id: number) => request<Ride>(`/api/rides/${id}/approve`, { method: 'POST' }),
   takeOver: (id: number) => request<Ride>(`/api/rides/${id}/takeover`, { method: 'POST' }),
   confirmRide: (id: number) => request<Ride>(`/api/rides/${id}/confirm`, { method: 'POST' }),
+  /** The mail to the office about this shared car went out; `series`: it covered the coming weeks too. */
+  officeMailed: (id: number, series = false) =>
+    request<Ride>(`/api/rides/${id}/office-mail`, json('POST', { series })),
   notices: () => request<SeatNotice[]>('/api/notices'),
   noticeSeen: (id: number) => request<void>(`/api/notices/${id}/seen`, { method: 'POST' }),
   /** "This is me": every ride under that account-less driver name, the one asked about first. */

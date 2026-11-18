@@ -93,6 +93,7 @@ export function aRide(overrides: Partial<Ride> = {}): Ride {
     unconfirmed: false,
     coffee_please: false,
     added_by_name: '',
+    office_mailed_at: null,
     plate: '',
     plate_registered: false,
     proposal: null,
