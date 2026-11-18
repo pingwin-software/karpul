@@ -6,7 +6,6 @@
 import { act } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { messages } from '../lib/i18n'
-import type { Ride } from '../lib/types'
 import { aRide, render } from '../test/render'
 import { CarMailSheet } from './CarMailSheet'
 
