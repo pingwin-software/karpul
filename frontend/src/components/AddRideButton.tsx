@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useT } from '../lib/i18n'
-import { PlusIcon } from './icons'
+import { HandIcon, PlusIcon } from './icons'
 
 /** How long the pressed look is held at least, so a quick tap still shows the
  * full contraction before the spring back (the CSS press takes 80ms). */
@@ -50,9 +50,9 @@ function usePressed() {
 /**
  * The one way to add a ride: a white plus in a green circle, floating at the
  * bottom right of the column on both views whenever a ride can be added. It
- * is deliberately the only add control on the screen (no tile in the
- * carousel, no plus in the empty card, no drawer item), so there is one place
- * to look for it.
+ * is deliberately the only add control on a phone (no tile in the carousel,
+ * no plus in the empty card, no drawer item), so there is one place to look
+ * for it.
  */
 function PlusCircle({ size }: { size: number }) {
   return (
@@ -80,16 +80,41 @@ export function AddRideFab({ onClick }: { onClick: () => void }) {
 }
 
 /**
- * The same control on a wide screen, where nothing floats: a green button at
- * the right end of the toolbar, where a desktop app keeps its "new" action.
- * It is still the only add control on the screen.
+ * The same choice on a wide screen, where nothing floats: two cards at the top
+ * of the list column, where the eye already is. A toolbar button at the top
+ * right was easy to miss, and the one action left in the column was *Ask for a
+ * ride*, so people who meant to book a shared car asked for a seat instead.
+ * Side by side, each card says who drives, which is the whole difference.
+ * Either card is left out when it does not apply (a past day, a day you are
+ * already in a car), and the other then takes the full width.
  */
-export function AddRideToolbarButton({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
+export function RideActions({ onAdd, onAsk }: { onAdd?: () => void; onAsk?: () => void }) {
   const t = useT()
+  if (!onAdd && !onAsk) return null
   return (
-    <button type="button" className="btn btn-primary toolbar-add" onClick={onClick} disabled={disabled} title={t.fab.addRide}>
-      <PlusIcon size={16} weight="bold" />
-      {t.fab.addRide}
-    </button>
+    <div className="ride-actions">
+      {onAdd && (
+        <button type="button" className="ride-action ride-action-add" onClick={onAdd}>
+          <span className="ride-action-mark" aria-hidden="true">
+            <PlusIcon size={20} weight="bold" />
+          </span>
+          <span className="ride-action-text">
+            <strong>{t.fab.addRide}</strong>
+            <small>{t.fab.addHint}</small>
+          </span>
+        </button>
+      )}
+      {onAsk && (
+        <button type="button" className="ride-action ride-action-ask" onClick={onAsk}>
+          <span className="ride-action-mark" aria-hidden="true">
+            <HandIcon size={20} />
+          </span>
+          <span className="ride-action-text">
+            <strong>{t.requests.ask}</strong>
+            <small>{t.fab.askHint}</small>
+          </span>
+        </button>
+      )}
+    </div>
   )
 }

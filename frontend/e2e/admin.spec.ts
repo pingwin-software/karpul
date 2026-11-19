@@ -98,7 +98,7 @@ test('a shared car past the share is asked for, approved by an admin, and a plat
   await mila.reload()
 
   // A second shared car today is past the share: the form offers to ask an admin.
-  await mila.getByRole('button', { name: 'Add ride' }).click()
+  await mila.getByRole('button', { name: 'Schedule a ride' }).click()
   const form = mila.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'Shared car' }).click()
   await form.getByRole('button', { name: 'Which shared car' }).click()

@@ -14,7 +14,7 @@ export const TOUR_NEW_DAYS = 14
 /** The element each step opens its hole round, on a phone and on a wide screen. */
 const TARGETS: Record<TourStep, [phone: string, wide: string]> = {
   find: ['.tabbar', '.topbar-center'],
-  offer: ['.fab', '.toolbar-add'],
+  offer: ['.fab', '.ride-action-add'],
   cars: ['.topbar-menu', '[data-tour="sharedCars"]'],
 }
 

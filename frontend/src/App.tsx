@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { AccountSheet } from './components/AccountSheet'
 import { AddCarCard } from './components/AddCarCard'
-import { AddRideFab, AddRideToolbarButton } from './components/AddRideButton'
+import { AddRideFab, RideActions } from './components/AddRideButton'
 import { AdminLog } from './components/AdminLog'
 import { Approvals } from './components/Approvals'
 import { GarageList } from './components/GarageList'
@@ -545,7 +545,7 @@ function Board({ session }: { session: Session }) {
   const canAskToday = !isPast && !askedToday && !myRideToday && !dayRides.some((r) => drives(r, me))
   const dayYou = loading ? null : (
     <>
-      {canAskToday && (
+      {canAskToday && !wide && (
         <button type="button" className="add-row add-row-quiet" onClick={() => openAsk(selected)}>
           <HandIcon size={18} />
           {t.requests.ask}
@@ -553,6 +553,12 @@ function Board({ session }: { session: Session }) {
       )}
       <RequestList requests={dayRequests} isPast={isPast} busy={busyId !== null} onOffer={onOffer} onWithdraw={(r) => void onWithdraw(r)} />
     </>
+  )
+
+  // A wide screen's two ways in, at the top of the list column (AddRideButton.tsx):
+  // book or offer a ride, or ask for a seat, for the day on screen.
+  const wideActions = loading ? null : (
+    <RideActions onAdd={canAdd ? openNewCar : undefined} onAsk={canAskToday ? () => openAsk(selected) : undefined} />
   )
 
   const viewIcons: Record<View, ReactNode> = {
@@ -689,7 +695,6 @@ function Board({ session }: { session: Session }) {
                 <span className="live-dot" aria-hidden="true" />
                 <span className="sr-only">{t.live.label[liveStatus]}</span>
               </span>
-              {wide && <AddRideToolbarButton onClick={openNewCar} disabled={!canAdd} />}
             </div>
           </header>
 
@@ -709,15 +714,20 @@ function Board({ session }: { session: Session }) {
                   </div>
                 ) : rides.length === 0 && openRequests.length === 0 ? (
                   <>
+                    {wide && <RideActions onAdd={openNewCar} onAsk={() => openAsk(todayISO())} />}
                     <AddCarCard isPast={false} emptyTitle={t.empty.noUpcoming} />
-                    <button type="button" className="add-row add-row-quiet" onClick={() => openAsk(todayISO())}>
-                      {t.requests.ask}
-                    </button>
+                    {!wide && (
+                      <button type="button" className="add-row add-row-quiet" onClick={() => openAsk(todayISO())}>
+                        {t.requests.ask}
+                      </button>
+                    )}
                   </>
                 ) : (
                   <div className={wide ? 'split' : undefined}>
                     {wrapSide(
-                      <Upcoming
+                      <>
+                        {wide && <RideActions onAdd={openNewCar} onAsk={() => openAsk(todayISO())} />}
+                        <Upcoming
                         rides={rides}
                         requests={openRequests}
                         busy={busyId !== null}
@@ -727,7 +737,9 @@ function Board({ session }: { session: Session }) {
                         openId={openUpcomingId}
                         onOpen={wide ? (id) => id !== null && openUpcoming(id) : openUpcoming}
                         opensPage={!wide}
-                      />,
+                        showAsk={!wide}
+                      />
+                      </>,
                     )}
                     {wide && openUpcomingRide && (
                       <aside className="split-pane" data-scroll-pane="" aria-label={openUpcomingRide.car_name}>
@@ -740,7 +752,10 @@ function Board({ session }: { session: Session }) {
               {view === 'day' &&
                 (wide ? (
                   <div className="split split-day">
-                    <div className="split-side" data-scroll-pane="">{dayPlan}</div>
+                    <div className="split-side" data-scroll-pane="">
+                      {wideActions}
+                      {dayPlan}
+                    </div>
                     <aside className="split-pane" data-scroll-pane="" aria-label={planPicked?.car_name ?? t.plan.label}>
                       {planDetail ?? <div className="card empty-card empty-card-short plan-pick">{t.plan.pick}</div>}
                     </aside>
@@ -753,6 +768,7 @@ function Board({ session }: { session: Session }) {
                 (wide ? (
                   <div className="split split-week">
                     <div className="split-side" data-scroll-pane="">
+                      {wideActions}
                       <DateCarousel selected={selected} rides={rides} onSelect={setSelected} />
                       <SlideSwitch id={selected} dir={dayDir}>
                         {dayTiles}

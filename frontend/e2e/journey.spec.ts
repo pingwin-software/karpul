@@ -52,7 +52,7 @@ test('offer a ride, get in, leave, and the driver removes it', async ({ browser 
   const nikolaName = `Nikola Savić ${tag}`
 
   // Lena offers a ride between the offices in her own car: the distance is known.
-  await lena.getByRole('button', { name: 'Add ride' }).click()
+  await lena.getByRole('button', { name: 'Schedule a ride' }).click()
   const form = lena.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Red Clio')
