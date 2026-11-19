@@ -122,7 +122,11 @@ const en = {
     overview: 'The whole day',
   },
 
-  fab: { addRide: 'Add ride' },
+  fab: {
+    addRide: 'Schedule a ride',
+    addHint: 'You drive: a shared car or your own',
+    askHint: 'Someone else drives, you need a seat',
+  },
 
   sidebar: {
     cars: 'Shared cars',
@@ -1322,7 +1326,7 @@ const en = {
         title: 'Find your way around',
         steps: [
           '**Upcoming** lists every ride for the next 90 days, a heading per day. **Week** is one week, a day at a time. **Day** shows who has which shared car when.',
-          'The green **+** (on a computer, **Add ride** at the top right) adds a ride.',
+          'The green **+** (on a computer, **Schedule a ride** at the top of the list) adds a ride: book a shared car or offer your own. **Ask for a ride** is for when someone else drives.',
           'The ☰ menu holds your account, **Your rides**, **Shared cars**, help and settings.',
           'The lamp in the top bar is lit while the board is live: what colleagues do shows up as it happens.',
         ],
@@ -1507,7 +1511,7 @@ const en = {
     } as Record<TourStep, [string, string]>,
     /** Where a step reads differently beside the dock on a wide screen. */
     wide: {
-      offer: 'Add ride, top right, offers your ride: the car, the seats, the day and the route. Colleagues going your way get in, and you are told when they do.',
+      offer: 'Schedule a ride, at the top of the list, is where you book a shared car or offer your own: the car, the seats, the day and the route. Ask for a ride, under it, is for when someone else drives.',
       cars: 'They are on the left: how each one stands (kilometres, battery, anything wrong) and how to charge one with the company card.',
     } as Partial<Record<TourStep, string>>,
   },
@@ -1913,7 +1917,11 @@ const sr: Messages = {
     overview: 'Ceo dan',
   },
 
-  fab: { addRide: 'Dodaj vožnju' },
+  fab: {
+    addRide: 'Zakaži vožnju',
+    addHint: 'Voziš ti: zajednički ili svoj auto',
+    askHint: 'Vozi neko drugi, tebi treba mesto',
+  },
 
   sidebar: {
     cars: 'Zajednički automobili',
@@ -3090,7 +3098,7 @@ const sr: Messages = {
         title: 'Snalaženje',
         steps: [
           '**Predstojeće** prikazuje sve vožnje u narednih 90 dana, po danima. **Sedmica** prikazuje jednu sedmicu, dan po dan. **Dan** pokazuje ko ima koji zajednički auto i kada.',
-          'Zeleno **+** (na računaru, **Dodaj vožnju** gore desno) dodaje vožnju.',
+          'Zeleno **+** (na računaru, **Zakaži vožnju** na vrhu liste) dodaje vožnju: rezerviše zajednički auto ili nudi tvoj. **Zatraži prevoz** je za kad vozi neko drugi.',
           'U meniju ☰ su tvoj nalog, **Tvoje vožnje**, **Zajednički automobili**, pomoć i podešavanja.',
           'Lampica u gornjoj traci svetli dok je tabla uživo: šta kolege urade, vidiš odmah.',
         ],
@@ -3271,7 +3279,7 @@ const sr: Messages = {
       cars: ['Zajednički automobili', 'U meniju su: kako koji stoji (kilometraža, baterija, kvarovi) i kako se puni službenom karticom.'],
     },
     wide: {
-      offer: 'Dodaj vožnju, gore desno, nudi tvoju vožnju: auto, mesta, dan i putanju. Kolege koje idu tvojim putem ulaze, a ti dobijaš obaveštenje.',
+      offer: 'Zakaži vožnju, na vrhu liste, rezerviše zajednički auto ili nudi tvoj: auto, mesta, dan i putanju. Zatraži prevoz, ispod njega, je za kad vozi neko drugi.',
       cars: 'Levo su: kako koji stoji (kilometraža, baterija, kvarovi) i kako se puni službenom karticom.',
     },
   },

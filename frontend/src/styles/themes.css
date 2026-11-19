@@ -332,11 +332,6 @@
   .app-wide .topbar-right {
     gap: 0.9rem;
   }
-  .toolbar-add {
-    min-height: 38px;
-    padding: 0.45rem 1rem 0.45rem 0.85rem;
-    font-size: 0.9rem;
-  }
   .app-wide main {
     flex: 1;
     min-height: 0;

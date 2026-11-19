@@ -22,6 +22,8 @@ interface Props {
   requests: RideRequest[]
   busy: boolean
   onAsk: () => void
+  /** The ask row above the list; a wide screen has it beside Schedule a ride instead. */
+  showAsk?: boolean
   onOffer: (request: RideRequest) => void
   onWithdraw: (request: RideRequest) => void
   /** The open ride: on its own screen on a phone, in the pane beside the list on a wide screen. */
@@ -36,7 +38,7 @@ interface Props {
  * day, then who is still looking for a ride that day. Tapping a row opens the
  * ride: on a screen of its own on a phone, beside the list on a wide screen.
  */
-export function Upcoming({ rides, requests, busy, onAsk, onOffer, onWithdraw, openId, onOpen, opensPage = false }: Props) {
+export function Upcoming({ rides, requests, busy, onAsk, onOffer, onWithdraw, openId, onOpen, opensPage = false, showAsk = true }: Props) {
   const t = useT()
   const me = useMe()
   // Filters live here: they are a way of looking at the list, not board state.
@@ -93,10 +95,12 @@ export function Upcoming({ rides, requests, busy, onAsk, onOffer, onWithdraw, op
         </label>
       </div>
 
-      <button type="button" className="add-row add-row-quiet upcoming-ask" onClick={onAsk}>
-        <HandIcon size={18} />
-        {t.requests.ask}
-      </button>
+      {showAsk && (
+        <button type="button" className="add-row add-row-quiet upcoming-ask" onClick={onAsk}>
+          <HandIcon size={18} />
+          {t.requests.ask}
+        </button>
+      )}
 
       {days.length === 0 && filtered && (
         <div className="card empty-card empty-card-short">

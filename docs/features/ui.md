@@ -25,8 +25,7 @@ and colour: Fluent is the language, not a Microsoft brand. The semantic class na
 `.panel`, `.btn`, …) are the contract the components render against. On a phone the layout is
 one 600px column. From 1024px (`lib/useWide.ts`, the *Wide screens* block in `index.css`) it is a desktop app
 that fills the window: the page never scrolls; the drawer's content is docked down the left edge
-(`Dock` in `Sidebar.tsx`, no ☰), a toolbar carries the view's name, the view switch and the add
-button, and each view is two full-height panes (`.split`) that scroll on their own
+(`Dock` in `Sidebar.tsx`, no ☰), a toolbar carries the view's name and the view switch, and each view is two full-height panes (`.split`) that scroll on their own
 (`data-scroll-pane`):
 Upcoming is the list beside the open ride (no screen of its own: `Upcoming` gets no `opensPage`,
 and the pane shows your next ride when nothing is picked), Week is the days, the day's rides as a
@@ -61,7 +60,12 @@ hairline (`.car-tile-selected`, `.session-open`), a filter chip is a square-corn
 when on (`.chip-on`), and the week arrows are borderless icon buttons (`.week-btn`). Adding a ride has exactly one control: `AddRideFab`
 (`components/AddRideButton.tsx`), Fluent's FAB: a white plus on a green rounded square (16px corners)
 floating at the bottom right of the column, above the tab bar, on every view whenever a ride can be added (`.fab`, under every sheet's backdrop); on a
-wide screen it is `AddRideToolbarButton` at the right end of the toolbar instead.
+wide screen it is `RideActions` instead, at the top of every view's list column: a green *Schedule a ride*
+card (*You drive: a shared car or your own*) and under it a quieter *Ask for a ride* (*Someone else drives,
+you need a seat*), which then has no row of its own in the column. It used to be a small button at the top
+right of the toolbar, which people missed and asked for a seat when they meant to book a shared car; each
+card saying who drives is the point. A card is left out when it does not apply (a past day; a day you are
+already in a car, driving or have asked).
 There is deliberately no *Add ride* tile in the carousel, no plus in the empty card and no drawer
 item; the empty card says only that there is nothing yet. Avatars (`components/Avatar.tsx`) derive a stable pastel from the name.
 Known car models get a side-view illustration instead of the generic icon: `lib/carModels.ts`

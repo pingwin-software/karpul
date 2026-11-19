@@ -44,8 +44,8 @@ test('offer a ride, get in, write in its thread', async ({ browser }, info) => {
   const anaName = `Ana Petrović ${info.project.name === 'phone' ? 'P' : 'D'}`
   const markoName = `Marko Jovanović ${info.project.name === 'phone' ? 'P' : 'D'}`
 
-  // Ana adds a ride with the floating plus, in her own car.
-  await ana.getByRole('button', { name: 'Add ride' }).click()
+  // Ana adds a ride (the floating plus on a phone, Schedule a ride on a computer), in her own car.
+  await ana.getByRole('button', { name: 'Schedule a ride' }).click()
   const form = ana.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Blue Golf')
@@ -144,7 +144,7 @@ test('a profile photo replaces the initials, for everyone', async ({ browser }, 
   // go when she removes it, without reloading.
   await nina.keyboard.press('Escape')
   await expect(sheet).toHaveCount(0)
-  await nina.getByRole('button', { name: 'Add ride' }).click()
+  await nina.getByRole('button', { name: 'Schedule a ride' }).click()
   const form = nina.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Red Clio')
@@ -173,7 +173,7 @@ test('a reload keeps the view, the open form and what was typed in it', async ({
   const tag = info.project.name === 'phone' ? 'p' : 'd'
   const page = await register(browser, { username: `rita.${tag}`, first: 'Rita', last: `Reload ${tag.toUpperCase()}` }, info.project.use)
   await page.getByRole('radiogroup', { name: 'View' }).getByRole('radio', { name: 'Week' }).click()
-  await page.getByRole('button', { name: 'Add ride' }).click()
+  await page.getByRole('button', { name: 'Schedule a ride' }).click()
   const form = page.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Red Clio')
