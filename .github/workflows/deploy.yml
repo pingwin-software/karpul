@@ -151,6 +151,19 @@ jobs:
             cd "${DEPLOY_PATH}"
             origin_url="$(git remote get-url origin | tr '[:upper:]' '[:lower:]')"
             expected="$(printf '%s' "${EXPECTED_REPO}" | tr '[:upper:]' '[:lower:]')"
+            # The repository moved from LosBobes to pingwin-software. A checkout
+            # cloned before the move still tracks the old name, which is this
+            # same repository (GitHub redirects it), so point it at the new
+            # name, keeping the rest of the URL as it is, and carry on. Any
+            # other origin is still refused below.
+            former="losbobes/karpul"
+            case "${origin_url}" in
+              *"${former}"|*"${former}.git"|*"${former}/"|*"${former}.git/")
+                echo "${DEPLOY_PATH} tracks the repository's former name; pointing origin at ${EXPECTED_REPO}."
+                git remote set-url origin "$(git remote get-url origin | sed "s#${former}#${EXPECTED_REPO}#I")"
+                origin_url="$(git remote get-url origin | tr '[:upper:]' '[:lower:]')"
+                ;;
+            esac
             case "${origin_url}" in
               *"${expected}"|*"${expected}.git"|*"${expected}/"|*"${expected}.git/") ;;
               *)

@@ -61,7 +61,7 @@ server to obtain a certificate.
 
 ```bash
 ssh root@YOUR_SERVER_IP
-git clone https://github.com/LosBobes/karpul.git /opt/karpul
+git clone https://github.com/pingwin-software/karpul.git /opt/karpul
 cd /opt/karpul
 ```
 
