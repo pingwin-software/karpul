@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
-import { fmtShortDate, fmtTime, shortCarName } from '../lib/dates'
+import { fmtShortDate, fmtTime, shortCarName, toISODate } from '../lib/dates'
+import { errMsg } from '../lib/errors'
 import { useT } from '../lib/i18n'
-import type { Ride } from '../lib/types'
+import type { Ride, WaitingResetAsk } from '../lib/types'
 import { Avatar } from './Avatar'
 import { PowertrainMark } from './CarArt'
 import { ArrowRightIcon, CheckIcon } from './icons'
@@ -16,6 +17,10 @@ interface Props {
   onDecline: (ride: Ride) => void
   /** Open the ride on the day plan, among that day's cars. */
   onOpen: (ride: Ride) => void
+  /** The "forgot password" asks waiting (lib/useAdminDesk.ts). */
+  resetAsks: WaitingResetAsk[]
+  resetBusyId: number | null
+  onDecideReset: (ask: WaitingResetAsk, approve: boolean) => Promise<void>
   onClose: () => void
 }
 
@@ -25,8 +30,13 @@ interface Props {
  * Each is decided here without opening it; a tap on the ride itself opens it
  * on the day plan, to see what else has the car that day. Approving checks the
  * car is still free (a pending ride holds no slot), so it can be refused.
+ *
+ * Above them, the people who forgot their password and asked for a new one
+ * from the sign-in screen. Each shows the four-digit code the person sees, so
+ * the admin can check it with them before approving; once approved, their
+ * screen gets a button to set a new password.
  */
-export function Approvals({ version, busyId, onApprove, onDecline, onOpen, onClose }: Props) {
+export function Approvals({ version, busyId, onApprove, onDecline, onOpen, resetAsks, resetBusyId, onDecideReset, onClose }: Props) {
   const t = useT()
   const [rides, setRides] = useState<Ride[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -41,11 +51,56 @@ export function Approvals({ version, busyId, onApprove, onDecline, onOpen, onClo
       .catch((e) => setError(t.apiError(e instanceof Error ? e.message : String(e))))
   }, [version, t])
 
+  const [resetError, setResetError] = useState<string | null>(null)
+  const decide = (ask: WaitingResetAsk, approve: boolean) => {
+    setResetError(null)
+    onDecideReset(ask, approve).catch((e) => setResetError(errMsg(e)))
+  }
+
   return (
     <Sheet id="approvals-title" title={t.approvals.title} className="approvals" onClose={onClose}>
       {error && <p className="error">{error}</p>}
       {rides === null && !error && <p className="hint">{t.common.loading}</p>}
-      {rides?.length === 0 && <div className="card empty-card empty-card-short">{t.approvals.empty}</div>}
+      {resetAsks.length > 0 && (
+        <section className="approval-resets" aria-labelledby="approval-resets-title">
+          <h3 id="approval-resets-title" className="approval-heading">
+            {t.approvals.resetsTitle}
+          </h3>
+          {resetError && <p className="error">{resetError}</p>}
+          <ul className="approval-list">
+            {resetAsks.map((a) => {
+              const busy = resetBusyId === a.id
+              return (
+                <li key={a.id} className="card approval-item">
+                  <span className="approval-ride approval-reset">
+                    <Avatar name={a.display_name} size="md" />
+                    <span className="approval-what">
+                      <strong>{a.display_name}</strong>
+                      <span className="approval-when">
+                        @{a.username} · {askedAt(a.created_at)}
+                      </span>
+                      <span className="approval-code">{t.approvals.resetCode(a.code)}</span>
+                    </span>
+                  </span>
+                  <span className="approval-actions">
+                    <button type="button" className="btn btn-outline-danger" disabled={busy} onClick={() => decide(a, false)}>
+                      {t.detail.decline}
+                    </button>
+                    <button type="button" className="btn btn-primary" disabled={busy} onClick={() => decide(a, true)}>
+                      <CheckIcon size={16} /> {t.detail.approve}
+                    </button>
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+          <p className="hint">{t.approvals.resetHint}</p>
+          {rides && rides.length > 0 && (
+            <h3 className="approval-heading">{t.approvals.ridesTitle}</h3>
+          )}
+        </section>
+      )}
+      {rides?.length === 0 && resetAsks.length === 0 && <div className="card empty-card empty-card-short">{t.approvals.empty}</div>}
       {rides && rides.length > 0 && (
         <ul className="approval-list">
           {rides.map((r) => {
@@ -86,4 +141,10 @@ export function Approvals({ version, busyId, onApprove, onDecline, onOpen, onClo
       )}
     </Sheet>
   )
+}
+
+/** When an ask came, in this browser's own time: "Fri, Nov 20 09:14". The server's stamps are UTC. */
+function askedAt(iso: string): string {
+  const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`)
+  return `${fmtShortDate(toISODate(d))} ${fmtTime(`${d.getHours()}:${d.getMinutes()}`)}`
 }

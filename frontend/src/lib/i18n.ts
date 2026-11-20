@@ -296,10 +296,22 @@ const en = {
     switchToSignUp: 'No account yet? Register',
     switchToSignIn: 'Already registered? Sign in',
     fillIn: 'Fill in every field to continue.',
-    forgot: 'Forgot your password? Ask an admin for a reset link.',
+    forgot: 'Forgot your password?',
   },
 
   /** A password reset link from an admin: components/AuthGate.tsx, `reset` mode. */
+  forgot: {
+    title: 'Forgot your password',
+    submit: 'Ask an admin for a new one',
+    waiting: 'Asked. An admin will look at it soon; you can close Karpul meanwhile, this screen comes back.',
+    codeLabel: (code: string) => `Your code: ${code}`,
+    codeHint: 'If an admin asks, read them this code. Never give it to anyone else.',
+    withdraw: 'I remembered it',
+    approved: 'An admin approved it. Pick a new password.',
+    declined: 'An admin declined it. Talk to them, or ask again.',
+    gone: 'This ask has expired or was replaced by a newer one.',
+    again: 'Ask again',
+  },
   reset: {
     title: 'Set a new password',
     greeting: (name: string) => `Hi ${name}. Pick a new password; every browser signed in to your account is signed out.`,
@@ -801,6 +813,10 @@ const en = {
     empty: 'Nothing waiting.',
     count: (n: number) => `${n} waiting`,
     open: 'Open the ride',
+    resetsTitle: 'Forgotten passwords',
+    ridesTitle: 'Shared cars',
+    resetCode: (code: string) => `Code ${code}`,
+    resetHint: 'Call them and check the code on their screen first: approving lets whoever asked set a new password.',
   },
 
   /** Own cars coming to the Beograd office whose plate the garage needs: components/GarageList.tsx. */
@@ -860,6 +876,10 @@ const en = {
           return `${admin} took the admin role from ${subject}`
         case 'reset_link':
           return `${admin} made a password reset link for ${subject}`
+        case 'reset_approved':
+          return `${admin} approved a new password for ${subject}`
+        case 'reset_declined':
+          return `${admin} declined a new password for ${subject}`
         case 'account_deleted':
           return `${admin} deleted the account of ${subject}`
         case 'photo_removed':
@@ -1191,6 +1211,8 @@ const en = {
     claimed: (n: number) => (n === 1 ? 'The ride is yours now.' : `${n} rides are yours now.`),
     lateSaid: (minutes: number) => `The car knows you're ${minutes} min late.`,
     rideDeclined: 'Declined. The ride is removed.',
+    resetApproved: (name: string) => `Approved. ${name} can pick a new password on the screen they asked from.`,
+    resetDeclined: 'Declined.',
     ridesAdded: (n: number) => `${n} rides added, one a week.`,
     ridesRemoved: 'Rides removed.',
     linkCopied: 'Link copied.',
@@ -1524,6 +1546,10 @@ const en = {
     done: 'Got it',
     step: (n: number, of: number) => `${n} of ${of}`,
     entries: {
+      forgotPassword: {
+        title: 'Forgot your password? Happens to the best of us',
+        body: "The sign-in screen now has **Forgot your password?**. Type your username and the admins are asked for you, with a four-digit code on your screen they may ask you to read out (it proves you are you, not your prankster deskmate). Once an admin approves under **Approvals**, the same screen shows **Set a new password**. Close the app meanwhile if you like; it remembers you asked.",
+      },
       officeMail: {
         title: 'Did the mail go out? Say so',
         body: "The mail to the office after taking a shared car now leaves a record. Sent it? **I sent it**. Wrote it from your own inbox before the app asked? **I already sent it**. Got distracted? The ride card keeps a polite little nag until you do. A ride that waited for approval asks the moment an admin says yes, with a notification naming the car and the day, because nobody remembers what they booked last Tuesday.",
@@ -1719,6 +1745,9 @@ const SR_API_ERRORS: [RegExp, (m: RegExpMatchArray) => string][] = [
   [/^Sign in first$/, () => 'Prvo se prijavi'],
   [/^Too many attempts; try again in (\d+) min$/, (m) => `Previše pokušaja; pokušaj ponovo za ${m[1]} min`],
   [/^This reset link has expired or was already used$/, () => 'Ovaj link je istekao ili je već iskorišćen'],
+  [/^No account has that username$/, () => 'Nijedan nalog nema to korisničko ime'],
+  [/^This request has expired or was withdrawn; ask again$/, () => 'Ovaj zahtev je istekao ili je povučen; zatraži ponovo'],
+  [/^That request was withdrawn or has expired$/, () => 'Taj zahtev je povučen ili je istekao'],
   // Admins (app/admin.py, routers/admin.py).
   [/^Only an admin can do that$/, () => 'To može samo administrator'],
   [/^Account not found$/, () => 'Nalog nije pronađen'],
@@ -2091,9 +2120,21 @@ const sr: Messages = {
     switchToSignUp: 'Nemaš nalog? Registruj se',
     switchToSignIn: 'Već imaš nalog? Prijavi se',
     fillIn: 'Popuni sva polja da nastaviš.',
-    forgot: 'Zaboravio/la si lozinku? Zatraži od administratora link za novu.',
+    forgot: 'Zaboravio/la si lozinku?',
   },
 
+  forgot: {
+    title: 'Zaboravljena lozinka',
+    submit: 'Zatraži novu od administratora',
+    waiting: 'Zatraženo. Administrator će to uskoro pogledati; Karpul možeš zatvoriti, ovaj ekran se vraća.',
+    codeLabel: (code) => `Tvoj kod: ${code}`,
+    codeHint: 'Ako te administrator pita, pročitaj mu ovaj kod. Nikome drugom ga ne daj.',
+    withdraw: 'Setio/la sam se',
+    approved: 'Administrator je odobrio. Izaberi novu lozinku.',
+    declined: 'Administrator je odbio. Razgovaraj sa njim ili zatraži ponovo.',
+    gone: 'Ovaj zahtev je istekao ili ga je zamenio noviji.',
+    again: 'Zatraži ponovo',
+  },
   reset: {
     title: 'Nova lozinka',
     greeting: (name) => `Zdravo, ${name}. Izaberi novu lozinku; svi pregledači prijavljeni na tvoj nalog biće odjavljeni.`,
@@ -2452,6 +2493,10 @@ const sr: Messages = {
     empty: 'Ništa ne čeka.',
     count: (n) => `${n} na čekanju`,
     open: 'Otvori vožnju',
+    resetsTitle: 'Zaboravljene lozinke',
+    ridesTitle: 'Zajednički automobili',
+    resetCode: (code) => `Kod ${code}`,
+    resetHint: 'Prvo ih pozovi i proveri kod na njihovom ekranu: odobrenje dozvoljava onome ko je tražio da izabere novu lozinku.',
   },
 
   garage: {
@@ -2509,6 +2554,10 @@ const sr: Messages = {
           return `${admin} je oduzeo/la administratorska prava: ${subject}`
         case 'reset_link':
           return `${admin} je napravio/la link za novu lozinku: ${subject}`
+        case 'reset_approved':
+          return `${admin} je odobrio/la novu lozinku: ${subject}`
+        case 'reset_declined':
+          return `${admin} je odbio/la novu lozinku: ${subject}`
         case 'account_deleted':
           return `${admin} je obrisao/la nalog: ${subject}`
         case 'photo_removed':
@@ -2964,6 +3013,8 @@ const sr: Messages = {
     claimed: (n) => (n === 1 ? 'Vožnja je sada tvoja.' : `Vožnje su sada tvoje (${n}).`),
     lateSaid: (minutes) => `Putnici znaju da kasniš ${minutes} min.`,
     rideDeclined: 'Odbijeno. Vožnja je uklonjena.',
+    resetApproved: (name) => `Odobreno. ${name} može da izabere novu lozinku na ekranu sa kog je tražio/la.`,
+    resetDeclined: 'Odbijeno.',
     ridesAdded: (n) => `Dodato: ${srPlural(n, 'vožnja', 'vožnje', 'vožnji')}, jedna sedmično.`,
     ridesRemoved: 'Vožnje su uklonjene.',
     linkCopied: 'Link je kopiran.',
@@ -3292,6 +3343,10 @@ const sr: Messages = {
     done: 'Važi',
     step: (n, of) => `${n} od ${of}`,
     entries: {
+      forgotPassword: {
+        title: 'Zaboravio/la si lozinku? Dešava se i najboljima',
+        body: 'Ekran za prijavu sad ima **Zaboravio/la si lozinku?**. Upiši korisničko ime i administratori dobijaju zahtev umesto tebe, a na tvom ekranu stoji kod od četiri cifre koji mogu da te zamole da pročitaš (dokaz da si to ti, a ne kolega šaljivdžija). Kad administrator odobri pod **Odobrenja**, isti ekran pokaže **Nova lozinka**. Aplikaciju slobodno zatvori u međuvremenu; pamti da si tražio/la.',
+      },
       officeMail: {
         title: 'Da li je mejl otišao? Reci',
         body: 'Mejl kancelariji posle uzimanja službenog auta sad ostavlja trag. Poslao si ga? **Poslao/la sam**. Napisao si ga iz svog sandučeta pre nego što je aplikacija pitala? **Već sam poslao/la**. Nešto te omelo? Kartica vožnje te pristojno podseća dok to ne uradiš. Vožnja koja je čekala odobrenje pita čim administrator kaže da, obaveštenjem koje navodi auto i dan, jer niko ne pamti šta je rezervisao prošlog utorka.',

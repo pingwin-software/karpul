@@ -14,6 +14,7 @@ export type LiveEvent =
   | { type: 'request.deleted'; request_id: number }
   | { type: 'photos.changed' }
   | { type: 'notices.changed' }
+  | { type: 'resets.changed' }
 
 export type LiveStatus = 'connecting' | 'live' | 'offline'
 

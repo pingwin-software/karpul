@@ -88,6 +88,10 @@ login_failures_by_ip = Limiter(30, 15 * 60)
 registrations = Limiter(int(os.getenv("KARPUL_REGISTRATIONS_PER_HOUR", "10")), 60 * 60)
 # Reset-link attempts (a wrong or dead token), per address.
 reset_attempts = Limiter(20, 15 * 60)
+# "Forgot password" asks to the admins (each one pushes every admin): per
+# address and per account, an hour.
+reset_asks_by_ip = Limiter(10, 60 * 60)
+reset_asks_by_account = Limiter(3, 60 * 60)
 
 # Place searches and pin lookups (app/geo.py), per account: typing a place asks
 # once per pause, so this is a lot of typing; it keeps one browser from
@@ -129,7 +133,7 @@ def spend(kind: str, user_id: int | None) -> None:
     limiter.hit(key)
 
 
-ALL = (login_failures_by_account, login_failures_by_ip, registrations, reset_attempts, place_lookups, writes_by_token, *WRITES.values())
+ALL = (login_failures_by_account, login_failures_by_ip, registrations, reset_attempts, reset_asks_by_ip, reset_asks_by_account, place_lookups, writes_by_token, *WRITES.values())
 
 
 def reset_all() -> None:

@@ -16,10 +16,10 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, delete, select
 
 from .. import audit, fleet
-from ..admin import admin_by_config, configured_admins, is_admin, require_admin
-from ..auth import CredsDep, issue_reset
+from ..admin import admin_by_config, admin_ids, configured_admins, is_admin, require_admin
+from ..auth import CredsDep, issue_reset, reset_ask_expired
 from ..database import get_session, get_write_session
-from ..events import disconnect, photos_changed, request_deleted, request_saved, ride_deleted, ride_saved
+from ..events import disconnect, photos_changed, request_deleted, request_saved, resets_changed, ride_deleted, ride_saved
 from ..models import (
     AdminAction,
     AuthSession,
@@ -30,16 +30,27 @@ from ..models import (
     PasswordReset,
     ProfilePhoto,
     PushSubscription,
+    ResetRequest,
     Ride,
     RideMessage,
     RideRequest,
     SeatNotice,
     User,
     WaitlistEntry,
+    utcnow,
 )
 from ..offices import needs_garage
 from ..push import notify
-from ..schemas import AdminActionRead, AdminUserRead, AdminUserUpdate, GaragePlateRead, GaragePlateUpdate, ResetLinkOut, RideRead
+from ..schemas import (
+    AdminActionRead,
+    AdminUserRead,
+    AdminUserUpdate,
+    GaragePlateRead,
+    GaragePlateUpdate,
+    ResetAskRead,
+    ResetLinkOut,
+    RideRead,
+)
 from ..services import board_extras, promote_waitlist, to_ride_read_dict
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -132,6 +143,7 @@ def update_user(user_id: int, payload: AdminUserUpdate, session: WriteSessionDep
             session.exec(delete(AuthSession).where(col(AuthSession.user_id) == user.id))
             session.exec(delete(PushSubscription).where(col(PushSubscription.user_id) == user.id))
             session.exec(delete(PasswordReset).where(col(PasswordReset.user_id) == user.id))
+            session.exec(delete(ResetRequest).where(col(ResetRequest.user_id) == user.id))
         audit.record(session, admin, "account_disabled" if payload.disabled else "account_enabled", user.display_name)
         user.disabled = payload.disabled
     session.add(user)
@@ -272,6 +284,7 @@ def delete_user(user_id: int, session: WriteSessionDep, creds: CredsDep):
         session.add(leg)
     session.exec(delete(PushSubscription).where(col(PushSubscription.user_id) == user.id))
     session.exec(delete(PasswordReset).where(col(PasswordReset.user_id) == user.id))
+    session.exec(delete(ResetRequest).where(col(ResetRequest.user_id) == user.id))
     had_photo = session.get(ProfilePhoto, user.id) is not None
     session.exec(delete(ProfilePhoto).where(col(ProfilePhoto.user_id) == user.id))
     audit.record(session, admin, "account_deleted", user.display_name)
@@ -354,6 +367,62 @@ def approvals(session: SessionDep, creds: CredsDep):
     rides = list(session.exec(stmt).all())
     extras = board_extras(session, rides)
     return [to_ride_read_dict(r, extras) for r in rides]
+
+
+@router.get("/reset-requests", response_model=list[ResetAskRead])
+def reset_requests(session: SessionDep, creds: CredsDep):
+    """Admin-only: the "forgot password" asks waiting for a decision, oldest
+    first (routers/auth.ask_for_reset). Each carries the code the person
+    asking sees, so it can be checked with them first."""
+    require_admin(session, creds)
+    stmt = select(ResetRequest).where(ResetRequest.status == "pending").order_by(col(ResetRequest.created_at), col(ResetRequest.id))
+    out = []
+    for ask in session.exec(stmt):
+        user = session.get(User, ask.user_id)
+        if user is None or user.disabled or reset_ask_expired(ask):
+            continue
+        out.append(
+            ResetAskRead(
+                id=ask.id,  # type: ignore[arg-type]
+                user_id=user.id,  # type: ignore[arg-type]
+                username=user.username,
+                display_name=user.display_name,
+                code=ask.code,
+                created_at=ask.created_at,
+            )
+        )
+    return out
+
+
+def _decide_reset(session: Session, creds, ask_id: int, verdict: str) -> None:
+    admin = require_admin(session, creds)
+    ask = session.get(ResetRequest, ask_id)
+    if ask is None or ask.status != "pending" or reset_ask_expired(ask):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "That request was withdrawn or has expired")
+    user = session.get(User, ask.user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "That request was withdrawn or has expired")
+    ask.status = verdict
+    ask.decided_at = utcnow()
+    ask.decided_by = admin.display_name
+    session.add(ask)
+    audit.record(session, admin, "reset_approved" if verdict == "approved" else "reset_declined", user.display_name)
+    admins = admin_ids(session)
+    session.commit()
+    resets_changed(admins)
+
+
+@router.post("/reset-requests/{ask_id}/approve", status_code=status.HTTP_204_NO_CONTENT)
+def approve_reset(ask_id: int, session: WriteSessionDep, creds: CredsDep):
+    """Admin-only: let the ask through. The asking browser gets a one-time
+    reset link on its next look (routers/auth.reset_ask_status)."""
+    _decide_reset(session, creds, ask_id, "approved")
+
+
+@router.post("/reset-requests/{ask_id}/decline", status_code=status.HTTP_204_NO_CONTENT)
+def decline_reset(ask_id: int, session: WriteSessionDep, creds: CredsDep):
+    """Admin-only: refuse the ask; the asking browser is told so."""
+    _decide_reset(session, creds, ask_id, "declined")
 
 
 @router.get("/garage", response_model=list[RideRead])

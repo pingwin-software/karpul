@@ -136,3 +136,11 @@ def photos_changed() -> None:
 def notices_changed(user_id: int) -> None:
     """That account has a seat notice to see (app/notices.py); nobody else hears."""
     hub.publish({"type": "notices.changed"}, user_id=user_id)
+
+
+def resets_changed(admin_ids: list[int | None]) -> None:
+    """A "forgot password" ask came, went or was decided: the admins' Approvals
+    count fetches again. Only the admins hear it (`admin.admin_ids`)."""
+    for uid in admin_ids:
+        if uid is not None:
+            hub.publish({"type": "resets.changed"}, user_id=uid)

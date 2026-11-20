@@ -98,6 +98,17 @@ counters in the autouse `clean_env` fixture. **The writes that reach other peopl
 /api/admin/users/{id}/reset-link`, `PasswordReset` stored as a hash, 48 h, the newest only);
 the app opened on `/reset/<token>` shows `AuthGate`'s reset card, which sets the password,
 signs every browser out and this one in. There is no email: the admin passes the link on.
+**Forgot your password?** on the sign-in screen asks the admins instead (`ResetRequest`,
+`POST /api/auth/reset-requests` by username, signed out): the browser gets a secret `claim` it
+polls with (`/reset-requests/status`, a write route) and a four-digit `code` that the admin sees
+too, to check with the person first; every admin is pushed (`reset_requested`, category
+approvals) and hears `resets.changed` on the socket. The asks sit at the top of *Approvals*
+(`GET /api/admin/reset-requests`, `/{id}/approve` | `/decline`, both in the admin log); the first
+poll after an approval issues an ordinary reset link (`issue_reset`) and the ask is spent, and
+`AuthGate`'s `ForgotCard` shows *Set a new password*, which opens `/reset/<token>`. The ask is
+kept in localStorage (`lib/resetAsk.ts`, `karpul.resetAsk`) so a closed app comes back to it; a
+newer ask replaces an older one, and an undecided or unclaimed one lapses after a day
+(`RESET_ASK_HOURS`, purged by `purge_expired`). Tests: `tests/test_reset_requests.py`.
 
 On the frontend `lib/auth.ts` is an external store (like the theme and the locale) holding
 the token and the account in `localStorage` under `karpul.auth`; `lib/api.ts` attaches the

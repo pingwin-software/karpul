@@ -272,7 +272,7 @@ function Board({ session }: { session: Session }) {
   const board = useBoard(range, { isAdmin, onLoadError })
   // Another account signing in here starts with no seat notices of this one's.
   useEffect(() => clearNotices, [])
-  const { rides, requests, cars, adminCars, carStates, reloadCarStates, loading, liveStatus, load, upsertRide, removeRides, upsertRequest, removeRequest, reloadCars } = board
+  const { rides, requests, cars, adminCars, carStates, reloadCarStates, loading, liveStatus, load, upsertRide, removeRides, upsertRequest, removeRequest, reloadCars, resetsTick } = board
   // Back where the page was scrolled, once there is a board to scroll.
   useEffect(() => {
     if (!loading) restoreScroll()
@@ -298,7 +298,7 @@ function Board({ session }: { session: Session }) {
 
   // The admin's approvals, garage list and car pool (lib/useAdminDesk.ts),
   // and asking for a ride (lib/useRideRequests.ts).
-  const desk = useAdminDesk({ isAdmin, rides, withBusy, upsertRide, removeRides, reloadCars, load, notice, setConfirm })
+  const desk = useAdminDesk({ isAdmin, rides, resetsTick, withBusy, upsertRide, removeRides, reloadCars, load, notice, setConfirm })
   const { waiting, plates, onApprove, onDecline, onMarkPlate } = desk
   const asks = useRideRequests({ withBusy, upsertRequest, removeRequest, notice })
   const { askDate, openAsk, closeAsk, onWithdraw } = asks
@@ -921,6 +921,9 @@ function Board({ session }: { session: Session }) {
             busyId={busyId}
             onApprove={(r) => void onApprove(r)}
             onDecline={onDecline}
+            resetAsks={desk.resetAsks}
+            resetBusyId={desk.resetBusyId}
+            onDecideReset={desk.onDecideReset}
             onOpen={(r) => openLoggedRide(r.id)}
             onClose={closer('approvals')}
           />

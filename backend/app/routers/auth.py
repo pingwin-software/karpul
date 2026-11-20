@@ -1,5 +1,6 @@
-"""`/api/auth`: register, sign in, sign out, your own account, and the
-password reset links an admin hands out.
+"""`/api/auth`: register, sign in, sign out, your own account, the
+password reset links an admin hands out, and the "forgot password" asks that
+an admin approves under Approvals (which end in such a link).
 
 The browser keeps the token from `register` / `login` / `reset` and sends it
 as `Authorization: Bearer <token>` on everything afterwards; `app/auth.py`
@@ -9,30 +10,47 @@ The three doors (sign-in, registration, a reset link) are throttled in
 `app/ratelimit.py`.
 """
 
+import secrets
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlmodel import Session, select
+from sqlmodel import Session, col, delete, select
 
 from .. import ratelimit
-from ..admin import is_admin
+from ..admin import admin_ids, is_admin
 from ..auth import (
     CredsDep,
     burn_password_time,
     end_other_sessions,
     end_session,
     hash_password,
+    hash_token,
+    issue_reset,
     renew_session,
     require_user,
+    reset_ask_expired,
     reset_for_token,
     start_session,
     user_by_login,
     verify_password,
 )
 from ..database import get_session, get_write_session
-from ..events import photos_changed, ride_saved
-from ..models import ProfilePhoto, User, utcnow
-from ..schemas import AuthOut, LoginIn, ProfileUpdate, RegisterIn, ResetIn, ResetInfo, UserRead
+from ..events import photos_changed, resets_changed, ride_saved
+from ..models import ProfilePhoto, ResetRequest, User, utcnow
+from ..push import notify
+from ..schemas import (
+    AuthOut,
+    LoginIn,
+    ProfileUpdate,
+    RegisterIn,
+    ResetAskIn,
+    ResetAskOut,
+    ResetAskStatus,
+    ResetClaimIn,
+    ResetIn,
+    ResetInfo,
+    UserRead,
+)
 from ..services import claim_rows, new_calendar_token, norm_name, rename_person
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -273,3 +291,84 @@ def reset_password(payload: ResetIn, request: Request, session: WriteSessionDep)
     session.add(row)
     ratelimit.login_failures_by_account.forget(f"login:{user.username}")
     return _signed_in(session, user)
+
+
+# --- "forgot password": an ask to the admins ---------------------------------
+#
+# Signed out, so the browser that asks gets a secret (`claim`) to come back
+# with. An admin approves or declines under Approvals (routers/admin.py); the
+# next poll after an approval hands this browser a one-time reset link, which
+# the app opens as the ordinary reset card.
+
+ASK_GONE = "This request has expired or was withdrawn; ask again"
+
+
+def _ask_for_claim(session: Session, claim: str, request: Request) -> ResetRequest:
+    ip = f"ip:{ratelimit.client_ip(request)}"
+    ratelimit.reset_attempts.check(ip)
+    ask = session.exec(select(ResetRequest).where(ResetRequest.claim_hash == hash_token(claim))).first()
+    if ask is None or reset_ask_expired(ask):
+        ratelimit.reset_attempts.hit(ip)
+        raise HTTPException(status.HTTP_404_NOT_FOUND, ASK_GONE)
+    return ask
+
+
+@router.post("/reset-requests", response_model=ResetAskOut, status_code=status.HTTP_201_CREATED)
+def ask_for_reset(payload: ResetAskIn, request: Request, session: WriteSessionDep):
+    """Ask the admins for a new password. Any earlier ask of the account is
+    replaced, so only the newest browser to ask can get the link. Every admin
+    is told."""
+    ip = f"ip:{ratelimit.client_ip(request)}"
+    ratelimit.reset_asks_by_ip.check(ip)
+    user = user_by_login(session, payload.username)
+    if user is None:
+        ratelimit.reset_asks_by_ip.hit(ip)
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No account has that username")
+    if user.disabled:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "This account is switched off. Ask an admin")
+    account = f"user:{user.id}"
+    ratelimit.reset_asks_by_account.check(account)
+    ratelimit.reset_asks_by_ip.hit(ip)
+    ratelimit.reset_asks_by_account.hit(account)
+    session.exec(delete(ResetRequest).where(col(ResetRequest.user_id) == user.id))  # type: ignore[call-overload]
+    claim = secrets.token_urlsafe(32)
+    code = f"{secrets.randbelow(10_000):04d}"
+    session.add(ResetRequest(user_id=user.id, claim_hash=hash_token(claim), code=code))  # type: ignore[arg-type]
+    admins = admin_ids(session)
+    session.commit()
+    notify(session, admins, "reset_requested", name=user.display_name, url="/")
+    resets_changed(admins)
+    return ResetAskOut(claim=claim, code=code)
+
+
+@router.post("/reset-requests/status", response_model=ResetAskStatus)
+def reset_ask_status(payload: ResetClaimIn, request: Request, session: WriteSessionDep):
+    """Where this browser's ask stands. A write route: the first answer after
+    an approval issues the reset link (its token, once) and the ask is spent;
+    a declined ask is said once and goes too."""
+    ask = _ask_for_claim(session, payload.claim, request)
+    if ask.status == "pending":
+        return ResetAskStatus(status="pending")
+    if ask.status == "declined":
+        session.delete(ask)
+        session.commit()
+        return ResetAskStatus(status="declined")
+    user = session.get(User, ask.user_id)
+    if user is None or user.disabled:
+        session.delete(ask)
+        session.commit()
+        raise HTTPException(status.HTTP_404_NOT_FOUND, ASK_GONE)
+    token, _ = issue_reset(session, user)
+    session.delete(ask)
+    session.commit()
+    return ResetAskStatus(status="approved", token=token)
+
+
+@router.post("/reset-requests/withdraw", status_code=status.HTTP_204_NO_CONTENT)
+def withdraw_reset_ask(payload: ResetClaimIn, request: Request, session: WriteSessionDep):
+    """The person remembered after all: the ask leaves the admins' list."""
+    ask = _ask_for_claim(session, payload.claim, request)
+    session.delete(ask)
+    admins = admin_ids(session)
+    session.commit()
+    resets_changed(admins)

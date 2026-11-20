@@ -8,7 +8,7 @@
  * showing only what this account has not seen in this browser and nothing from
  * before the account existed: a newcomer is not handed the history.
  */
-export type DemoKey = 'officeMail' | 'carMail' | 'tourSpotlight' | 'noYou' | 'pickAfter' | 'whoWhere' | 'outOfService' | 'fleetUpkeep' | 'monthSummary' | 'pickColleague' | 'impact' | 'addedBy' | 'seatNotice' | 'carWhere' | 'carBusy' | 'prefill' | 'consent'
+export type DemoKey = 'forgotPassword' | 'officeMail' | 'carMail' | 'tourSpotlight' | 'noYou' | 'pickAfter' | 'whoWhere' | 'outOfService' | 'fleetUpkeep' | 'monthSummary' | 'pickColleague' | 'impact' | 'addedBy' | 'seatNotice' | 'carWhere' | 'carBusy' | 'prefill' | 'consent'
 
 export type Audience = 'admins' | 'members'
 
@@ -23,6 +23,7 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
+  { id: 'forgotPassword', date: '2026-11-20' },
   { id: 'officeMail', date: '2026-11-18' },
   { id: 'carMail', date: '2026-11-10' },
   { id: 'tourSpotlight', date: '2026-11-09' },
