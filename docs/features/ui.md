@@ -157,7 +157,7 @@ the driver card of any company-car ride; its foot opens *Contact support*). The 
 Fluent accordion of topics, each a few numbered steps; the words are `howTo` in `lib/i18n.ts`, `**name**` sets a
 control's name in bold, the admin topic shows to admins only; `docs/user-guide.md` is the long version, keep them
 in step), the guide,
-*Contact support* (`SupportSheet`: car, app and organizational contacts with `tel:` / `mailto:` buttons, the list is
+*Contact support* (`SupportSheet`: car, app and organizational contacts with `tel:` / `mailto:` buttons, each by name, never the address, the list is
 `SUPPORT` in `lib/support.ts`) and *Report a bug or send feedback* (`FeedbackSheet`, also at the foot of the support
 sheet: a bug or an idea sent as a `mailto:` to the app contact from the person's own mail app, with the account, view,
 browser and screen under the text; nothing on the server). Picking an

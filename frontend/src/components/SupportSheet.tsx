@@ -48,7 +48,7 @@ export function SupportSheet({ onFeedback, onClose }: Props) {
               <MailIcon size={18} />
               <span className="support-link-text">
                 {t.support.email}
-                <span className="support-link-value">{c.email}</span>
+                <span className="support-link-value">{c.name}</span>
               </span>
             </a>
           </div>

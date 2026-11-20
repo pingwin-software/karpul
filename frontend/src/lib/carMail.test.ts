@@ -26,7 +26,10 @@ describe('carMail', () => {
       { id: 4, display_name: 'Nina Nobody', is_admin: false },
       admin(5, 'Ada Colic'),
     ]
-    expect(adminCopies(people)).toEqual(['ada.colic@se.com', 'boris.boss@se.com'])
+    expect(adminCopies(people)).toEqual([
+      { name: 'Ada Čolić', email: 'ada.colic@se.com' },
+      { name: 'Boris Boss', email: 'boris.boss@se.com' },
+    ])
   })
 
   it('only mails about shared cars', () => {
@@ -52,6 +55,8 @@ describe('carMail', () => {
     const m = carMail([ride], [admin(1, 'Ada Admin')])
     expect(m.to).toBe(OFFICE_EMAIL)
     expect(m.cc).toEqual(['ada.admin@se.com'])
+    expect(m.toName).toBe('Vesna Ardeljan')
+    expect(m.ccNames).toEqual(['Ada Admin'])
     expect(m.subject).toBe('Službeni automobil Mazda 3 (BG-123-AB), 11.11.2026. (Ana Petrović)')
     expect(m.body).toContain('službeni automobil Mazda 3 (BG-123-AB) je zauzet')
     expect(m.body).toMatch(/od 08:00 do 17:30/)
