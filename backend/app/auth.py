@@ -22,7 +22,7 @@ from typing import Annotated
 from fastapi import Depends, Header, HTTPException, status
 from sqlmodel import Session, select
 
-from .models import AuthSession, PasswordReset, User, utcnow
+from .models import AuthSession, PasswordReset, ResetRequest, User, utcnow
 
 HASH_ALGO = "sha256"
 HASH_NAME = f"pbkdf2_{HASH_ALGO}"
@@ -136,7 +136,7 @@ def purge_expired(session: Session, now: datetime | None = None) -> dict[str, in
     expired or were used: they are refused anyway, and the tables would only
     grow. Returns how many of each went; the caller commits."""
     now = now or datetime.now(timezone.utc)
-    gone = {"sessions": 0, "resets": 0}
+    gone = {"sessions": 0, "resets": 0, "reset_asks": 0}
     for row in session.exec(select(AuthSession)):
         if _as_utc(row.expires_at) <= now:
             session.delete(row)
@@ -145,6 +145,10 @@ def purge_expired(session: Session, now: datetime | None = None) -> dict[str, in
         if row.used_at is not None or _as_utc(row.expires_at) <= now:
             session.delete(row)
             gone["resets"] += 1
+    for ask in session.exec(select(ResetRequest)):
+        if reset_ask_expired(ask, now):
+            session.delete(ask)
+            gone["reset_asks"] += 1
     return gone
 
 
@@ -191,6 +195,17 @@ def issue_reset(session: Session, user: User) -> tuple[str, PasswordReset]:
     )
     session.add(row)
     return raw, row
+
+
+# How long a "forgot password" ask waits for an admin, and how long an approved
+# one waits for its browser to come back for the link.
+RESET_ASK_HOURS = 24
+
+
+def reset_ask_expired(ask: ResetRequest, now: datetime | None = None) -> bool:
+    now = now or datetime.now(timezone.utc)
+    since = ask.decided_at or ask.created_at
+    return _as_utc(since) + timedelta(hours=RESET_ASK_HOURS) <= now
 
 
 def reset_for_token(session: Session, raw: str) -> PasswordReset | None:

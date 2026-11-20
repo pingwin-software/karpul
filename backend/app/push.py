@@ -70,7 +70,7 @@ CATEGORIES: dict[str, tuple[str, ...]] = {
     "reminders": ("leaving_soon", "note_km", "log_yours", "log_claim"),
     "messages": ("message",),
     "requests": ("request_made", "request_answered"),
-    "approvals": ("approval_requested", "ride_approved", "ride_declined", "garage_plate", "plate_registered", "approval_waiting"),
+    "approvals": ("approval_requested", "reset_requested", "ride_approved", "ride_declined", "garage_plate", "plate_registered", "approval_waiting"),
     "cars": ("car_issue", "fleet_registration", "fleet_insurance", "fleet_service", "fleet_tyres"),
 }
 CATEGORY_OF = {kind: category for category, kinds in CATEGORIES.items() for kind in kinds}
@@ -140,6 +140,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "running_late": lambda driver, minutes: f"{driver} is running {minutes} min late",
         "ride_assigned": lambda name: f"{name} put you down to drive",
         "approval_requested": lambda name: f"{name} asks for another shared car",
+        "reset_requested": lambda name: f"{name} forgot their password: approve a new one under Approvals",
         "ride_approved": lambda name: f"{name} approved your shared car. Send the office the mail",
         "ride_declined": lambda name: f"{name} declined your shared car",
         "garage_plate": lambda name, plate: f"{name} comes to the Beograd office in {plate}: add it to the garage list",
@@ -193,6 +194,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "running_late": lambda driver, minutes: f"{driver} kasni {minutes} min",
         "ride_assigned": lambda name: f"{name} te je upisao/la kao vozača",
         "approval_requested": lambda name: f"{name} traži još jedan zajednički auto",
+        "reset_requested": lambda name: f"{name} je zaboravio/la lozinku: odobri novu pod Odobrenja",
         "ride_approved": lambda name: f"{name} je odobrio/la tvoj zajednički auto. Pošalji mejl kancelariji",
         "ride_declined": lambda name: f"{name} je odbio/la tvoj zajednički auto",
         "garage_plate": lambda name, plate: f"{name} dolazi u kancelariju u Beogradu autom {plate}: dodaj ga na spisak za garažu",

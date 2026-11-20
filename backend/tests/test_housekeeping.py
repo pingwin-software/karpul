@@ -7,7 +7,7 @@ from sqlmodel import Session, SQLModel, select
 
 from app import auth
 from app.housekeeping import backup_due, backups_in, run_housekeeping, write_backup
-from app.models import AuthSession, CorporateCar, PasswordReset, User
+from app.models import AuthSession, CorporateCar, PasswordReset, ResetRequest, User
 from tests.conftest import make_person
 
 # --- sessions slide ------------------------------------------------------------
@@ -54,8 +54,16 @@ def test_purge_drops_expired_sessions_and_spent_reset_links(session_factory):
         s.add(PasswordReset(token_hash="fresh", user_id=user.id, expires_at=now + timedelta(hours=1)))
         s.add(PasswordReset(token_hash="old", user_id=user.id, expires_at=now - timedelta(hours=1)))
         s.add(PasswordReset(token_hash="used", user_id=user.id, expires_at=now + timedelta(hours=1), used_at=now))
+        s.add(ResetRequest(user_id=user.id, claim_hash="new", code="1234", created_at=now - timedelta(hours=1)))
+        s.add(ResetRequest(user_id=user.id, claim_hash="stale", code="1234", created_at=now - timedelta(hours=25)))
+        s.add(
+            ResetRequest(
+                user_id=user.id, claim_hash="late", code="1234", status="approved",
+                created_at=now - timedelta(hours=30), decided_at=now - timedelta(hours=2),
+            )
+        )
         s.commit()
-        assert auth.purge_expired(s, now) == {"sessions": 1, "resets": 2}
+        assert auth.purge_expired(s, now) == {"sessions": 1, "resets": 2, "reset_asks": 1}
         s.commit()
         assert [r.token_hash for r in s.exec(select(AuthSession))] == ["live"]
         assert [r.token_hash for r in s.exec(select(PasswordReset))] == ["fresh"]

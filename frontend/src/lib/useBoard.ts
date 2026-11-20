@@ -59,6 +59,8 @@ export interface Board {
   removeRequest: (id: number) => void
   /** Fetch both car lists again (after a pool edit, or a `cars.changed`). */
   reloadCars: () => Promise<void>
+  /** Bumped when a "forgot password" ask changes (admins only) or the socket reconnects. */
+  resetsTick: number
 }
 
 /** How long to wait before each new try when the network did not answer. */
@@ -100,6 +102,8 @@ export function useBoard(range: Range, { isAdmin, onLoadError }: Options): Board
   const [requests, setRequests] = useState<RideRequest[]>([])
   const [cars, setCars] = useState<CorporateCar[]>([])
   const [adminCars, setAdminCars] = useState<CorporateCar[]>([])
+  /** Bumped when a "forgot password" ask changes (`resets.changed`, admins only) or the socket reconnects. */
+  const [resetsTick, setResetsTick] = useState(0)
   const [carStates, setCarStates] = useState<CarState[] | null>(null)
   const [loadedRange, setLoadedRange] = useState<string | null>(null)
   const rangeKey = `${range.from}:${range.to}`
@@ -207,6 +211,10 @@ export function useBoard(range: Range, { isAdmin, onLoadError }: Options): Board
         case 'notices.changed':
           loadNotices().catch(() => undefined)
           break
+        case 'resets.changed':
+          // Only admins hear it: a "forgot password" ask came, went or was decided.
+          setResetsTick((n) => n + 1)
+          break
         default:
           break
       }
@@ -216,6 +224,7 @@ export function useBoard(range: Range, { isAdmin, onLoadError }: Options): Board
   // Whatever happened while the socket was down was never delivered: the
   // board, the photos and the cars' state are all fetched again on every (re)connect.
   const onConnect = useCallback(() => {
+    setResetsTick((n) => n + 1)
     loadPhotos().catch(() => undefined)
     loadNotices().catch(() => undefined)
     reloadCarStates().catch(() => undefined)
@@ -268,5 +277,6 @@ export function useBoard(range: Range, { isAdmin, onLoadError }: Options): Board
     upsertRequest,
     removeRequest,
     reloadCars,
+    resetsTick,
   }
 }

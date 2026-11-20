@@ -31,6 +31,8 @@ ACTIONS = (
     "admin_granted",
     "admin_revoked",
     "reset_link",
+    "reset_approved",  # a "forgot password" ask from the sign-in screen, let through
+    "reset_declined",
     "photo_removed",  # someone's profile photo taken down
     "place_moved",  # a known place (an office, a suggestion) put somewhere else
     "place_removed",

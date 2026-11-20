@@ -687,3 +687,26 @@ export interface ProfilePatch {
   new_password?: string
   prefill_rides?: boolean
 }
+
+/** A "forgot password" ask, as the browser that made it keeps it. */
+export interface ResetAsk {
+  claim: string
+  /** Four digits the admin may ask to hear before approving. */
+  code: string
+}
+
+export interface ResetAskStatus {
+  status: 'pending' | 'approved' | 'declined'
+  /** With "approved": the reset link's token (`/reset/<token>`). */
+  token: string | null
+}
+
+/** A "forgot password" ask waiting under Approvals. */
+export interface WaitingResetAsk {
+  id: number
+  user_id: number
+  username: string
+  display_name: string
+  code: string
+  created_at: string
+}

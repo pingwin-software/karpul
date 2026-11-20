@@ -350,6 +350,43 @@ class ResetInfo(BaseModel):
     display_name: str
 
 
+class ResetAskIn(BaseModel):
+    """A "forgot password" ask to the admins, from the sign-in screen."""
+
+    username: str = Field(min_length=1, max_length=200)
+
+
+class ResetAskOut(BaseModel):
+    """What the asking browser keeps: the secret it polls with (shown only
+    now) and the code the admin may ask it to read out."""
+
+    claim: str
+    code: str
+
+
+class ResetClaimIn(BaseModel):
+    claim: str = Field(min_length=1, max_length=200)
+
+
+class ResetAskStatus(BaseModel):
+    """Where an ask stands. `token` comes once, with "approved": the reset
+    link's token (`/reset/<token>`)."""
+
+    status: Literal["pending", "approved", "declined"]
+    token: str | None = None
+
+
+class ResetAskRead(BaseModel):
+    """A waiting ask, as the admins see it under Approvals."""
+
+    id: int
+    user_id: int
+    username: str
+    display_name: str
+    code: str
+    created_at: datetime
+
+
 class ResetIn(BaseModel):
     token: str = Field(min_length=1, max_length=200)
     new_password: str = Field(min_length=1, max_length=200)

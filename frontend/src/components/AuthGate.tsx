@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../lib/api'
 import { setSession } from '../lib/auth'
 import { messages, useT } from '../lib/i18n'
 import { slideClass, useSlideDir } from '../lib/motion'
+import { clearResetAsk, loadResetAsk, saveResetAsk, type StoredResetAsk } from '../lib/resetAsk'
 import { LanguageSwitch } from './LanguageSwitch'
 import { Logo } from './Logo'
 import { SegThumb } from './Segmented'
@@ -22,7 +23,8 @@ const MODES: Mode[] = ['in', 'up']
  * before the menu, exactly as they used to meet the name sheet.
  *
  * With `resetToken` (the app was opened on an admin's `/reset/<token>` link)
- * it is the "set a new password" card instead (`ResetCard`).
+ * it is the "set a new password" card instead (`ResetCard`). *Forgot your
+ * password?* opens `ForgotCard`, which asks the admins for a new one.
  */
 export function AuthGate({ resetToken = null, onResetDone }: { resetToken?: string | null; onResetDone?: () => void }) {
   if (resetToken) return <ResetCard token={resetToken} onDone={onResetDone ?? (() => undefined)} />
@@ -30,9 +32,16 @@ export function AuthGate({ resetToken = null, onResetDone }: { resetToken?: stri
 }
 
 function SignIn() {
+  // An ask still open from an earlier visit opens straight on its card.
+  const [forgot, setForgot] = useState(() => loadResetAsk() !== null)
+  const [login, setLogin] = useState('')
+  if (forgot) return <ForgotCard username={login.trim()} onBack={() => setForgot(false)} />
+  return <SignInForm login={login} setLogin={setLogin} onForgot={() => setForgot(true)} />
+}
+
+function SignInForm({ login, setLogin, onForgot }: { login: string; setLogin: (v: string) => void; onForgot: () => void }) {
   const t = useT()
   const [mode, setMode] = useState<Mode>('in')
-  const [login, setLogin] = useState('')
   const [username, setUsername] = useState('')
   const [phone, setPhone] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -190,8 +199,186 @@ function SignIn() {
           <button type="button" className="link auth-switch" onClick={() => pick(mode === 'in' ? 'up' : 'in')}>
             {mode === 'in' ? t.auth.switchToSignUp : t.auth.switchToSignIn}
           </button>
-          {mode === 'in' && <p className="hint auth-forgot">{t.auth.forgot}</p>}
+          {mode === 'in' && (
+            <button type="button" className="link auth-switch auth-forgot" onClick={onForgot}>
+              {t.auth.forgot}
+            </button>
+          )}
         </form>
+      </div>
+
+      <LanguageSwitch compact />
+    </div>
+  )
+}
+
+/** How often a waiting ask looks whether an admin has decided. */
+const ASK_POLL_MS = 10_000
+
+type AskState = 'form' | 'pending' | 'approved' | 'declined' | 'gone'
+
+/**
+ * Forgot the password: ask the admins for a new one. The ask goes to every
+ * admin (a push, and *Approvals*); this card then waits, showing a four-digit
+ * code the admin may ask to hear before approving. Once an admin approves,
+ * the card's button opens the ordinary reset card on a one-time link. The ask
+ * lives in localStorage (lib/resetAsk.ts), so the app can be closed meanwhile.
+ */
+function ForgotCard({ username: typed, onBack }: { username: string; onBack: () => void }) {
+  const t = useT()
+  const [ask, setAsk] = useState<StoredResetAsk | null>(loadResetAsk)
+  const [username, setUsername] = useState(ask?.username ?? typed)
+  const [state, setState] = useState<AskState>(ask ? (ask.token ? 'approved' : 'pending') : 'form')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const check = useCallback(async (current: StoredResetAsk) => {
+    try {
+      const answer = await api.resetAskStatus(current.claim)
+      if (answer.status === 'approved' && answer.token) {
+        const next = { ...current, token: answer.token }
+        saveResetAsk(next)
+        setAsk(next)
+        setState('approved')
+      } else if (answer.status === 'declined') {
+        clearResetAsk()
+        setState('declined')
+      }
+    } catch (err) {
+      // Gone (withdrawn elsewhere, replaced by a newer ask, a day old); a
+      // network hiccup just waits for the next look.
+      if (err instanceof ApiError && err.status === 404) {
+        clearResetAsk()
+        setState('gone')
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (state !== 'pending' || !ask) return
+    // Data fetching: the state update happens after the await, not synchronously.
+    // oxlint-disable-next-line react/set-state-in-effect
+    void check(ask)
+    const id = setInterval(() => void check(ask), ASK_POLL_MS)
+    const onBackAgain = () => {
+      if (document.visibilityState === 'visible') void check(ask)
+    }
+    document.addEventListener('visibilitychange', onBackAgain)
+    window.addEventListener('focus', onBackAgain)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onBackAgain)
+      window.removeEventListener('focus', onBackAgain)
+    }
+  }, [state, ask, check])
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const name = username.trim()
+    if (!name || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      const made = await api.askReset(name)
+      const next = { username: name, claim: made.claim, code: made.code }
+      saveResetAsk(next)
+      setAsk(next)
+      setState('pending')
+    } catch (err) {
+      const m = messages()
+      setError(err instanceof ApiError ? m.apiError(err.message) : m.common.somethingWrong)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function withdraw() {
+    if (ask) api.withdrawResetAsk(ask.claim).catch(() => undefined)
+    clearResetAsk()
+    onBack()
+  }
+
+  function again() {
+    clearResetAsk()
+    setAsk(null)
+    setState('form')
+  }
+
+  function back() {
+    if (state !== 'pending') clearResetAsk()
+    onBack()
+  }
+
+  function openReset() {
+    if (!ask?.token) return
+    clearResetAsk()
+    // The app reads `/reset/<token>` on start (App.tsx, readResetToken).
+    window.location.assign(`/reset/${encodeURIComponent(ask.token)}`)
+  }
+
+  return (
+    <div className="auth">
+      <div className="auth-card card">
+        <h1 className="auth-title">
+          <Logo /> Karpul
+        </h1>
+        <p className="auth-tagline">{t.forgot.title}</p>
+
+        {state === 'form' && (
+          <form className="auth-form" onSubmit={submit}>
+            <label className="field">
+              <span className="field-label">{t.auth.username}</span>
+              <input
+                autoFocus
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                maxLength={200}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </label>
+            {error && <p className="error">{error}</p>}
+            <button type="submit" className="btn btn-primary btn-block" disabled={busy || !username.trim()}>
+              {busy ? t.auth.working : t.forgot.submit}
+            </button>
+          </form>
+        )}
+
+        {state === 'pending' && ask && (
+          <div className="auth-form" role="status">
+            <p>{t.forgot.waiting}</p>
+            <p className="forgot-code" aria-label={t.forgot.codeLabel(ask.code)}>
+              {ask.code}
+            </p>
+            <p className="hint">{t.forgot.codeHint}</p>
+            <button type="button" className="btn btn-soft btn-block" onClick={withdraw}>
+              {t.forgot.withdraw}
+            </button>
+          </div>
+        )}
+
+        {state === 'approved' && (
+          <div className="auth-form" role="status">
+            <p>{t.forgot.approved}</p>
+            <button type="button" className="btn btn-primary btn-block" autoFocus onClick={openReset}>
+              {t.reset.title}
+            </button>
+          </div>
+        )}
+
+        {(state === 'declined' || state === 'gone') && (
+          <div className="auth-form" role="status">
+            <p className="error">{state === 'declined' ? t.forgot.declined : t.forgot.gone}</p>
+            <button type="button" className="btn btn-soft btn-block" onClick={again}>
+              {t.forgot.again}
+            </button>
+          </div>
+        )}
+
+        <button type="button" className="link auth-switch" onClick={back}>
+          {t.reset.backToSignIn}
+        </button>
       </div>
 
       <LanguageSwitch compact />

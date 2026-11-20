@@ -38,8 +38,11 @@ import type {
   RideMessage,
   RideRequest,
   RideRequestInput,
+  ResetAsk,
+  ResetAskStatus,
   Road,
   SeatNotice,
+  WaitingResetAsk,
 } from './types'
 
 const BASE = import.meta.env.VITE_API_URL ?? ''
@@ -255,6 +258,15 @@ export const api = {
   resetInfo: (token: string) =>
     request<{ username: string; display_name: string }>(`/api/auth/reset/${encodeURIComponent(token)}`, {}, { anonymous: true }),
 
+  /** Forgot the password: ask the admins for a new one (signed out). Keep `claim`; it is shown only now. */
+  askReset: (username: string) =>
+    request<ResetAsk>('/api/auth/reset-requests', json('POST', { username }), { anonymous: true }),
+  /** Where that ask stands; "approved" brings the reset link's token, once. 404 once it is gone. */
+  resetAskStatus: (claim: string) =>
+    request<ResetAskStatus>('/api/auth/reset-requests/status', json('POST', { claim }), { anonymous: true }),
+  withdrawResetAsk: (claim: string) =>
+    request<void>('/api/auth/reset-requests/withdraw', json('POST', { claim }), { anonymous: true }),
+
   /** Set a new password with a reset link; signs this browser in. */
   resetPassword: (token: string, newPassword: string) =>
     request<Session>('/api/auth/reset', json('POST', { token, new_password: newPassword }), { anonymous: true }),
@@ -402,6 +414,10 @@ export const api = {
 
   users: () => request<AdminUser[]>('/api/admin/users'),
   approvals: () => request<Ride[]>('/api/admin/approvals'),
+  /** The "forgot password" asks waiting for an admin (Approvals). */
+  resetAsks: () => request<WaitingResetAsk[]>('/api/admin/reset-requests'),
+  decideResetAsk: (id: number, approve: boolean) =>
+    request<void>(`/api/admin/reset-requests/${id}/${approve ? 'approve' : 'decline'}`, { method: 'POST' }),
   /** A passenger's answer to the driver's change (`Ride.proposal`). */
   answerChange: (rideId: number, agree: boolean) =>
     request<Ride>(`/api/rides/${rideId}/proposal/${agree ? 'agree' : 'decline'}`, { method: 'POST' }),

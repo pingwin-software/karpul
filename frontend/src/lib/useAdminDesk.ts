@@ -4,12 +4,14 @@ import { api } from './api'
 import type { Confirm } from './confirm'
 import { errMsg } from './errors'
 import { useT } from './i18n'
-import type { CorporateCarInput, Ride } from './types'
+import type { CorporateCarInput, Ride, WaitingResetAsk } from './types'
 
 interface Deps {
   isAdmin: boolean
   /** The board's rides: a new ask arrives as a live ride event, so the counts are asked again when they change. */
   rides: readonly Ride[]
+  /** Bumped when a "forgot password" ask comes, goes or is decided (lib/useBoard.ts). */
+  resetsTick: number
   /** The board's busy wrapper for one ride: toasts and reloads on failure. */
   withBusy: (id: number, fn: () => Promise<void>) => Promise<void>
   upsertRide: (ride: Ride) => void
@@ -23,14 +25,17 @@ interface Deps {
 /**
  * The admin's desk on the board: the shared-car rides waiting for approval
  * (components/Approvals.tsx), the own cars' plates the Beograd garage still
- * needs (components/GarageList.tsx), and the car pool's controls on the
- * Shared cars sheet. `waiting` and `plates` are the counts on the drawer's
+ * needs (components/GarageList.tsx), the "forgot password" asks (also under
+ * Approvals), and the car pool's controls on the Shared cars sheet. `waiting`
+ * (rides and asks together) and `plates` are the counts on the drawer's
  * items and the dot on the ☰; `tick` tells an open sheet to reload after a
  * decision. For anyone else the counts stay 0 and nothing is asked.
  */
-export function useAdminDesk({ isAdmin, rides, withBusy, upsertRide, removeRides, reloadCars, load, notice, setConfirm }: Deps) {
+export function useAdminDesk({ isAdmin, rides, resetsTick, withBusy, upsertRide, removeRides, reloadCars, load, notice, setConfirm }: Deps) {
   const t = useT()
-  const [waiting, setWaiting] = useState(0)
+  const [waitingRides, setWaitingRides] = useState(0)
+  const [resetAsks, setResetAsks] = useState<WaitingResetAsk[]>([])
+  const [resetBusyId, setResetBusyId] = useState<number | null>(null)
   const [plates, setPlates] = useState(0)
   const [tick, setTick] = useState(0)
   const bump = () => setTick((n) => n + 1)
@@ -40,9 +45,17 @@ export function useAdminDesk({ isAdmin, rides, withBusy, upsertRide, removeRides
     if (!isAdmin) return
     api
       .approvals()
-      .then((list) => setWaiting(list.length))
+      .then((list) => setWaitingRides(list.length))
       .catch(() => undefined)
   }, [isAdmin, rides, tick])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    api
+      .resetAsks()
+      .then(setResetAsks)
+      .catch(() => undefined)
+  }, [isAdmin, resetsTick, tick])
 
   useEffect(() => {
     if (!isAdmin) return
@@ -82,6 +95,21 @@ export function useAdminDesk({ isAdmin, rides, withBusy, upsertRide, removeRides
         })
       },
     })
+
+  // --- a "forgot password" ask: the person gets a reset link on the screen they asked from ---
+
+  /** Throws on failure, for the Approvals sheet to show. */
+  const onDecideReset = async (ask: WaitingResetAsk, approve: boolean) => {
+    setResetBusyId(ask.id)
+    try {
+      await api.decideResetAsk(ask.id, approve)
+      setResetAsks((list) => list.filter((a) => a.id !== ask.id))
+      notice(approve ? t.toasts.resetApproved(ask.display_name) : t.toasts.resetDeclined)
+    } finally {
+      setResetBusyId(null)
+      bump()
+    }
+  }
 
   // --- an own car's plate for the Beograd garage: the admin ticks it off ---
 
@@ -150,7 +178,10 @@ export function useAdminDesk({ isAdmin, rides, withBusy, upsertRide, removeRides
   const downloadUsage = useCallback((days: number) => api.downloadCarUsage(days), [])
 
   return {
-    waiting,
+    waiting: waitingRides + resetAsks.length,
+    resetAsks,
+    resetBusyId,
+    onDecideReset,
     plates,
     tick,
     onApprove,

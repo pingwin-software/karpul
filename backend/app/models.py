@@ -297,6 +297,30 @@ class PasswordReset(SQLModel, table=True):
     used_at: datetime | None = None
 
 
+class ResetRequest(SQLModel, table=True):
+    """Someone who forgot their password asking the admins for a new one
+    (POST /api/auth/reset-requests), from the sign-in screen, so signed out.
+
+    The asking browser holds a secret (`claim`, stored here as its SHA-256)
+    that it polls with; an admin approves or declines it under *Approvals*.
+    Once approved, the browser's next poll gets a one-time reset link
+    (`auth.issue_reset`) and this row goes. `code` is four digits shown both to
+    the person asking and to the admin, so the admin can check with them that
+    the ask is really theirs before approving it.
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="appuser.id", index=True)
+    claim_hash: str = Field(unique=True, index=True)
+    code: str
+    # "pending", "approved" or "declined".
+    status: str = Field(default="pending")
+    created_at: datetime = Field(default_factory=utcnow)
+    decided_at: datetime | None = None
+    # The deciding admin's display name, a snapshot.
+    decided_by: str = ""
+
+
 class WaitlistEntry(SQLModel, table=True):
     """Someone waiting for a seat in a full car. When a seat frees up the first
     in line is put in the car and told (services.promote_waitlist)."""

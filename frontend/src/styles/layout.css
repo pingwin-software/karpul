@@ -487,6 +487,29 @@ main,
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+/* A "forgot password" ask: not a button, nothing to open; the code to check
+   with the person reads large. */
+.approval-reset:hover {
+  background: none;
+}
+.approval-code {
+  margin-top: 0.15rem;
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+.approval-resets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.approval-heading {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
 .approval-car,
 .approval-route {
   display: inline-flex;

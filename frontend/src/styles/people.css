@@ -22,6 +22,16 @@
 .auth-forgot {
   text-align: center;
 }
+/* The four digits a "forgot password" ask shows (AuthGate's ForgotCard), for
+   the admin to check before approving. */
+.forgot-code {
+  margin: 0.25rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.25em;
+  text-align: center;
+}
 
 .banner {
   display: flex;
