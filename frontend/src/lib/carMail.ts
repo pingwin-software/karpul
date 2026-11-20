@@ -26,7 +26,8 @@ function srDate(iso: string): string {
   return `${d}.${m}.${y}.`
 }
 
-export const OFFICE_EMAIL = SUPPORT.find((c) => c.topic === 'org')!.email
+const OFFICE = SUPPORT.find((c) => c.topic === 'org')!
+export const OFFICE_EMAIL = OFFICE.email
 export const COMPANY_DOMAIN = 'se.com'
 
 /** A name's words, lower case, no accents, `đ` as `dj`. */
@@ -61,23 +62,29 @@ export function companyEmail(name: string): string {
   return KNOWN_ADDRESSES.get(nameKey(name)) ?? `${nameWords(name).join('.')}@${COMPANY_DOMAIN}`
 }
 
-/** The copy line: every admin but the office itself, each address once. */
-export function adminCopies(people: Person[]): string[] {
+/** The copy line: every admin but the office itself, each address once, with the name it is shown by. */
+export function adminCopies(people: Person[]): { name: string; email: string }[] {
   const seen = new Set([OFFICE_EMAIL.toLowerCase()])
-  const out: string[] = []
+  const out: { name: string; email: string }[] = []
   for (const p of people) {
     if (!p.is_admin) continue
     const e = companyEmail(p.display_name)
     if (seen.has(e.toLowerCase())) continue
     seen.add(e.toLowerCase())
-    out.push(e)
+    out.push({ name: p.display_name, email: e })
   }
   return out
 }
 
+/**
+ * The addresses (`to`, `cc`) only go into the mailto: link; the sheet shows
+ * the names (`toName`, `ccNames`), so nobody's address is on screen.
+ */
 export interface CarMail {
   to: string
   cc: string[]
+  toName: string
+  ccNames: string[]
   subject: string
   body: string
 }
@@ -124,9 +131,12 @@ export function carMail(rides: Ride[], admins: Person[], repeatUntil?: string | 
     '--',
     'Ovaj mejl je automatski napravila aplikacija Karpul (www.karpul.dev).',
   ].join('\n')
+  const copies = adminCopies(admins)
   return {
     to: OFFICE_EMAIL,
-    cc: adminCopies(admins),
+    cc: copies.map((c) => c.email),
+    toName: OFFICE.name,
+    ccNames: copies.map((c) => c.name),
     subject: `Službeni automobil ${first.car_name}, ${srDate(first.ride_date)} (${first.driver_name})`,
     body,
   }

@@ -25,7 +25,7 @@ interface Props {
 
 /**
  * The mail to the office about a shared car (lib/carMail.ts), with every admin
- * in copy, shown as it will go out, and a button that opens it in the driver's
+ * in copy, shown as it will go out (by name: the addresses only go into the link), and a button that opens it in the driver's
  * mail app. The app cannot see that app, so the driver says when it went out
  * (*I sent it*, or *I already sent it* for a mail written by hand), which is
  * the office mail's record (`Ride.office_mailed_at`). Right after taking the
@@ -113,11 +113,11 @@ export function CarMailSheet({ rides, repeatUntil, locked = false, onSent, onErr
         <div className="car-mail-preview">
           <dl className="car-mail-head">
             <dt>{t.carMail.to}</dt>
-            <dd>{mail.to}</dd>
-            {mail.cc.length > 0 && (
+            <dd>{mail.toName}</dd>
+            {mail.ccNames.length > 0 && (
               <>
                 <dt>{t.carMail.cc}</dt>
-                <dd>{mail.cc.join(', ')}</dd>
+                <dd>{mail.ccNames.join(', ')}</dd>
               </>
             )}
           </dl>

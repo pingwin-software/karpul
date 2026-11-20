@@ -8,15 +8,17 @@ export type SupportTopic = 'org' | 'app' | 'car'
 
 export interface SupportContact {
   topic: SupportTopic
+  /** Shown on screen; the address is not, it only goes into the mailto: link. */
+  name: string
   email: string
   /** As people write it; `telHref` makes the link. */
   phone?: string
 }
 
 export const SUPPORT: SupportContact[] = [
-  { topic: 'car', email: 'vladimir.boskovic@se.com', phone: '+381 628867861' },
-  { topic: 'app', email: 'vladimir.batocanin@se.com', phone: '+381606679411' },
-  { topic: 'org', email: 'vesna.ardeljan@non.se.com' },
+  { topic: 'car', name: 'Vladimir Bošković', email: 'vladimir.boskovic@se.com', phone: '+381 628867861' },
+  { topic: 'app', name: 'Vladimir Batoćanin', email: 'vladimir.batocanin@se.com', phone: '+381606679411' },
+  { topic: 'org', name: 'Vesna Ardeljan', email: 'vesna.ardeljan@non.se.com' },
 ]
 
 /** Bugs and ideas go to whoever looks after the app. */

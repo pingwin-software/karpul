@@ -55,7 +55,8 @@ button, Escape, backdrop or back; `useBackClose` keeps the entry), and a reload 
 `name.surname@se.com` from the display name (`companyEmail`: lower case, no accents, `đ` as `dj`), unless the
 name is in `KNOWN_ADDRESSES` (any word order): Vesna there is the office's own address, so as an admin she is
 not copied twice. Account emails play no part, so nobody has to give one. `GET /api/people` carries `is_admin`
-for this and no email. The mail is always Serbian whatever the app language, the date is in the subject, and its foot says
+for this and no email. The sheet shows the To and Cc lines by name (`toName`, `ccNames`): the addresses
+only go into the `mailto:` link, so none is ever on screen. The mail is always Serbian whatever the app language, the date is in the subject, and its foot says
 the app wrote it.
 
 **Which mails went out** (`Ride.office_mailed_at`, an `ADDED_COLUMNS` column; `POST /api/rides/{id}/office-mail` in
