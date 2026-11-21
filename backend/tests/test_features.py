@@ -463,9 +463,12 @@ def test_impact_splits_each_saved_trip_so_the_team_adds_up():
 
     from app.services import impact
 
-    ride = SimpleNamespace(distance_km=90, driver_id=1, bookings=[object(), object()])
+    def seat():
+        return SimpleNamespace(no_show=False)
+
+    ride = SimpleNamespace(distance_km=90, driver_id=1, bookings=[seat(), seat()])
     lone = SimpleNamespace(distance_km=50, driver_id=1, bookings=[])
-    blank = SimpleNamespace(distance_km=None, driver_id=1, bookings=[object()])
+    blank = SimpleNamespace(distance_km=None, driver_id=1, bookings=[seat()])
     rides = [ride, lone, blank]
     assert impact(rides)["car_km_avoided"] == 180
     assert impact(rides, 1)["car_km_avoided"] == 90  # the driver: half of two trips

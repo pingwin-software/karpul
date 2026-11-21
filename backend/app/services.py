@@ -622,6 +622,12 @@ FUEL_L_PER_KM = 0.07
 """And what it burns: 7 l per 100 km."""
 
 
+def turned_up(ride: Ride) -> list[Booking]:
+    """The passengers who rode: everyone in the car but those the driver
+    marked as not having turned up."""
+    return [b for b in ride.bookings if not b.no_show]
+
+
 def impact(rides: list[Ride], user_id: int | None = None, fuel_price: float | None = None) -> dict:
     """The car trips the rides took off the road, and what they would have put out.
 
@@ -630,14 +636,15 @@ def impact(rides: list[Ride], user_id: int | None = None, fuel_price: float | No
     the driver and the passenger, so adding up everyone's figure gives the
     team's and nobody's trip is counted twice; without it, the whole of it.
     Rides with no distance count 0, so this is a floor, like *km shared*.
+    A passenger who did not turn up (`Booking.no_show`) is no car left at home.
     """
     km = 0.0
     for r in rides:
         dist = r.distance_km or 0
         if user_id is None:
-            km += dist * len(r.bookings)
+            km += dist * len(turned_up(r))
         elif r.driver_id == user_id:
-            km += dist * len(r.bookings) / 2
+            km += dist * len(turned_up(r)) / 2
         else:
             km += dist / 2
     return {
@@ -660,7 +667,12 @@ def person_stats(session: Session, user: User, today: date | None = None) -> dic
     from .fleet import price_on, setting
 
     today = today or date.today()
-    rides = rides_of(session, user, date(2000, 1, 1), today)
+    # A ride this person had a seat in and did not turn up for is not theirs.
+    rides = [
+        r
+        for r in rides_of(session, user, date(2000, 1, 1), today)
+        if not any(b.no_show and b.passenger_id == user.id for b in r.bookings)
+    ]
     month_start = today.replace(day=1)
     price = price_on(session, today, setting(session, "allowance_fuel"))
 
@@ -670,7 +682,7 @@ def person_stats(session: Session, user: User, today: date | None = None) -> dic
         return {
             "rides_driven": len(driven),
             "rides_ridden": len(ridden),
-            "people_carried": sum(len(r.bookings) for r in driven),
+            "people_carried": sum(len(turned_up(r)) for r in driven),
             "km_shared": round(sum(r.distance_km or 0 for r in subset), 1),
             **impact(subset, user.id, price),
         }
@@ -685,7 +697,7 @@ def person_stats(session: Session, user: User, today: date | None = None) -> dic
             "origin": r.origin,
             "destination": r.destination,
             "role": "driver" if r.driver_id == user.id else "passenger",
-            "passengers": len(r.bookings),
+            "passengers": len(turned_up(r)),
             "distance_km": r.distance_km,
         }
         for r in reversed(rides)

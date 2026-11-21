@@ -9,7 +9,81 @@ import type { DemoKey } from '../lib/whatsNew'
 export function WhatsNewArt({ demo }: { demo: DemoKey }) {
   return (
     <div className={`wn-art wn-${demo}`} aria-hidden="true">
-      {demo === 'forgotPassword' ? <ForgotPasswordDemo /> : demo === 'officeMail' ? <OfficeMailDemo /> : demo === 'carMail' ? <CarMailDemo /> : demo === 'tourSpotlight' ? <TourSpotlightDemo /> : demo === 'noYou' ? <NoYouDemo /> : demo === 'pickAfter' ? <PickAfterDemo /> : demo === 'whoWhere' ? <WhoWhereDemo /> : demo === 'outOfService' ? <OutOfServiceDemo /> : demo === 'fleetUpkeep' ? <FleetUpkeepDemo /> : demo === 'monthSummary' ? <MonthSummaryDemo /> : demo === 'pickColleague' ? <PickColleagueDemo /> : demo === 'impact' ? <ImpactDemo /> : demo === 'addedBy' ? <AddedByDemo /> : demo === 'seatNotice' ? <SeatNoticeDemo /> : demo === 'carWhere' ? <CarWhereDemo /> : demo === 'carBusy' ? <CarBusyDemo /> : demo === 'prefill' ? <PrefillDemo /> : <ConsentDemo />}
+      {demo === 'passkey' ? <PasskeyDemo /> : demo === 'imHere' ? <ImHereDemo /> : demo === 'offlineRides' ? <OfflineRidesDemo /> : demo === 'forgotPassword' ? <ForgotPasswordDemo /> : demo === 'officeMail' ? <OfficeMailDemo /> : demo === 'carMail' ? <CarMailDemo /> : demo === 'tourSpotlight' ? <TourSpotlightDemo /> : demo === 'noYou' ? <NoYouDemo /> : demo === 'pickAfter' ? <PickAfterDemo /> : demo === 'whoWhere' ? <WhoWhereDemo /> : demo === 'outOfService' ? <OutOfServiceDemo /> : demo === 'fleetUpkeep' ? <FleetUpkeepDemo /> : demo === 'monthSummary' ? <MonthSummaryDemo /> : demo === 'pickColleague' ? <PickColleagueDemo /> : demo === 'impact' ? <ImpactDemo /> : demo === 'addedBy' ? <AddedByDemo /> : demo === 'seatNotice' ? <SeatNoticeDemo /> : demo === 'carWhere' ? <CarWhereDemo /> : demo === 'carBusy' ? <CarBusyDemo /> : demo === 'prefill' ? <PrefillDemo /> : <ConsentDemo />}
+    </div>
+  )
+}
+
+const Tick = () => (
+  <svg viewBox="0 0 16 16" width="14" height="14">
+    <path d="M4 8.5 7 11l5-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+/** The sign-in card: the password field fades, the passkey button is pressed, a tick lets you in. */
+function PasskeyDemo() {
+  return (
+    <div className="wn-card wn-passkey">
+      <div className="wn-field wn-passkey-password">
+        <span className="wn-field-text">••••••••</span>
+      </div>
+      <div className="wn-passkey-btn">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="8" cy="15" r="4" />
+          <path d="m11 12 8-8m-3 3 2.5 2.5M14 9l2 2" />
+        </svg>
+        <span className="wn-line" />
+      </div>
+      <div className="wn-pax">
+        <span className="wn-pax-dot wn-passkey-in">
+          <Tick />
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/** A passenger's row: the button is pressed and turns into "at the pickup point" for the whole car. */
+function ImHereDemo() {
+  return (
+    <div className="wn-card wn-here">
+      <div className="wn-here-row">
+        <span className="wn-pax-avatar">MD</span>
+        <span className="wn-here-text">
+          <span className="wn-line wn-line-label" />
+          <span className="wn-here-tag">
+            <span className="wn-here-pin" />
+            <span className="wn-line" />
+          </span>
+        </span>
+      </div>
+      <div className="wn-here-btn">
+        <span className="wn-here-pin" />
+        <span className="wn-line" />
+      </div>
+    </div>
+  )
+}
+
+/** The signal drops, and your next rides stay on the card all the same. */
+function OfflineRidesDemo() {
+  return (
+    <div className="wn-card wn-offline">
+      <div className="wn-offline-head">
+        <span className="wn-offline-bars">
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="wn-line wn-line-label" />
+      </div>
+      {['07:30', '16:15'].map((time, i) => (
+        <div key={time} className="wn-offline-ride" style={{ ['--i' as string]: i }}>
+          <span className="wn-busy-time">{time}</span>
+          <span className="wn-line" />
+        </div>
+      ))}
     </div>
   )
 }

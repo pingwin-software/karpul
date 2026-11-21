@@ -10,13 +10,14 @@ The three doors (sign-in, registration, a reset link) are throttled in
 `app/ratelimit.py`.
 """
 
+import logging
 import secrets
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session, col, delete, select
 
-from .. import ratelimit
+from .. import passkeys, ratelimit
 from ..admin import admin_ids, is_admin
 from ..auth import (
     CredsDep,
@@ -36,11 +37,14 @@ from ..auth import (
 )
 from ..database import get_session, get_write_session
 from ..events import photos_changed, resets_changed, ride_saved
-from ..models import ProfilePhoto, ResetRequest, User, utcnow
+from ..models import Passkey, ProfilePhoto, ResetRequest, User, utcnow
 from ..push import notify
 from ..schemas import (
     AuthOut,
     LoginIn,
+    PasskeyLoginIn,
+    PasskeyRead,
+    PasskeyRegisterIn,
     ProfileUpdate,
     RegisterIn,
     ResetAskIn,
@@ -54,6 +58,7 @@ from ..schemas import (
 from ..services import claim_rows, new_calendar_token, norm_name, rename_person
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+log = logging.getLogger("karpul.auth")
 
 SessionDep = Annotated[Session, Depends(get_session)]
 WriteSessionDep = Annotated[Session, Depends(get_write_session)]
@@ -249,6 +254,131 @@ def update_me(payload: ProfileUpdate, session: WriteSessionDep, creds: CredsDep)
     if renamed_photo:
         photos_changed()
     return user_read(user)
+
+
+# --- passkeys (app/passkeys.py) -------------------------------------------------
+
+
+def _host(request: Request) -> str:
+    return request.headers.get("host", "")
+
+
+def _own_passkeys(session: Session, user: User) -> list[Passkey]:
+    return list(session.exec(select(Passkey).where(Passkey.user_id == user.id).order_by(col(Passkey.id))).all())
+
+
+@router.get("/passkeys", response_model=list[PasskeyRead])
+def list_passkeys(session: SessionDep, creds: CredsDep):
+    """The passkeys this account signs in with."""
+    return _own_passkeys(session, require_user(session, creds))
+
+
+@router.post("/passkeys/options")
+def passkey_options(request: Request, session: WriteSessionDep, creds: CredsDep):
+    """What the browser needs to make a passkey for this account: a fresh
+    challenge, who the site and the person are, and the passkeys the account
+    already has (the same device is not asked twice)."""
+    user = require_user(session, creds)
+    existing = _own_passkeys(session, user)
+    if len(existing) >= passkeys.MAX_PASSKEYS:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"An account holds {passkeys.MAX_PASSKEYS} passkeys at most; remove one first")
+    return passkeys.creation_options(
+        host=_host(request),
+        user_id=user.id,  # type: ignore[arg-type]
+        username=user.username,
+        display_name=user.display_name,
+        existing=[p.credential_id for p in existing],
+    )
+
+
+@router.post("/passkeys", response_model=PasskeyRead, status_code=status.HTTP_201_CREATED)
+def add_passkey(payload: PasskeyRegisterIn, request: Request, session: WriteSessionDep, creds: CredsDep):
+    """Keep the passkey the browser just made, once it checks out."""
+    user = require_user(session, creds)
+    try:
+        count = passkeys.verify_registration(
+            credential_id=payload.id,
+            client_data=payload.client_data,
+            authenticator_data=payload.authenticator_data,
+            public_key=payload.public_key,
+            user_id=user.id,  # type: ignore[arg-type]
+            host=_host(request),
+        )
+    except passkeys.PasskeyError as exc:
+        log.info("passkey of %s refused: %s", user.username, exc)
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "That passkey could not be added; try again") from exc
+    if session.exec(select(Passkey).where(Passkey.credential_id == payload.id)).first() is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "That passkey is already added")
+    if len(_own_passkeys(session, user)) >= passkeys.MAX_PASSKEYS:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"An account holds {passkeys.MAX_PASSKEYS} passkeys at most; remove one first")
+    row = Passkey(
+        user_id=user.id,  # type: ignore[arg-type]
+        credential_id=payload.id,
+        public_key=payload.public_key,
+        sign_count=count,
+        name=payload.name,
+    )
+    session.add(row)
+    session.commit()
+    session.refresh(row)
+    return row
+
+
+@router.delete("/passkeys/{passkey_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_passkey(passkey_id: int, session: WriteSessionDep, creds: CredsDep):
+    """Forget a passkey (a phone sold or lost): it signs nobody in any more.
+    The browsers already signed in stay so; *Sign out everywhere else* is for those."""
+    user = require_user(session, creds)
+    row = session.get(Passkey, passkey_id)
+    if row is None or row.user_id != user.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Passkey not found")
+    session.delete(row)
+    session.commit()
+
+
+@router.post("/passkey-login/options")
+def passkey_login_options(request: Request):
+    """A challenge for signing in with a passkey. No username: the
+    authenticator offers the passkeys it holds for this site."""
+    ip = f"ip:{ratelimit.client_ip(request)}"
+    ratelimit.login_failures_by_ip.check(ip)
+    ratelimit.passkey_challenges.check(ip)
+    ratelimit.passkey_challenges.hit(ip)
+    return passkeys.request_options(host=_host(request))
+
+
+PASSKEY_REFUSED = "That passkey did not work here; sign in with your password"
+
+
+@router.post("/passkey-login", response_model=AuthOut)
+def passkey_login(payload: PasskeyLoginIn, request: Request, session: WriteSessionDep):
+    """Sign in with a passkey: the credential says whose it is, the signature
+    that it is them. A failure counts against the address like a wrong password."""
+    ip = f"ip:{ratelimit.client_ip(request)}"
+    ratelimit.login_failures_by_ip.check(ip)
+    row = session.exec(select(Passkey).where(Passkey.credential_id == payload.id)).first()
+    user = session.get(User, row.user_id) if row is not None else None
+    try:
+        if row is None or user is None:
+            raise passkeys.PasskeyError("unknown credential")
+        count = passkeys.verify_assertion(
+            client_data=payload.client_data,
+            authenticator_data=payload.authenticator_data,
+            signature=payload.signature,
+            public_key=row.public_key,
+            sign_count=row.sign_count,
+            host=_host(request),
+        )
+    except passkeys.PasskeyError as exc:
+        log.info("passkey sign-in refused: %s", exc)
+        ratelimit.login_failures_by_ip.hit(ip)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, PASSKEY_REFUSED) from exc
+    if user.disabled:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "This account is switched off. Ask an admin")
+    row.sign_count = count
+    row.last_used_at = utcnow()
+    session.add(row)
+    return _signed_in(session, user)
 
 
 # --- password reset links (issued by an admin, routers/admin.py) --------------

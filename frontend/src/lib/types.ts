@@ -67,7 +67,20 @@ export interface Booking {
   passenger_name: string
   /** Where they get in: "" is the ride's origin, otherwise one of its stops. */
   pickup: string
+  /** When they said "I'm at the pickup point", on the day of the ride. */
+  here_at?: string | null
+  /** The driver's word, after the ride left, that they did not turn up. */
+  no_show?: boolean
   created_at: string
+}
+
+/** A passkey in its owner's list (backend: app/passkeys.py). */
+export interface Passkey {
+  id: number
+  /** The device it was made on, as far as the browser let on; may be "". */
+  name: string
+  created_at: string
+  last_used_at: string | null
 }
 
 /** The fields a driver's change touches (backend: rides.CONSENT_FIELDS). */

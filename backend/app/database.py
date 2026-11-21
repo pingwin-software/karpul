@@ -147,6 +147,8 @@ ADDED_COLUMNS: list[tuple[str, str, str]] = [
     ("ride", "approval_nudged", "BOOLEAN NOT NULL DEFAULT 0"),
     ("carreport", "issue_status", "VARCHAR NOT NULL DEFAULT ''"),
     ("ride", "office_mailed_at", "DATETIME"),
+    ("booking", "here_at", "DATETIME"),
+    ("booking", "no_show", "BOOLEAN NOT NULL DEFAULT 0"),
 ]
 
 # What a column just added says about the rows that were already there, run

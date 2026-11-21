@@ -742,6 +742,35 @@
   font-weight: 600;
 }
 
+/* The passkeys of the account (components/Passkeys.tsx): a name, when it was
+   made and used, and its Remove. */
+.passkey-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.passkey {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.passkey-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.passkey-name {
+  font-weight: 600;
+}
+.passkey-when {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 /* --- App menu drawer (components/Sidebar.tsx) ---------------------------- */
 /* Slides in from the left edge under the ☰: who you are, then the items in
    collapsible groups (one heading each), the settings folded at the foot. */

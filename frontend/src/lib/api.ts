@@ -24,6 +24,7 @@ import type {
   CorporateCarInput,
   KnownPlace,
   MapConfig,
+  Passkey,
   PersonStats,
   ScreenUsage,
   Photo,
@@ -229,6 +230,16 @@ export const api = {
   login: (login: string, password: string) =>
     request<Session>('/api/auth/login', json('POST', { login, password }), { anonymous: true }),
 
+  // Passkeys (lib/passkeys.ts turns these into `navigator.credentials` calls).
+  passkeys: () => request<Passkey[]>('/api/auth/passkeys'),
+  passkeyOptions: <T>() => request<T>('/api/auth/passkeys/options', { method: 'POST' }),
+  addPasskey: (made: { id: string; client_data: string; authenticator_data: string; public_key: string; name: string }) =>
+    request<Passkey>('/api/auth/passkeys', json('POST', made)),
+  removePasskey: (id: number) => request<void>(`/api/auth/passkeys/${id}`, { method: 'DELETE' }),
+  passkeyLoginOptions: <T>() => request<T>('/api/auth/passkey-login/options', { method: 'POST' }, { anonymous: true }),
+  passkeyLogin: (got: { id: string; client_data: string; authenticator_data: string; signature: string }) =>
+    request<Session>('/api/auth/passkey-login', json('POST', got), { anonymous: true }),
+
   /** Tell the server to forget this browser's token. The caller clears it locally. */
   logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
 
@@ -358,6 +369,12 @@ export const api = {
   messages: (rideId: number) => request<RideMessage[]>(`/api/rides/${rideId}/messages`),
 
   postMessage: (rideId: number, body: string) => request<RideMessage>(`/api/rides/${rideId}/messages`, json('POST', { body })),
+  /** "I'm at the pickup point", and taking it back. */
+  atPickup: (rideId: number, bookingId: number, here: boolean) =>
+    request<Ride>(`/api/rides/${rideId}/bookings/${bookingId}/here`, { method: here ? 'POST' : 'DELETE' }),
+  /** The driver's word, after the ride left, that a passenger did not turn up. */
+  setNoShow: (rideId: number, bookingId: number, noShow: boolean) =>
+    request<Ride>(`/api/rides/${rideId}/bookings/${bookingId}/no-show`, json('PUT', { no_show: noShow })),
   runningLate: (rideId: number, minutes: number) => request<RideMessage>(`/api/rides/${rideId}/late`, json('POST', { minutes })),
 
   deleteMessage: (rideId: number, messageId: number) =>

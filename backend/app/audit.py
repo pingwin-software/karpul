@@ -23,6 +23,7 @@ ACTIONS = (
     "ride_confirmed",  # a ride from the shared car's paper log, confirmed for its driver
     "seat_added",  # someone put in someone else's car
     "seat_removed",
+    "seat_no_show",  # a passenger marked as not having turned up, or that taken back
     "car_added",
     "car_edited",
     "car_removed",
