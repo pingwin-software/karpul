@@ -15,7 +15,7 @@ admin password. Pushes are addressed by account (`notify(session, user_ids, ...)
 a seat with no account is skipped). Who is told: the driver when someone gets in or out on their own, a passenger
 when the driver takes them out, the passengers when the ride moves (date, times or route, not a
 note) or is removed, the first in line when a seat frees up, the car when someone writes in its
-thread, the passengers when the driver is running late, the drivers who drive that way when someone
+thread, the passengers when the driver is running late, the driver when a passenger says they are at the pickup point (`passenger_here`), a passenger the driver marked as not having turned up (`no_show`), the drivers who drive that way when someone
 asks for a ride, a requester when a driver answers, and everyone in the car before departure (`app/reminders.py`,
 a minute-by-minute task started in the lifespan): **each person picks the lead**, 15, 30 or 60
 minutes (`User.remind_before`, `LEAD_CHOICES`, in `GET/PUT /api/push/preferences` as

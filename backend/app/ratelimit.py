@@ -82,6 +82,8 @@ def client_ip(request: Request) -> str:
 # Wrong passwords: 10 per account and 30 per address in a quarter of an hour.
 login_failures_by_account = Limiter(10, 15 * 60)
 login_failures_by_ip = Limiter(30, 15 * 60)
+# Challenges for a passkey sign-in, per address: each is a tap on the button.
+passkey_challenges = Limiter(60, 15 * 60)
 # New accounts: 10 an hour from one address is a whole team signing up at once.
 # The end-to-end tests register more than that from one address in a minute,
 # so the figure is an environment knob (frontend/playwright.config.ts).
@@ -106,6 +108,8 @@ WRITES = {
     "message": Limiter(20, 60),
     # "Running late" pushes every passenger; a few taps a day is the most.
     "late": Limiter(6, 60 * 60),
+    # "I'm at the pickup point" pushes the driver; once is the point of it.
+    "here": Limiter(6, 60 * 60),
     # A new ride (a weekly series is one); admins are not held to it, they
     # may be entering a whole paper log.
     "ride": Limiter(40, 60 * 60),
@@ -133,7 +137,7 @@ def spend(kind: str, user_id: int | None) -> None:
     limiter.hit(key)
 
 
-ALL = (login_failures_by_account, login_failures_by_ip, registrations, reset_attempts, reset_asks_by_ip, reset_asks_by_account, place_lookups, writes_by_token, *WRITES.values())
+ALL = (login_failures_by_account, login_failures_by_ip, passkey_challenges, registrations, reset_attempts, reset_asks_by_ip, reset_asks_by_account, place_lookups, writes_by_token, *WRITES.values())
 
 
 def reset_all() -> None:

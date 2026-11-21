@@ -68,3 +68,18 @@ the foreground. On the server, everything outside `/assets` keeps its name acros
 phone always learns about a new build; `tests/test_frontend.py` pins the headers. In `npm run dev` the
 virtual register module is a stub and no worker runs; index.html carries the Apple meta tags the
 manifest cannot express (`apple-touch-icon`, standalone mode, the app title).
+
+**Your coming rides with no signal** (`lib/offline.ts`, `components/OfflineCard.tsx`). The worker opens the shell
+offline, but the board is the API's and the API is never cached, so the board used to open empty in a garage. Now each
+successful load writes the rides you drive or sit in to localStorage (`karpul.offline.<account id>`), cut down to what
+is needed at a pickup point (`OfflineRide`: when, from where to where, the car, who drives and their number, where you
+get in, who else is in the car). It is merged by range (`mergeSnapshot`): a load of some days replaces what was known of
+those days and leaves the rest, days gone by are dropped, and `App` also fetches the next `OFFLINE_DAYS` (14) once on
+start, so Monday's ride is there on a Sunday. Only a list the server just gave is remembered (`Board.fresh`), never one
+left on screen by a load that failed. When a load gets no answer at all (`Board.offline`, an `isNetworkError`, after
+`loadOnce`'s retries) and there is a copy, `OfflineCard` sits on top of the board: *No connection*, how old the copy is,
+the next three rides, *Call* the driver and *Try again*; the load error's toast is left out then, since the card says
+it. The first load that answers takes the card away. It is read-only on purpose: nothing is queued to send later. The
+copy carries colleagues' names and numbers, so it belongs to one account and `clearSession` (signing out, a dead token)
+removes every account's. On a phone an open ride is a screen over the board and covers the card; the ride on it is
+what was last loaded. Tests: `offline.test.ts`, `e2e/onday.spec.ts` (the network switched off under a loaded board).

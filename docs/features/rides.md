@@ -126,3 +126,19 @@ first and toasts its failure, the shared car's share included, rather than faili
 and the destination are one `.route` box with one focus ring and one `.route-tag` column, the
 way `CarDetail` draws the same journey. Every boolean here is a switch (`.toggle`, and
 `.switch-row` for one that is boxed on its own line with its explanation beside it).
+
+**On the day: at the pickup point, and who did not turn up** (`routers/seats.py`, `lib/pickup.ts`). The passenger's
+twin of *running late*. `POST /api/rides/{id}/bookings/{booking_id}/here` sets `Booking.here_at`: only the passenger,
+for themself, only on the ride's day (409 otherwise); the driver is pushed `passenger_here` with the place (category
+seats), `ratelimit.spend("here")` 6 an hour, a second tap is a no-op, and `DELETE` on the same path takes it back
+without a push. The card shows *At the pickup point* under that passenger to the whole car while it is the ride's day;
+the button itself appears from `HERE_BEFORE_MIN` (30) before departure (`canSayHere`; the card looks at the clock every
+half minute on the day, `useClock`). Another pickup point for the seat, or another day or departure for the ride
+(`apply_edit`), clears it. `PUT .../bookings/{booking_id}/no-show` `{no_show}` is whoever runs the ride (`may_run`)
+saying, once the departure has passed (409 `This ride has not left yet`), that a passenger did not turn up, or taking
+that back; the passenger is pushed `no_show` when marked, and an admin doing it on someone's ride is a `seat_no_show`
+line in the admin's log. The seat stays in the record; what changes is the figures: `services.turned_up(ride)` is the
+passengers who rode, used by `impact`, *people carried* and the history's passenger count, and a ride you did not turn
+up for is not among your own rides in `person_stats`. The mark is in every `RideRead` (`BookingRead.no_show`), but the
+card shows it only to whoever runs the ride and to that passenger (`CarDetail`): it is between them, not the office's.
+Tests: `tests/test_pickup_signals.py`, `pickup.test.ts`, `CarDetail.test.tsx`, `e2e/onday.spec.ts`.

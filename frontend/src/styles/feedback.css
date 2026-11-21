@@ -665,3 +665,61 @@
   font-style: italic;
   color: var(--muted);
 }
+
+/* --- No connection: your coming rides as last seen (components/OfflineCard.tsx) --- */
+.offline-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+  padding: 0.9rem 1rem;
+  border-left: 3px solid #d97706;
+}
+.offline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.offline-when {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.offline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.offline-ride {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.offline-route {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+.offline-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.offline-line svg {
+  flex: none;
+  color: var(--green);
+}
+.offline-call {
+  align-self: flex-start;
+  margin-top: 0.3rem;
+}

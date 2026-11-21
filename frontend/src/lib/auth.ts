@@ -109,6 +109,16 @@ export function setUser(user: AuthUser) {
 /** Forget the session in this browser. The caller tells the server separately. */
 export function clearSession() {
   setSession(null)
+  // The rides kept for when there is no signal (lib/offline.ts, which would
+  // import this file back) carry colleagues' names and numbers: they go too.
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i)
+      if (k?.startsWith('karpul.offline.')) localStorage.removeItem(k)
+    }
+  } catch {
+    /* nothing kept, nothing to drop */
+  }
 }
 
 function subscribe(fn: () => void) {

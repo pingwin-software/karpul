@@ -8,6 +8,7 @@ import { loadPhotos, squarePhoto, usePhoto, type Crop } from '../lib/photos'
 import { forgetPushHere } from '../lib/push'
 import type { ProfilePatch } from '../lib/types'
 import { Avatar } from './Avatar'
+import { Passkeys } from './Passkeys'
 import { PhotoCropper } from './PhotoCropper'
 import { Sheet } from './Sheet'
 
@@ -254,6 +255,8 @@ export function AccountSheet({ user, onRenamed, onSaved, onNotice, onClose }: Pr
       <p className="hint">{t.account.passwordHint}</p>
 
       {error && <p className="error">{error}</p>}
+
+      <Passkeys onNotice={onNotice} />
 
       <h3 className="account-section">{t.account.otherBrowsers}</h3>
       <button type="button" className="btn btn-soft btn-block" disabled={busy} onClick={() => void signOutOthers()}>

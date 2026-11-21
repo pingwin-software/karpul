@@ -3,6 +3,7 @@ import { api, ApiError } from '../lib/api'
 import { setSession } from '../lib/auth'
 import { messages, useT } from '../lib/i18n'
 import { slideClass, useSlideDir } from '../lib/motion'
+import { passkeyProblem, passkeysSupported, signInWithPasskey } from '../lib/passkeys'
 import { clearResetAsk, loadResetAsk, saveResetAsk, type StoredResetAsk } from '../lib/resetAsk'
 import { LanguageSwitch } from './LanguageSwitch'
 import { Logo } from './Logo'
@@ -83,6 +84,20 @@ function SignInForm({ login, setLogin, onForgot }: { login: string; setLogin: (v
     } catch (err) {
       const m = messages()
       setError(err instanceof ApiError ? m.apiError(err.message) : m.common.somethingWrong)
+      setBusy(false)
+    }
+  }
+
+  /** No username: the device offers the passkeys it holds for this site. */
+  async function withPasskey() {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      setSession(await signInWithPasskey())
+    } catch (err) {
+      const m = messages()
+      setError(passkeyProblem(err, m.passkeys, m.apiError, m.common.somethingWrong))
       setBusy(false)
     }
   }
@@ -196,6 +211,11 @@ function SignInForm({ login, setLogin, onForgot }: { login: string; setLogin: (v
           <button type="submit" className="btn btn-primary btn-block" disabled={!ready || busy}>
             {busy ? t.auth.working : mode === 'in' ? t.auth.submitSignIn : t.auth.submitSignUp}
           </button>
+          {mode === 'in' && passkeysSupported() && (
+            <button type="button" className="btn btn-soft btn-block" disabled={busy} onClick={() => void withPasskey()}>
+              {t.auth.passkey}
+            </button>
+          )}
           <button type="button" className="link auth-switch" onClick={() => pick(mode === 'in' ? 'up' : 'in')}>
             {mode === 'in' ? t.auth.switchToSignUp : t.auth.switchToSignIn}
           </button>

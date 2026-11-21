@@ -37,7 +37,7 @@ import { WhatsNew } from './components/WhatsNew'
 import { forReader, loadSeen, markSeen, unseen, WHATS_NEW, type WhatsNewEntry } from './lib/whatsNew'
 import { SegThumb } from './components/Segmented'
 import { Upcoming } from './components/Upcoming'
-import { api } from './lib/api'
+import { api, isNetworkError } from './lib/api'
 import type { Confirm } from './lib/confirm'
 import { asksApproval, errMsg } from './lib/errors'
 import { useAdminDesk } from './lib/useAdminDesk'
@@ -45,7 +45,8 @@ import { useRideRequests } from './lib/useRideRequests'
 import { newlyAsked, useRideActions } from './lib/useRideActions'
 import { setUser, useSession, type Session } from './lib/auth'
 import { messages, useT } from './lib/i18n'
-import { parseISODate, todayISO } from './lib/dates'
+import { addDays, parseISODate, toISODate, todayISO } from './lib/dates'
+import { loadSnapshot, OFFLINE_DAYS, rememberRides, useOfflineSnapshot } from './lib/offline'
 import { useSlideDir } from './lib/motion'
 import { drives, isMyRequest, MeContext, myBooking, runs, type Me } from './lib/me'
 import { resubscribePush } from './lib/push'
@@ -61,6 +62,7 @@ import { useToast } from './lib/useToast'
 import { useWide } from './lib/useWide'
 import { promptInstall, setInstallDismissed, useInstallDismissed, useInstallMode } from './lib/install'
 import { InstallCard } from './components/InstallCard'
+import { OfflineCard } from './components/OfflineCard'
 import { PushCard } from './components/PushCard'
 import { useCoarsePointer } from './lib/useCoarsePointer'
 import { SeatNotices } from './components/SeatNotices'
@@ -268,8 +270,28 @@ function Board({ session }: { session: Session }) {
   // the Mon-Sun week around the selected day (lib/selection.ts).
   const range = useMemo(() => boardRange(view, selected), [view, selected])
 
-  const onLoadError = useCallback((e: unknown) => setToast({ kind: 'error', text: messages().toasts.couldNotLoad(errMsg(e)) }), [setToast])
+  // With no signal and a copy of your rides to show (OfflineCard), the card says it; otherwise the toast does.
+  const onLoadError = useCallback(
+    (e: unknown) => {
+      if (isNetworkError(e) && loadSnapshot(user.id)) return
+      setToast({ kind: 'error', text: messages().toasts.couldNotLoad(errMsg(e)) })
+    },
+    [setToast, user.id],
+  )
   const board = useBoard(range, { isAdmin, onLoadError })
+  // Your coming rides, kept for when there is no signal (lib/offline.ts):
+  // whatever the board shows, and once on start the next two weeks.
+  const offlineSnapshot = useOfflineSnapshot(user.id)
+  useEffect(() => {
+    if (board.fresh) rememberRides(board.rides, range, me)
+  }, [board.rides, board.fresh, range, me])
+  useEffect(() => {
+    const ahead = { from: todayISO(), to: toISODate(addDays(new Date(), OFFLINE_DAYS)) }
+    api
+      .rides(ahead.from, ahead.to)
+      .then((found) => rememberRides(found, ahead, me))
+      .catch(() => undefined)
+  }, [me])
   // Another account signing in here starts with no seat notices of this one's.
   useEffect(() => clearNotices, [])
   const { rides, requests, cars, adminCars, carStates, reloadCarStates, loading, liveStatus, load, upsertRide, removeRides, upsertRequest, removeRequest, reloadCars, resetsTick } = board
@@ -306,7 +328,7 @@ function Board({ session }: { session: Session }) {
   // What the ride card does (lib/useRideActions.ts): seats, the queue, the
   // route, the driver's switches, removal, asks and answers.
   const actions = useRideActions({ me, rides, withBusy, upsertRide, removeRides, setToast, setConfirm })
-  const { onJoin, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onConfirmRide, onClaim, onLate } = actions
+  const { onJoin, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onConfirmRide, onClaim, onLate, onHere, onNoShow } = actions
 
   const closeForm = useCallback(() => {
     setForm(null)
@@ -510,6 +532,8 @@ function Board({ session }: { session: Session }) {
       onWithdrawChange={(r) => void onWithdrawChange(r)}
       onSuggestTime={onSuggestTime}
       onLate={(r, minutes) => void onLate(r, minutes)}
+      onHere={(r, id, here) => void onHere(r, id, here)}
+      onNoShow={(r, id, noShow) => void onNoShow(r, id, noShow)}
       onGuide={() => show('guide')}
       carState={ride.corporate_car_id !== null ? (carStates?.find((s) => s.car.id === ride.corporate_car_id) ?? null) : null}
       onCarState={() => openSharedCars('cars')}
@@ -699,6 +723,7 @@ function Board({ session }: { session: Session }) {
           </header>
 
           <main>
+            {board.offline && offlineSnapshot && <OfflineCard snapshot={offlineSnapshot} busy={loading} onRetry={() => void load()} />}
             {!wide && seatNotices}
             {!wide && installCard}
             {!wide && pushCard}

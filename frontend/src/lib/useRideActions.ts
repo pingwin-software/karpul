@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from 'react'
 import { api } from './api'
 import type { Confirm } from './confirm'
 import { errMsg } from './errors'
-import { fmtShortDate, fmtTime } from './dates'
+import { firstName, fmtShortDate, fmtTime } from './dates'
 import { useT } from './i18n'
 import { drives, handsOver, isMyBooking, placeInLine, type Me } from './me'
 import type { Person } from './people'
@@ -279,5 +279,20 @@ export function useRideActions({ me, rides, withBusy, upsertRide, removeRides, s
       setToast({ kind: 'ok', text: t.toasts.lateSaid(minutes) })
     })
 
-  return { onJoin, afterLeave, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onConfirmRide, onClaim, onLate }
+  /** A passenger's one tap on the day; the driver is pushed. */
+  const onHere = (ride: Ride, bookingId: number, here: boolean) =>
+    withBusy(ride.id, async () => {
+      upsertRide(await api.atPickup(ride.id, bookingId, here))
+      if (here) setToast({ kind: 'ok', text: t.toasts.hereSaid(firstName(ride.driver_name)) })
+    })
+
+  /** Whoever runs the ride, once it has left: who did not turn up. */
+  const onNoShow = (ride: Ride, bookingId: number, noShow: boolean) =>
+    withBusy(ride.id, async () => {
+      const name = firstName(ride.bookings.find((b) => b.id === bookingId)?.passenger_name ?? '')
+      upsertRide(await api.setNoShow(ride.id, bookingId, noShow))
+      setToast({ kind: 'ok', text: noShow ? t.toasts.noShowSaid(name) : t.toasts.noShowUndone(name) })
+    })
+
+  return { onHere, onNoShow, onJoin, afterLeave, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onConfirmRide, onClaim, onLate }
 }

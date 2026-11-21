@@ -2,21 +2,22 @@
 place on the route. A seat freed goes to the queue (`promote_waitlist`); a
 seat taken ends the passenger's wait elsewhere that day."""
 
+from datetime import date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, col, select
 
-from .. import audit, geo, notices
+from .. import audit, geo, notices, ratelimit
 from ..access import get_ride_or_404, is_driver, may_manage_seats, may_run, on_behalf
 from ..auth import CredsDep, require_user
 from ..database import get_session, get_write_session
 from ..events import request_saved, ride_saved
-from ..models import Booking, Ride, RideRequest, User
+from ..models import Booking, Ride, RideRequest, User, utcnow
 from ..push import notify
 from ..ride_edits import proposal_of, settle, tell_applied
 from ..ride_removal import remove_rides
-from ..schemas import BookingCreate, BookingRead, BookingUpdate, NewStop, Point, RideRead, StopCreate
+from ..schemas import BookingCreate, BookingRead, BookingUpdate, NewStop, NoShowIn, Point, RideRead, StopCreate
 from ..services import (
     account_for_name,
     add_stop,
@@ -155,7 +156,11 @@ def move_booking(
     if not is_person(user, booking.passenger_id, booking.passenger_name) and not may_manage_seats(ride, user):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the passenger or the driver can change this booking")
     added = _new_stop(session, ride, user, payload.pickup, payload.new_stop)
-    booking.pickup = added if added is not None else pickup_or_422(ride, payload.pickup)
+    pickup = added if added is not None else pickup_or_422(ride, payload.pickup)
+    if pickup != booking.pickup:
+        # "I'm here" was said of the old place.
+        booking.here_at = None
+    booking.pickup = pickup
     session.add(booking)
     session.add(ride)
     session.commit()
@@ -163,6 +168,85 @@ def move_booking(
     ride_saved(ride, created=False)
     if added and not is_driver(user, ride):
         notify(session, [ride.driver_id], "stop_added", ride, name=booking.passenger_name, place=added)
+    return to_ride_read_dict(ride)
+
+
+def _booking_or_404(ride: Ride, booking_id: int) -> Booking:
+    booking = next((b for b in ride.bookings if b.id == booking_id), None)
+    if booking is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Booking not found")
+    return booking
+
+
+@router.post("/{ride_id}/bookings/{booking_id}/here", response_model=RideRead)
+def at_pickup(ride_id: int, booking_id: int, session: WriteSessionDep, creds: CredsDep):
+    """The passenger's one tap on the day: "I'm at the pickup point". The
+    driver is pushed `passenger_here` and the card shows it to the whole car.
+    Only the passenger says it, and only for themself."""
+    user = require_user(session, creds)
+    ride = get_ride_or_404(session, ride_id)
+    booking = _booking_or_404(ride, booking_id)
+    if not is_person(user, booking.passenger_id, booking.passenger_name):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the passenger can say they are at the pickup point")
+    if ride.ride_date != date.today():
+        raise HTTPException(status.HTTP_409_CONFLICT, "You can only be at the pickup point on the day of the ride")
+    if booking.here_at is not None:
+        return to_ride_read_dict(ride)
+    ratelimit.spend("here", user.id)
+    booking.here_at = utcnow()
+    session.add(booking)
+    session.commit()
+    session.refresh(ride)
+    ride_saved(ride, created=False)
+    if not ride.needs_driver:
+        notify(session, [ride.driver_id], "passenger_here", ride, name=booking.passenger_name, place=booking.pickup or ride.origin)
+    return to_ride_read_dict(ride)
+
+
+@router.delete("/{ride_id}/bookings/{booking_id}/here", response_model=RideRead)
+def not_at_pickup(ride_id: int, booking_id: int, session: WriteSessionDep, creds: CredsDep):
+    """Take "I'm at the pickup point" back (a tap by mistake). Nobody is pushed."""
+    user = require_user(session, creds)
+    ride = get_ride_or_404(session, ride_id)
+    booking = _booking_or_404(ride, booking_id)
+    if not is_person(user, booking.passenger_id, booking.passenger_name):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the passenger can say they are at the pickup point")
+    if booking.here_at is not None:
+        booking.here_at = None
+        session.add(booking)
+        session.commit()
+        session.refresh(ride)
+        ride_saved(ride, created=False)
+    return to_ride_read_dict(ride)
+
+
+@router.put("/{ride_id}/bookings/{booking_id}/no-show", response_model=RideRead)
+def mark_no_show(ride_id: int, booking_id: int, payload: NoShowIn, session: WriteSessionDep, creds: CredsDep):
+    """Whoever runs the ride says a passenger did not turn up, or takes that
+    back. Only once the ride has left: before that the seat is simply theirs.
+    The passenger is told, so a mistake does not stand unnoticed, and the
+    trip stops counting in the figures (`services.turned_up`)."""
+    user = require_user(session, creds)
+    ride = get_ride_or_404(session, ride_id)
+    booking = _booking_or_404(ride, booking_id)
+    if not may_run(user, ride):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the driver or an admin can say who did not turn up")
+    if datetime.combine(ride.ride_date, ride.departure_time) > datetime.now():
+        raise HTTPException(status.HTTP_409_CONFLICT, "This ride has not left yet")
+    if booking.no_show == payload.no_show:
+        return to_ride_read_dict(ride)
+    booking.no_show = payload.no_show
+    session.add(booking)
+    if on_behalf(user, ride):
+        audit.record(
+            session, user, "seat_no_show", ride.driver_name, ride=ride,
+            changes=[("passenger", *((None, booking.passenger_name) if payload.no_show else (booking.passenger_name, None)))],
+        )
+    session.commit()
+    session.refresh(ride)
+    ride_saved(ride, created=False)
+    if payload.no_show and booking.passenger_id != user.id:
+        notify(session, [booking.passenger_id], "no_show", ride, driver=user.display_name)
     return to_ride_read_dict(ride)
 
 

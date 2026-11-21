@@ -19,7 +19,7 @@ const BOSS: Me = { id: 9, name: 'Šef Šefić', admin: true }
 
 const t = () => messages().detail
 
-function card(ride: Ride, me: Me, extra: { isPast?: boolean; onJoin?: (...args: unknown[]) => void } = {}) {
+function card(ride: Ride, me: Me, extra: { isPast?: boolean; onJoin?: (...args: unknown[]) => void; onHere?: (...args: unknown[]) => void; onNoShow?: (...args: unknown[]) => void } = {}) {
   const noop = vi.fn()
   const props = {
     ride,
@@ -50,6 +50,8 @@ function card(ride: Ride, me: Me, extra: { isPast?: boolean; onJoin?: (...args: 
     onWithdrawChange: noop,
     onSuggestTime: vi.fn(async () => true),
     onLate: noop,
+    onHere: extra.onHere ?? noop,
+    onNoShow: extra.onNoShow ?? noop,
     onWait: noop,
     onLeaveLine: noop,
     onOdometer: noop,
@@ -203,5 +205,77 @@ describe('CarDetail: the mail to the office', () => {
     expect(card(mailed, ANA).button(t().officeMailWrite)).toBeNull()
     expect(card(mailed, ANA).text()).toContain(t().officeMail)
     expect(card(mailed, BOJAN).text()).not.toContain(t().officeMailed(''))
+  })
+})
+
+describe('on the day: at the pickup point, and who did not turn up', () => {
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const todayAt = (hhmm: string, bookings: Partial<Ride['bookings'][number]>[] = [{}]) =>
+    aRide({
+      ride_date: iso(new Date()),
+      departure_time: hhmm,
+      driver_id: ANA.id,
+      driver_name: ANA.name,
+      bookings: bookings.map((b, i) => ({ id: 10 + i, passenger_id: BOJAN.id, passenger_name: BOJAN.name, pickup: '', created_at: '', ...b })),
+    })
+
+  beforeEach(() => quietFetch())
+
+  it('offers the passenger the button once the ride is near, and nobody else', () => {
+    const onHere = vi.fn()
+    const mine = card(todayAt('00:00:00'), BOJAN, { onHere })
+    const button = mine.button(t().imHere)
+    expect(button).not.toBeNull()
+    act(() => button!.click())
+    expect(onHere).toHaveBeenCalledWith(expect.anything(), 10, true)
+
+    const drivers = card(todayAt('00:00:00'), ANA)
+    expect(drivers.button(t().imHere)).toBeNull()
+
+    // A ride that leaves at the very end of the day is not near yet (unless it is 23:29 or later).
+    const now = new Date()
+    if (now.getHours() * 60 + now.getMinutes() < 23 * 60 + 29) {
+      const early = card(todayAt('23:59:00'), BOJAN)
+      expect(early.button(t().imHere)).toBeNull()
+    }
+  })
+
+  it('shows the car who is there, and lets only that passenger take it back', () => {
+    const here = todayAt('00:00:00', [{ here_at: new Date().toISOString() }])
+    const drivers = card(here, ANA)
+    expect(drivers.text()).toContain(t().here)
+    expect(drivers.button(t().notHere)).toBeNull()
+
+    const mine = card(here, BOJAN)
+    expect(mine.button(t().imHere)).toBeNull()
+    expect(mine.button(t().notHere)).not.toBeNull()
+  })
+
+  it('lets whoever runs the ride say who did not turn up, once it has left', () => {
+    const onNoShow = vi.fn()
+    const left = todayAt('00:00:00')
+    const drivers = card(left, ANA, { onNoShow })
+    act(() => drivers.button(t().didNotTurnUp)!.click())
+    expect(onNoShow).toHaveBeenCalledWith(expect.anything(), 10, true)
+
+    const admins = card(left, BOSS)
+    expect(admins.button(t().didNotTurnUp)).not.toBeNull()
+
+    const others = card(left, MILA)
+    expect(others.button(t().didNotTurnUp)).toBeNull()
+  })
+
+  it('keeps the mark between the driver and the passenger', () => {
+    const marked = todayAt('00:00:00', [{ no_show: true }])
+    const drivers = card(marked, ANA)
+    expect(drivers.text()).toContain(t().noShow)
+    expect(drivers.button(t().turnedUp)).not.toBeNull()
+
+    const mine = card(marked, BOJAN)
+    expect(mine.text()).toContain(t().noShow)
+    expect(mine.button(t().imHere)).toBeNull()
+
+    const others = card(marked, MILA)
+    expect(others.text()).not.toContain(t().noShow)
   })
 })

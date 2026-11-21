@@ -27,6 +27,7 @@ from ..models import (
     CarType,
     DriveLeg,
     GaragePlate,
+    Passkey,
     PasswordReset,
     ProfilePhoto,
     PushSubscription,
@@ -284,6 +285,7 @@ def delete_user(user_id: int, session: WriteSessionDep, creds: CredsDep):
         session.add(leg)
     session.exec(delete(PushSubscription).where(col(PushSubscription.user_id) == user.id))
     session.exec(delete(PasswordReset).where(col(PasswordReset.user_id) == user.id))
+    session.exec(delete(Passkey).where(col(Passkey.user_id) == user.id))
     session.exec(delete(ResetRequest).where(col(ResetRequest.user_id) == user.id))
     had_photo = session.get(ProfilePhoto, user.id) is not None
     session.exec(delete(ProfilePhoto).where(col(ProfilePhoto.user_id) == user.id))

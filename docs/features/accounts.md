@@ -1,4 +1,4 @@
-# Accounts: profile photos and calling the driver
+# Accounts: profile photos, calling the driver and passkeys
 
 Moved out of CLAUDE.md, which keeps a one-line pointer here. These are the
 feature notes for working on this part of Karpul: the rules, where they live
@@ -27,3 +27,33 @@ for everyone but the driver. **Karpul keeps no email**: the office mail writes a
 `appuser.email` is in `DROPPED_COLUMNS` in `database.py`: `rebuild_tables` rebuilds that table once on
 start without it (and its unique index) and VACUUMs, so the addresses leave the file too. An app from
 before still sending `email` is ignored, not refused.
+
+**Passkeys** (`app/passkeys.py`, table `Passkey`, `lib/passkeys.ts`, `components/Passkeys.tsx`). Signing in with the
+device's fingerprint, face or screen lock instead of the password, for an app with no email to send a reset to; the
+password keeps working beside it. WebAuthn done on the `cryptography` package with no WebAuthn library, for the reason
+`app/webpush.py` gives, and kept small by two choices: **no attestation** (the browser is asked for `"none"` and hands
+over what it already parsed: the authenticator data and the public key as SubjectPublicKeyInfo from `getPublicKey()`, so
+nothing reads CBOR; the key is taken on trust the first time, from someone who is signed in, and only ever opens their
+own account) and **discoverable credentials only** (signing in sends no username: the device offers the passkeys it
+holds for the site and the credential id says whose it is). What `verify_registration` / `verify_assertion` hold a
+sign-in to: a challenge this process issued for that purpose (and, for adding one, that account) in the last five
+minutes, spent by the look (`Challenges`, in memory like the throttles, one worker); the page's origin is this site
+(`origin_ok`: https, or http on localhost); the data is for this site (`rpIdHash`); the UP and UV flags (someone was
+there and proved it was them, so a passkey is not a weaker door than a password); the signature under the stored key
+(P-256, Ed25519 or RSA, by the key's own type); and a counter that moved forward when the authenticator keeps one. The
+site's name (`rp_id`) is the host the request came to, or `KARPUL_RP_ID` to bind them to a parent domain; **changing it
+orphans every passkey**, as moving the site to another host does. A passkey cannot be used on an IP address, which is
+why `e2e/onday.spec.ts` visits the server as `localhost`.
+
+The routes, all in `routers/auth.py`: `GET /api/auth/passkeys` (yours: name, added, last used; never the key),
+`POST /api/auth/passkeys/options` then `POST /api/auth/passkeys` (signed in; `MAX_PASSKEYS` 10; a credential belongs to
+one account, 409), `DELETE /api/auth/passkeys/{id}`, and signed out `POST /api/auth/passkey-login/options` then
+`POST /api/auth/passkey-login`, which answers like `/login` (`AuthOut`). Every refusal is the one wording (401, the
+reason only in the log) and counts against the address like a wrong password (`login_failures_by_ip`); an account
+switched off is 403 as for a password. A password reset leaves the passkeys alone; deleting the account takes them.
+In the app: *Passkeys* in *Your account* lists them (named by `deviceName`: "Android, Chrome") with *Add a passkey on
+this device* and *Remove*, acting on the tap, not the form's Save; a browser that cannot make one still lists them, so a
+lost phone's can be removed from a desktop. *Sign in with a passkey* is on the sign-in tab where the browser can. The
+person closing the browser's sheet (`NotAllowedError`) is not an error and says nothing. Tests: `tests/test_passkeys.py`
+(a software authenticator signing what a phone would), `passkeys.test.ts`, and the virtual authenticator in
+`e2e/onday.spec.ts`.
