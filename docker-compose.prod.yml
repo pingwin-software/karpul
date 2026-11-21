@@ -31,6 +31,8 @@ services:
       KARPUL_ALLOWED_COUNTRIES: ${KARPUL_ALLOWED_COUNTRIES:-}
       KARPUL_VAPID_PRIVATE_KEY: ${KARPUL_VAPID_PRIVATE_KEY:-}
       KARPUL_VAPID_SUBJECT: ${KARPUL_VAPID_SUBJECT:-}
+      # The name passkeys are bound to (app/passkeys.py). Unset = the host the site is opened on.
+      KARPUL_RP_ID: ${KARPUL_RP_ID:-}
       # Optional error tracking. Unset = nothing is sent anywhere.
       KARPUL_SENTRY_DSN: ${KARPUL_SENTRY_DSN:-}
       # The nightly snapshots (app/housekeeping.py): where in the volume, how many to keep.

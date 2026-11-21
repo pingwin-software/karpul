@@ -86,6 +86,9 @@ CORS_ORIGINS=https://www.karpul.dev
 KARPUL_ADMINS=<your username>
 KARPUL_VAPID_PRIVATE_KEY=<what `python -m app.vapid` printed>
 KARPUL_VAPID_SUBJECT=mailto:someone@example.com
+# Optional: the name passkeys are bound to. Unset, it is the host the site is opened on (www.karpul.dev).
+# Changing it later, like moving the site to another host, orphans every passkey people have made.
+KARPUL_RP_ID=
 KARPUL_SENTRY_DSN=
 CORPORATE_CARS=Skoda Octavia|BG-123-XY|4;VW Transporter|BG-456-ZZ|8
 ```

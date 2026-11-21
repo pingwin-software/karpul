@@ -297,6 +297,25 @@ const en = {
     switchToSignIn: 'Already registered? Sign in',
     fillIn: 'Fill in every field to continue.',
     forgot: 'Forgot your password?',
+    passkey: 'Sign in with a passkey',
+  },
+
+  /** Passkeys: components/Passkeys.tsx in *Your account*, lib/passkeys.ts. */
+  passkeys: {
+    title: 'Passkeys',
+    hint: 'Sign in with this device\'s fingerprint, face or screen lock instead of the password. The password keeps working.',
+    add: 'Add a passkey on this device',
+    adding: 'Waiting for the device…',
+    added: 'Passkey added',
+    remove: 'Remove',
+    removeNamed: (name: string) => `Remove the passkey ${name}`,
+    removed: 'Passkey removed',
+    unnamed: 'Passkey',
+    madeOn: (date: string) => `Added ${date}`,
+    usedOn: (date: string) => `last used ${date}`,
+    neverUsed: 'not used yet',
+    exists: 'This device already has a passkey for your account.',
+    unsupported: 'This browser or device cannot do passkeys.',
   },
 
   /** A password reset link from an admin: components/AuthGate.tsx, `reset` mode. */
@@ -319,6 +338,21 @@ const en = {
     submit: 'Set password',
     expired: 'This link has expired or was already used. Ask an admin for a new one.',
     backToSignIn: 'Back to sign in',
+  },
+
+  /** Your coming rides with no signal: components/OfflineCard.tsx, lib/offline.ts. */
+  offline: {
+    title: 'No connection',
+    asOf: (when: string) => `Your rides as Karpul last saw them, ${when}:`,
+    none: (when: string) => `No rides of yours were coming up when Karpul last looked, ${when}.`,
+    youDrive: 'You drive',
+    drives: (name: string) => `${name} drives`,
+    getIn: (place: string) => `You get in at ${place}`,
+    withYou: (names: string) => `With you: ${names}`,
+    nobodyYet: 'Nobody else in the car',
+    call: (name: string) => `Call ${name}`,
+    retry: 'Try again',
+    more: (n: number) => `and ${n} more later`,
   },
 
   account: {
@@ -366,6 +400,12 @@ const en = {
     lateAsk: 'Running late?',
     lateChoice: (minutes: number) => `${minutes} min`,
     lateTell: (minutes: number) => `Tell the car you are ${minutes} min late`,
+    imHere: "I'm at the pickup point",
+    here: 'At the pickup point',
+    notHere: 'Not there after all',
+    didNotTurnUp: "Didn't turn up",
+    noShow: "Didn't turn up",
+    turnedUp: 'Turned up after all',
     you: 'You',
     rideOptions: 'Ride options',
     leaves: 'Leaves',
@@ -860,6 +900,8 @@ const en = {
           return `${admin} put someone in the car of ${subject}`
         case 'seat_removed':
           return `${admin} took someone out of the car of ${subject}`
+        case 'seat_no_show':
+          return `${admin} changed who turned up in the car of ${subject}`
         case 'car_added':
           return `${admin} added the shared car ${subject}`
         case 'car_edited':
@@ -1210,6 +1252,9 @@ const en = {
     suggestionSent: 'Sent to the driver.',
     claimed: (n: number) => (n === 1 ? 'The ride is yours now.' : `${n} rides are yours now.`),
     lateSaid: (minutes: number) => `The car knows you're ${minutes} min late.`,
+    hereSaid: (driver: string) => `${driver} knows you're there.`,
+    noShowSaid: (name: string) => `Noted: ${name} didn't turn up.`,
+    noShowUndone: (name: string) => `Noted: ${name} rode along after all.`,
     rideDeclined: 'Declined. The ride is removed.',
     resetApproved: (name: string) => `Approved. ${name} can pick a new password on the screen they asked from.`,
     resetDeclined: 'Declined.',
@@ -1546,6 +1591,18 @@ const en = {
     done: 'Got it',
     step: (n: number, of: number) => `${n} of ${of}`,
     entries: {
+      passkey: {
+        title: 'Your thumb is the password now',
+        body: "Tired of passwords? **Your account** now has **Passkeys**: tap **Add a passkey on this device**, show your phone your finger or your face, and from then on **Sign in with a passkey** on the sign-in screen lets you in without typing a thing. Your password keeps working, for the days your thumb is busy holding a coffee.",
+      },
+      imHere: {
+        title: "Here! (And the ones who weren't)",
+        body: "On the day of a ride, half an hour before it leaves, your seat grows a button: **I'm at the pickup point**. One tap, the driver gets a notification and the whole car sees it, so nobody circles the block wondering. Drivers: once the ride has left, **Didn't turn up** next to a passenger notes the empty seat. They are told, and that trip stops counting in the figures. No hard feelings, only honest kilometres.",
+      },
+      offlineRides: {
+        title: 'No signal? No drama',
+        body: "Garages and lifts eat signal for breakfast. Karpul now keeps a copy of **your coming rides** on your phone: with no connection, the board shows a **No connection** card with when you leave, where you get in, who drives and their number to call, and says how old the copy is. The moment the signal is back, so is the live board.",
+      },
       forgotPassword: {
         title: 'Forgot your password? Happens to the best of us',
         body: "The sign-in screen now has **Forgot your password?**. Type your username and the admins are asked for you, with a four-digit code on your screen they may ask you to read out (it proves you are you, not your prankster deskmate). Once an admin approves under **Approvals**, the same screen shows **Set a new password**. Close the app meanwhile if you like; it remembers you asked.",
@@ -1769,6 +1826,15 @@ const SR_API_ERRORS: [RegExp, (m: RegExpMatchArray) => string][] = [
   [/^Only the author or the driver can remove this message$/, () => 'Poruku može da ukloni samo onaj ko ju je napisao ili vozač'],
   [/^Only the driver can say the ride is running late$/, () => 'Samo vozač može da javi da vožnja kasni'],
   [/^A ride can only run late on its own day$/, () => 'Kašnjenje se javlja samo na dan vožnje'],
+  [/^Only the passenger can say they are at the pickup point$/, () => 'Samo putnik može da javi da je na mestu ulaska'],
+  [/^You can only be at the pickup point on the day of the ride$/, () => 'Na mestu ulaska možeš biti samo na dan vožnje'],
+  [/^Only the driver or an admin can say who did not turn up$/, () => 'Samo vozač ili administrator može da upiše ko se nije pojavio'],
+  [/^This ride has not left yet$/, () => 'Ova vožnja još nije krenula'],
+  [/^Passkey not found$/, () => 'Pristupni ključ nije pronađen'],
+  [/^That passkey could not be added; try again$/, () => 'Pristupni ključ nije dodat; pokušaj ponovo'],
+  [/^That passkey is already added$/, () => 'Taj pristupni ključ je već dodat'],
+  [/^That passkey did not work here; sign in with your password$/, () => 'Taj pristupni ključ ovde ne radi; prijavi se lozinkom'],
+  [/^An account holds (\d+) passkeys at most; remove one first$/, (m) => `Nalog može imati najviše ${m[1]} pristupnih ključeva; prvo ukloni jedan`],
   [/^Ride request not found$/, () => 'Zahtev za prevoz nije pronađen'],
   [/^Someone already answered that request$/, () => 'Neko je već odgovorio na taj zahtev'],
   [/^That is your own request$/, () => 'To je tvoj zahtev'],
@@ -2121,6 +2187,24 @@ const sr: Messages = {
     switchToSignIn: 'Već imaš nalog? Prijavi se',
     fillIn: 'Popuni sva polja da nastaviš.',
     forgot: 'Zaboravio/la si lozinku?',
+    passkey: 'Prijavi me pristupnim ključem',
+  },
+
+  passkeys: {
+    title: 'Pristupni ključevi',
+    hint: 'Prijavi se otiskom prsta, licem ili zaključavanjem ekrana ovog uređaja umesto lozinkom. Lozinka i dalje važi.',
+    add: 'Dodaj pristupni ključ na ovom uređaju',
+    adding: 'Čekam uređaj…',
+    added: 'Pristupni ključ je dodat',
+    remove: 'Ukloni',
+    removeNamed: (name) => `Ukloni pristupni ključ ${name}`,
+    removed: 'Pristupni ključ je uklonjen',
+    unnamed: 'Pristupni ključ',
+    madeOn: (date) => `Dodat ${date}`,
+    usedOn: (date) => `poslednji put korišćen ${date}`,
+    neverUsed: 'još nije korišćen',
+    exists: 'Ovaj uređaj već ima pristupni ključ za tvoj nalog.',
+    unsupported: 'Ovaj pregledač ili uređaj ne podržava pristupne ključeve.',
   },
 
   forgot: {
@@ -2142,6 +2226,20 @@ const sr: Messages = {
     submit: 'Postavi lozinku',
     expired: 'Ovaj link je istekao ili je već iskorišćen. Zatraži novi od administratora.',
     backToSignIn: 'Nazad na prijavu',
+  },
+
+  offline: {
+    title: 'Nema veze',
+    asOf: (when) => `Tvoje vožnje kako ih je Karpul poslednji put video, ${when}:`,
+    none: (when) => `Kad je Karpul poslednji put gledao, ${when}, nisi imao/la predstojećih vožnji.`,
+    youDrive: 'Ti voziš',
+    drives: (name) => `Vozi ${name}`,
+    getIn: (place) => `Ulaziš: ${place}`,
+    withYou: (names) => `Sa tobom: ${names}`,
+    nobodyYet: 'Niko drugi u autu',
+    call: (name) => `Pozovi: ${name}`,
+    retry: 'Pokušaj ponovo',
+    more: (n) => `i još ${n} kasnije`,
   },
 
   account: {
@@ -2190,6 +2288,12 @@ const sr: Messages = {
     lateAsk: 'Kasniš?',
     lateChoice: (minutes) => `${minutes} min`,
     lateTell: (minutes) => `Javi putnicima da kasniš ${minutes} min`,
+    imHere: 'Na mestu sam ulaska',
+    here: 'Na mestu ulaska',
+    notHere: 'Ipak nisam tu',
+    didNotTurnUp: 'Nije se pojavio/la',
+    noShow: 'Nije se pojavio/la',
+    turnedUp: 'Ipak se pojavio/la',
     you: 'Ti',
     rideOptions: 'Opcije vožnje',
     leaves: 'Polazi',
@@ -2538,6 +2642,8 @@ const sr: Messages = {
           return `${admin} je dodao/la putnika, vozi ${subject}`
         case 'seat_removed':
           return `${admin} je uklonio/la putnika, vozi ${subject}`
+        case 'seat_no_show':
+          return `${admin} je izmenio/la ko se pojavio, vozi ${subject}`
         case 'car_added':
           return `${admin} je dodao/la zajednički auto ${subject}`
         case 'car_edited':
@@ -3012,6 +3118,9 @@ const sr: Messages = {
     suggestionSent: 'Poslato vozaču.',
     claimed: (n) => (n === 1 ? 'Vožnja je sada tvoja.' : `Vožnje su sada tvoje (${n}).`),
     lateSaid: (minutes) => `Putnici znaju da kasniš ${minutes} min.`,
+    hereSaid: (driver) => `${driver} zna da si tu.`,
+    noShowSaid: (name) => `Upisano: ${name} se nije pojavio/la.`,
+    noShowUndone: (name) => `Upisano: ${name} se ipak vozio/la.`,
     rideDeclined: 'Odbijeno. Vožnja je uklonjena.',
     resetApproved: (name) => `Odobreno. ${name} može da izabere novu lozinku na ekranu sa kog je tražio/la.`,
     resetDeclined: 'Odbijeno.',
@@ -3343,6 +3452,18 @@ const sr: Messages = {
     done: 'Važi',
     step: (n, of) => `${n} od ${of}`,
     entries: {
+      passkey: {
+        title: 'Tvoj palac je sada lozinka',
+        body: 'Dosta ti je lozinki? **Tvoj nalog** sada ima **Pristupne ključeve**: dodirni **Dodaj pristupni ključ na ovom uređaju**, pokaži telefonu prst ili lice, i od tada te **Prijavi me pristupnim ključem** na ekranu za prijavu pušta bez kucanja. Lozinka i dalje važi, za dane kad ti je palac zauzet kafom.',
+      },
+      imHere: {
+        title: 'Tu sam! (I oni koji nisu bili)',
+        body: 'Na dan vožnje, pola sata pre polaska, na tvom mestu se pojavljuje dugme **Na mestu sam ulaska**. Jedan dodir, vozač dobija obaveštenje i ceo auto to vidi, pa niko ne kruži oko zgrade. Vozači: kad vožnja krene, **Nije se pojavio/la** pored putnika beleži prazno mesto. Putnik za to sazna, a ta vožnja se više ne računa u brojkama. Bez ljutnje, samo pošteni kilometri.',
+      },
+      offlineRides: {
+        title: 'Nema signala? Nema drame',
+        body: 'Garaže i liftovi jedu signal za doručak. Karpul sada čuva kopiju **tvojih predstojećih vožnji** na telefonu: kad nema veze, tabla pokazuje karticu **Nema veze** sa vremenom polaska, mestom ulaska, vozačem i brojem za poziv, i kaže koliko je kopija stara. Čim se signal vrati, vraća se i tabla uživo.',
+      },
       forgotPassword: {
         title: 'Zaboravio/la si lozinku? Dešava se i najboljima',
         body: 'Ekran za prijavu sad ima **Zaboravio/la si lozinku?**. Upiši korisničko ime i administratori dobijaju zahtev umesto tebe, a na tvom ekranu stoji kod od četiri cifre koji mogu da te zamole da pročitaš (dokaz da si to ti, a ne kolega šaljivdžija). Kad administrator odobri pod **Odobrenja**, isti ekran pokaže **Nova lozinka**. Aplikaciju slobodno zatvori u međuvremenu; pamti da si tražio/la.',

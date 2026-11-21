@@ -92,6 +92,28 @@
 .pax-pickup svg {
   color: var(--green);
 }
+/* On the day: "At the pickup point" under the passenger, the passenger's own
+   button to say so, and the driver's "Didn't turn up" once the ride has left. */
+.pax-signal-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+.pax-signal {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+}
+.pax-signal-row .pax-signal {
+  margin-top: 0;
+}
+.pax-here {
+  align-self: flex-start;
+  margin-top: 0.35rem;
+}
+.pax-noshow {
+  align-self: flex-start;
+}
 .pax-pickup-pick {
   display: flex;
   align-items: center;
@@ -2092,4 +2114,155 @@
 @keyframes wn-fold {
   0%, 30% { max-height: 3rem; padding-block: 0.35rem; border-width: 1px; opacity: 1; }
   45%, 100% { max-height: 0; padding-block: 0; border-width: 0; opacity: 0; }
+}
+
+/* Passkey: the password fades, the passkey button is pressed, the tick lets you in. */
+.wn-passkey-password .wn-field-text {
+  opacity: 0.35;
+  animation: wn-passkey-fade 5s var(--ease-out) infinite;
+}
+.wn-passkey-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2rem;
+  padding: 0 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--green-soft);
+  color: var(--green-dark);
+  animation: wn-passkey-press 5s var(--ease-out) infinite;
+}
+.wn-passkey-btn .wn-line {
+  flex: 1;
+  background: var(--green-line);
+}
+.wn-passkey-in {
+  --i: 0;
+  animation-name: wn-passkey-tick;
+}
+@keyframes wn-passkey-fade {
+  0%, 15% { opacity: 1; }
+  30%, 100% { opacity: 0.35; }
+}
+@keyframes wn-passkey-press {
+  0%, 30% { transform: scale(1); }
+  38% { transform: scale(0.94); }
+  46%, 100% { transform: scale(1); }
+}
+@keyframes wn-passkey-tick {
+  0%, 48% { opacity: 0; transform: scale(0.4); }
+  58%, 92% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* I'm here: the button is pressed and the green tag comes up under the passenger. */
+.wn-here-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.wn-here-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.wn-here-pin {
+  flex: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50% 50% 50% 0;
+  background: currentColor;
+  transform: rotate(-45deg);
+}
+.wn-here-tag {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 0.4rem;
+  width: 70%;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  animation: wn-here-tag 5s var(--ease-out) infinite;
+}
+.wn-here-tag .wn-line {
+  flex: 1;
+  background: var(--green-line);
+}
+.wn-here-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2rem;
+  padding: 0 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--green);
+  color: #fff;
+  opacity: 0.45;
+  animation: wn-here-press 5s var(--ease-out) infinite;
+}
+.wn-here-btn .wn-line {
+  flex: 1;
+  background: rgb(255 255 255 / 0.7);
+}
+@keyframes wn-here-press {
+  0%, 22% { opacity: 1; transform: scale(1); }
+  30% { opacity: 1; transform: scale(0.94); }
+  40%, 100% { opacity: 0.45; transform: scale(1); }
+}
+@keyframes wn-here-tag {
+  0%, 36% { opacity: 0; transform: translateY(4px); }
+  46%, 92% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(0); }
+}
+
+/* Offline: the signal bars go out one by one, the rides stay. */
+.wn-offline {
+  border-left: 3px solid #d97706;
+}
+.wn-offline-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.wn-offline-head .wn-line {
+  flex: 1;
+}
+.wn-offline-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 1rem;
+}
+.wn-offline-bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--border-strong);
+  animation: wn-offline-bar 5s var(--ease-out) infinite;
+}
+.wn-offline-bars i:nth-child(1) { height: 25%; animation-delay: 0.45s; }
+.wn-offline-bars i:nth-child(2) { height: 50%; animation-delay: 0.3s; }
+.wn-offline-bars i:nth-child(3) { height: 75%; animation-delay: 0.15s; }
+.wn-offline-bars i:nth-child(4) { height: 100%; }
+.wn-offline-ride {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  animation: wn-offline-ride 5s var(--ease-out) infinite;
+  animation-delay: calc(var(--i) * 0.2s);
+}
+.wn-offline-ride .wn-line {
+  flex: 1;
+}
+@keyframes wn-offline-bar {
+  0%, 12% { background: var(--green); }
+  24%, 100% { background: var(--border-strong); }
+}
+@keyframes wn-offline-ride {
+  0%, 30% { opacity: 0.25; }
+  42%, 100% { opacity: 1; }
 }

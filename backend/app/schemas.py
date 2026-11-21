@@ -405,6 +405,43 @@ class AuthOut(BaseModel):
     user: UserRead
 
 
+class PasskeyRead(BaseModel):
+    """A passkey in its owner's list. The key itself is nobody's business."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    created_at: datetime
+    last_used_at: datetime | None = None
+
+
+class PasskeyRegisterIn(BaseModel):
+    """What the browser got from `navigator.credentials.create`, binary as
+    base64url: the credential's id, `clientDataJSON`, the authenticator data
+    and the public key as `getPublicKey()` gives it (app/passkeys.py)."""
+
+    id: str = Field(min_length=1, max_length=1400)
+    client_data: str = Field(min_length=1, max_length=4000)
+    authenticator_data: str = Field(min_length=1, max_length=4000)
+    public_key: str = Field(min_length=1, max_length=4000)
+    name: str = Field(default="", max_length=60)
+
+    @field_validator("name")
+    @classmethod
+    def _tidy_name(cls, value: str) -> str:
+        return " ".join(value.split())
+
+
+class PasskeyLoginIn(BaseModel):
+    """What the browser got from `navigator.credentials.get`, binary as base64url."""
+
+    id: str = Field(min_length=1, max_length=1400)
+    client_data: str = Field(min_length=1, max_length=4000)
+    authenticator_data: str = Field(min_length=1, max_length=4000)
+    signature: str = Field(min_length=1, max_length=2000)
+
+
 class BookingRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -413,6 +450,10 @@ class BookingRead(BaseModel):
     passenger_id: int | None
     passenger_name: str
     pickup: str
+    # When they said they are at the pickup point, on the day of the ride.
+    here_at: datetime | None = None
+    # The driver's word that they did not turn up.
+    no_show: bool = False
     created_at: datetime
 
 
@@ -741,6 +782,12 @@ class LateIn(BaseModel):
     """The driver's one tap: how late the ride will leave."""
 
     minutes: Literal[5, 10, 15]
+
+
+class NoShowIn(BaseModel):
+    """The driver's word on one passenger after the ride has left."""
+
+    no_show: bool
 
 
 class BookingCreate(BaseModel):

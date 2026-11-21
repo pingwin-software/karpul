@@ -177,6 +177,12 @@ def apply_edit(session: Session, user: User, ride: Ride, sent: dict) -> Applied:
         data[key] != getattr(ride, key) for key in ("car_type", "corporate_car_id", "ride_date", "departure_time", "return_time")
     ):
         data["office_mailed_at"] = None
+    # "I'm at the pickup point" was said of a day and an hour: another one of
+    # those and nobody is standing there yet.
+    if data["ride_date"] != ride.ride_date or data["departure_time"] != ride.departure_time:
+        for booking in ride.bookings:
+            booking.here_at = None
+            booking.no_show = False
     for key, value in data.items():
         setattr(ride, key, value)
     new_task = garage_task(ride) and (not was_task or "plate_registered" in data)

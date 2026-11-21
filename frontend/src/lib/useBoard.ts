@@ -51,6 +51,10 @@ export interface Board {
   reloadCarStates: () => Promise<void>
   /** The range on screen has not been loaded yet. */
   loading: boolean
+  /** The last load got no answer at all: no signal, or the server is away. */
+  offline: boolean
+  /** `rides` is what the server last said of the range on screen (not a list left over from a load that failed). */
+  fresh: boolean
   liveStatus: LiveStatus
   load: () => Promise<void>
   upsertRide: (ride: Ride) => void
@@ -106,6 +110,8 @@ export function useBoard(range: Range, { isAdmin, onLoadError }: Options): Board
   const [resetsTick, setResetsTick] = useState(0)
   const [carStates, setCarStates] = useState<CarState[] | null>(null)
   const [loadedRange, setLoadedRange] = useState<string | null>(null)
+  const [offline, setOffline] = useState(false)
+  const [freshRange, setFreshRange] = useState<string | null>(null)
   const rangeKey = `${range.from}:${range.to}`
 
   const loadSeq = useRef(0)
@@ -124,7 +130,10 @@ export function useBoard(range: Range, { isAdmin, onLoadError }: Options): Board
       try {
         next = await loadOnce(range.from, range.to, () => seq === loadSeq.current)
       } catch (e) {
-        if (seq === loadSeq.current) failed.current(e)
+        if (seq === loadSeq.current) {
+          setOffline(isNetworkError(e))
+          failed.current(e)
+        }
         next = null
         break
       }
@@ -133,6 +142,8 @@ export function useBoard(range: Range, { isAdmin, onLoadError }: Options): Board
     if (next) {
       setRides(next[0])
       setRequests(next[1])
+      setOffline(false)
+      setFreshRange(rangeKey)
     }
     setLoadedRange(rangeKey)
   }, [range, rangeKey])
@@ -270,6 +281,8 @@ export function useBoard(range: Range, { isAdmin, onLoadError }: Options): Board
     carStates,
     reloadCarStates,
     loading: loadedRange !== rangeKey,
+    offline,
+    fresh: freshRange === rangeKey,
     liveStatus,
     load,
     upsertRide,

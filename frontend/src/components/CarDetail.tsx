@@ -6,6 +6,7 @@ import { hasPins, routeUrl, stopHint } from '../lib/maps'
 import { useArrivals } from '../lib/motion'
 import { keepsKm } from '../lib/odometer'
 import { goesToGarage } from '../lib/offices'
+import { canSayHere, hasLeft, isToday, useClock } from '../lib/pickup'
 import type { Person } from '../lib/people'
 import { mapsOn, useMapConfig, useMapsAllowed } from '../lib/places'
 import { allStops, MAX_STOPS, type NewStop } from '../lib/stops'
@@ -102,6 +103,10 @@ interface Props {
   onSuggestTime: (ride: Ride, times: { departure_time?: string; return_time?: string }) => Promise<boolean>
   /** The driver's one tap on the day: tell the car the ride leaves `minutes` late. */
   onLate: (ride: Ride, minutes: number) => void
+  /** A passenger's one tap on the day: "I'm at the pickup point" (or taking it back). */
+  onHere: (ride: Ride, bookingId: number, here: boolean) => void
+  /** Whoever runs the ride says, once it has left, that a passenger did not turn up (or takes it back). */
+  onNoShow: (ride: Ride, bookingId: number, noShow: boolean) => void
   /** Opens the company-car guide (charging, the Mazda 6e); shown on company-car rides only. */
   onGuide?: () => void
   /** How the shared car stands (components/CarStatus.tsx), for the line under its name. */
@@ -165,6 +170,8 @@ export function CarDetail({
   onWithdrawChange,
   onSuggestTime,
   onLate,
+  onHere,
+  onNoShow,
   onGuide,
   carState = null,
   onCarState,
@@ -200,6 +207,13 @@ export function CarDetail({
   const myEntry = myWaitlistEntry(ride, me)
   const line = placeInLine(ride, me)
   const canWait = full && !isDriver && !myBooking && !myEntry && !isPast && ride.seats > 0 && !ride.unconfirmed
+
+  // On the day the card looks at the clock: *I'm at the pickup point* comes
+  // up half an hour before the ride leaves, *Didn't turn up* once it has.
+  const now = useClock(isToday(ride))
+  const today = isToday(ride, now)
+  const sayHere = canSayHere(ride, now)
+  const left = hasLeft(ride, now)
 
   const [adding, setAdding] = useState(false)
   // A passenger's "Suggest another time" sheet.
@@ -592,6 +606,29 @@ export function CarDetail({
                             <XIcon size={16} />
                           </button>
                         </span>
+                      )}
+                      {b.no_show && (runsIt || mine) && <span className="tag tag-amber pax-signal">{t.detail.noShow}</span>}
+                      {!b.no_show && b.here_at && today && (
+                        <span className="pax-signal-row">
+                          <span className="tag tag-green tag-icon pax-signal">
+                            <PinIcon size={12} strokeWidth={2.25} /> {t.detail.here}
+                          </span>
+                          {mine && (
+                            <button type="button" className="link link-sm" disabled={busy} onClick={() => onHere(ride, b.id, false)}>
+                              {t.detail.notHere}
+                            </button>
+                          )}
+                        </span>
+                      )}
+                      {mine && sayHere && !b.here_at && !b.no_show && !movingPickup && (
+                        <button type="button" className="btn btn-sm btn-primary pax-here" disabled={busy} onClick={() => onHere(ride, b.id, true)}>
+                          <PinIcon size={16} /> {t.detail.imHere}
+                        </button>
+                      )}
+                      {runsIt && left && !mine && (
+                        <button type="button" className="link link-sm pax-noshow" disabled={busy} onClick={() => onNoShow(ride, b.id, !b.no_show)}>
+                          {b.no_show ? t.detail.turnedUp : t.detail.didNotTurnUp}
+                        </button>
                       )}
                     </span>
                     {canManage && !mine && (

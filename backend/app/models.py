@@ -100,6 +100,26 @@ class AuthSession(SQLModel, table=True):
     user: User = Relationship(back_populates="sessions")
 
 
+class Passkey(SQLModel, table=True):
+    """A passkey someone signs in with instead of their password
+    (app/passkeys.py): the public half of a key pair that lives in their phone
+    or laptop. Nothing here is a secret; a stolen database signs nobody in."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="appuser.id", index=True)
+    # The authenticator's name for the credential, base64url.
+    credential_id: str = Field(unique=True, index=True)
+    # SubjectPublicKeyInfo (DER), base64url.
+    public_key: str
+    # The authenticator's signature counter at its last sign-in; 0 for the
+    # passkeys that keep none.
+    sign_count: int = 0
+    # What the person sees in their list: the device it was made on.
+    name: str = ""
+    created_at: datetime = Field(default_factory=utcnow)
+    last_used_at: datetime | None = None
+
+
 class CorporateCar(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
@@ -260,6 +280,14 @@ class Booking(SQLModel, table=True):
     # Who put this passenger in the car when it was someone else (a colleague
     # booking for Milan): told when the seat is taken away again.
     added_by_id: int | None = Field(default=None, foreign_key="appuser.id")
+    # When the passenger said "I'm at the pickup point" on the day of the ride
+    # (POST .../bookings/{id}/here); None until then, and again once where or
+    # when they get in changes.
+    here_at: datetime | None = None
+    # The driver's word, after the ride has left, that this passenger did not
+    # turn up (PUT .../bookings/{id}/no-show). The seat stays in the record,
+    # but it is no shared trip in anyone's figures (services.turned_up).
+    no_show: bool = Field(default=False, sa_column_kwargs={"server_default": "0"})
     created_at: datetime = Field(default_factory=utcnow)
 
     ride: Ride = Relationship(back_populates="bookings")
