@@ -487,20 +487,25 @@ span.plus-circle svg {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 30%, transparent);
 }
 
-/* The phone's view switch: a Fluent bottom tab bar over a Mica-like blur.
-   The active tab's mark is filled; one green pill (.tab-glider) slides under
-   the marks to it, a little past and back, and the mark it lands on pops. */
+/* The phone's view switch: a dock floating over the board on a Mica-like
+   blur. The active tab's mark is filled and sits on one solid green pill
+   (.tab-glider), which slides to the picked tab, stretching as it sets off;
+   the mark it lands on jumps and settles, and a ring spreads from under it.
+   `--tabbar` (layout.css) is the room the dock takes, its gap below included. */
 .tabbar {
   position: fixed;
   z-index: 8;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(var(--tabbar) + env(safe-area-inset-bottom));
-  padding: 8px max(0.5rem, calc(50% - 300px)) env(safe-area-inset-bottom);
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
-  backdrop-filter: blur(24px) saturate(1.4);
-  border-top: 1px solid var(--border);
+  left: max(0.75rem, calc(50% - 288px));
+  right: max(0.75rem, calc(50% - 288px));
+  bottom: calc(0.6rem + env(safe-area-inset-bottom));
+  height: 76px;
+  padding: 8px 10px;
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-pop);
+  animation: tabbar-in 0.5s var(--ease-bounce) backwards;
 }
 .tabbar-track {
   position: relative;
@@ -513,31 +518,43 @@ span.plus-circle svg {
   top: 0;
   left: 0;
   width: calc(100% / 3);
-  height: 38px;
+  height: 40px;
   transform: translateX(calc(var(--tab, 0) * 100%));
-  transition: transform 0.42s var(--ease-bounce);
+  transition: transform 0.5s var(--ease-bounce);
   pointer-events: none;
 }
-.tab-glider::before {
+.tab-glider-pill {
+  position: absolute;
+  inset: 0;
+  width: 78px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--green) 38%, transparent);
+  animation: glider-stretch 0.5s var(--ease-out);
+}
+/* The ring that spreads from the pill as it lands. */
+.tab-glider-pill::after {
   content: '';
   position: absolute;
   inset: 0;
-  width: 68px;
-  margin: 0 auto;
-  border-radius: 999px;
-  background: var(--green-soft);
+  border-radius: inherit;
+  border: 2px solid var(--green);
+  opacity: 0;
+  animation: glider-ring 0.6s 0.18s var(--ease-out);
 }
 .tab {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   padding: 0;
   border: none;
   background: none;
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   line-height: 1.2;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -546,23 +563,33 @@ span.plus-circle svg {
 .tab-pill {
   display: grid;
   place-items: center;
-  width: 68px;
-  height: 38px;
+  width: 78px;
+  height: 40px;
   border-radius: 999px;
-  --icon-knock: var(--green-soft);
+  --icon-knock: var(--surface);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+/* The press: the mark sinks under the finger before it jumps. */
+.tab:active .tab-pill {
+  transform: scale(0.86);
 }
 .tab-label {
-  transition: transform var(--dur-gentle) var(--ease-out);
+  transition: transform var(--dur-gentle) var(--ease-out), letter-spacing var(--dur-gentle) var(--ease-out);
 }
 .tab-on {
   color: var(--green);
-  font-weight: 600;
+  font-weight: 700;
+}
+.tab-on .tab-pill {
+  color: #fff;
+  --icon-knock: var(--green);
 }
 .tab-on .tab-label {
   transform: translateY(-1px);
+  letter-spacing: 0.01em;
 }
 .tab-on .tab-icon {
-  animation: tab-pop 0.45s var(--ease-bounce);
+  animation: tab-pop 0.6s var(--ease-bounce);
 }
 .tab:not(.tab-on) .tab-icon {
   animation: tab-settle var(--dur-normal) var(--ease-out);
@@ -571,19 +598,34 @@ span.plus-circle svg {
   outline: none;
 }
 .tab:focus-visible .tab-pill {
-  box-shadow: 0 0 0 2px var(--green);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--green);
 }
 @media (hover: hover) and (pointer: fine) {
   .tab:not(.tab-on):hover {
     color: var(--text);
   }
 }
+@media (prefers-reduced-transparency: reduce) {
+  .tabbar {
+    background: var(--surface);
+    backdrop-filter: none;
+  }
+}
+@keyframes tabbar-in {
+  from {
+    transform: translateY(120%);
+  }
+}
+/* A jump with a tilt: up past its place, a small lean each way, then still. */
 @keyframes tab-pop {
   0% {
-    transform: scale(0.72) translateY(3px);
+    transform: scale(0.6) translateY(6px) rotate(-14deg);
   }
-  55% {
-    transform: scale(1.14) translateY(-2px);
+  45% {
+    transform: scale(1.22) translateY(-5px) rotate(8deg);
+  }
+  70% {
+    transform: scale(0.95) translateY(1px) rotate(-3deg);
   }
   100% {
     transform: none;
@@ -593,6 +635,27 @@ span.plus-circle svg {
   from {
     transform: scale(0.88);
     opacity: 0.6;
+  }
+}
+@keyframes glider-stretch {
+  0% {
+    transform: scaleX(1) scaleY(1);
+  }
+  35% {
+    transform: scaleX(1.32) scaleY(0.82);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes glider-ring {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.35, 1.6);
   }
 }
 
