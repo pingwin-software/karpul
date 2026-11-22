@@ -161,10 +161,11 @@ in step), the guide,
 `SUPPORT` in `lib/support.ts`) and *Report a bug or send feedback* (`FeedbackSheet`, also at the foot of the support
 sheet: a bug or an idea sent as a `mailto:` to the app contact from the person's own mail app, with the account, view,
 browser and screen under the text; nothing on the server). Picking an
-item closes the drawer before the sheet opens, so the two body-scroll locks never overlap. The views are switched by a Fluent bottom tab bar on a
-phone (`.tabbar` in `App.tsx`, a radio group named *View*, 26px marks, the active one filled; one
-green pill, `.tab-glider`, slides under the marks to the picked tab on `--ease-bounce`, and the mark it
-lands on pops, keyed so the animation replays; `--tabbar` is its height, which the FAB, the toast and the column's foot leave room for, and 0
+item closes the drawer before the sheet opens, so the two body-scroll locks never overlap. The views are switched by a floating dock on a
+phone (`.tabbar` in `App.tsx`, a radio group named *View*: a rounded bar inset from the edges over a blur, 30px marks, the active one
+filled in white on one solid green pill; the pill, `.tab-glider`, slides to the picked tab on `--ease-bounce` and its keyed inner
+`.tab-glider-pill` stretches as it sets off, a ring spreads from it as it lands, and the mark it
+lands on jumps with a tilt, keyed so the animations replay; `--tabbar` is the room the dock takes with the gap under it, which the FAB, the toast and the column's foot leave room for, and 0
 on a wide screen) and by the segmented control in the toolbar on a wide screen, and
 remembered in `localStorage` (`karpul.view`): *Upcoming* (the default), *Week* and *Day*.
 Day (`components/DayPlan.tsx`, the arithmetic in `lib/dayPlan.ts`, tested in `dayPlan.test.ts`) is

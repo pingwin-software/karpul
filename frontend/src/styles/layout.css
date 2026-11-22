@@ -1,6 +1,7 @@
 /* --- Layout -------------------------------------------------------------- */
 :root {
-  --tabbar: 72px;
+  /* The dock (76px) and the gap under it. */
+  --tabbar: 88px;
 }
 .app {
   max-width: 600px;

@@ -590,18 +590,22 @@ function Board({ session }: { session: Session }) {
     week: <CalendarIcon size={16} />,
     day: <ClockIcon size={16} />,
   }
-  // On a phone the views are a Fluent bottom tab bar instead: the same radio
-  // group, the active tab's mark filled. One green pill glides under the marks
-  // to the picked tab, and the mark it lands on pops (keyed, so it replays).
+  // On a phone the views are a floating dock instead: the same radio group,
+  // the active tab's mark filled on a solid green pill. The pill glides to the
+  // picked tab, stretching as it goes, and the mark it lands on jumps and
+  // settles (both keyed, so they replay).
   const tabMarks: Record<View, FluentName> = { upcoming: 'list', week: 'calendar', day: 'clock' }
   const tabBar = (
     <nav className="tabbar" role="radiogroup" aria-label={t.view.label}>
       <div className="tabbar-track" style={{ '--tab': VIEWS.indexOf(view) } as CSSProperties}>
-        <span className="tab-glider" aria-hidden="true" />
+        <span className="tab-glider" aria-hidden="true">
+          {/* Keyed, so the pill stretches as it sets off each time. */}
+          <span key={view} className="tab-glider-pill" />
+        </span>
         {VIEWS.map((v) => (
           <button key={v} type="button" role="radio" aria-checked={view === v} className={view === v ? 'tab tab-on' : 'tab'} onClick={() => setView(v)}>
             <span className="tab-pill" aria-hidden="true">
-              <FluentIcon key={view === v ? 'on' : 'off'} className="tab-icon" name={tabMarks[v]} variant={view === v ? 'filled' : 'regular'} size={26} />
+              <FluentIcon key={view === v ? 'on' : 'off'} className="tab-icon" name={tabMarks[v]} variant={view === v ? 'filled' : 'regular'} size={30} />
             </span>
             <span className="tab-label">{t.view[v]}</span>
           </button>
