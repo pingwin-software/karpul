@@ -89,7 +89,7 @@ export function MyRides({ user, onNotice, onClose }: Props) {
                 </button>
               </div>
               <p className="hint">{t.myRides.feedHint}</p>
-              <button type="button" className="link feed-new" disabled={rotating} onClick={() => void rotateFeed()}>
+              <button type="button" className="soft-action feed-new" disabled={rotating} onClick={() => void rotateFeed()}>
                 <RepeatIcon size={15} /> {t.myRides.feedNew}
               </button>
               <p className="hint hint-tight">{t.myRides.feedNewHint}</p>

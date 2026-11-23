@@ -134,6 +134,7 @@
   color: #fcd34d;
 }
 :root[data-resolved='dark'] .soft-action,
+:root[data-resolved='dark'] .route-add,
 :root[data-resolved='dark'] .driver-car-pt-electric,
 :root[data-resolved='dark'] .driver-car-pt-hybrid {
   color: var(--green);

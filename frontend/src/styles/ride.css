@@ -117,8 +117,12 @@
   content: '·';
   margin-right: 0.35rem;
 }
+/* Free seats: an outlined pill, so it reads apart from the filled "Driving" and "You're in". */
 .session-seats {
-  font-size: 0.82rem;
+  padding: 0.08rem 0.5rem;
+  border: 1px solid var(--green-line);
+  border-radius: 999px;
+  font-size: 0.74rem;
   font-weight: 600;
   color: var(--green);
   white-space: nowrap;
@@ -251,9 +255,6 @@
 }
 .pax-row-me {
   background: color-mix(in srgb, var(--green-soft) 50%, var(--surface));
-}
-.pax-leave {
-  font-size: 0.84rem;
 }
 .add-row,
 .dropzone {

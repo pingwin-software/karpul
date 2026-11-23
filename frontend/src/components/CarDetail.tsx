@@ -571,7 +571,7 @@ export function CarDetail({
                         <span className="pax-pickup">
                           <PinIcon size={12} /> {t.detail.getsInAt(b.pickup || ride.origin)}
                           {mine && !isPast && !movingPickup && (
-                            <button type="button" className="link link-sm" disabled={busy} onClick={() => setMovingPickup('pick')}>
+                            <button type="button" className="soft-action soft-action-plain soft-action-xs" disabled={busy} onClick={() => setMovingPickup('pick')}>
                               {t.common.edit}
                             </button>
                           )}
@@ -646,7 +646,7 @@ export function CarDetail({
                     {mine && !isDriver && !isPast && (
                       <button
                         type="button"
-                        className="link pax-leave"
+                        className="soft-action soft-action-plain pax-leave"
                         disabled={busy}
                         onClick={() => onLeave(ride, b.id)}
                       >

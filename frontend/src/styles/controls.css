@@ -433,6 +433,16 @@ input[type='checkbox'] {
 .soft-action:disabled {
   opacity: 0.5;
 }
+/* Without an icon: even padding. And the small one, for inside a line of text. */
+.soft-action-plain {
+  padding-inline: 0.8rem;
+}
+.soft-action-xs {
+  min-height: 24px;
+  padding-block: 0.05rem;
+  padding-inline: 0.55rem;
+  font-size: 0.76rem;
+}
 .icon-btn {
   display: inline-grid;
   place-items: center;
