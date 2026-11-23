@@ -352,7 +352,7 @@ export function CarDetail({
         )}
 
         {!ride.proposal && !isPast && !isDriver && myBooking?.passenger_id != null && (
-          <button type="button" className="link suggest-link" onClick={() => setSuggesting(true)}>
+          <button type="button" className="soft-action suggest-link" onClick={() => setSuggesting(true)}>
             <ClockIcon size={15} /> {t.detail.suggest}
           </button>
         )}
@@ -419,7 +419,7 @@ export function CarDetail({
           <span className="trip-actions">
             <button
               type="button"
-              className="link link-sm trip-add"
+              className="soft-action"
               disabled={busy}
               onClick={() => (myBooking ? setMovingPickup('new') : setChoosing(seatOnOffer ? 'join' : 'wait'))}
             >
@@ -430,11 +430,11 @@ export function CarDetail({
         {runsIt && !isPast && (
           <span className="trip-actions">
             {roomForStop && (
-              <button type="button" className="link link-sm trip-add" disabled={busy} onClick={() => setRouting('add')}>
+              <button type="button" className="soft-action" disabled={busy} onClick={() => setRouting('add')}>
                 <PlusIcon size={14} /> {t.detail.addStop}
               </button>
             )}
-            <button type="button" className="link link-sm trip-add" disabled={busy} onClick={() => setRouting('edit')}>
+            <button type="button" className="soft-action" disabled={busy} onClick={() => setRouting('edit')}>
               <PencilIcon size={14} /> {t.detail.editRoute}
             </button>
           </span>

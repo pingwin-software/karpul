@@ -392,6 +392,47 @@ input[type='checkbox'] {
   background: var(--green-soft);
   color: var(--green-dark);
 }
+/* A small action that should be seen: a green-tinted pill with its icon in a
+   filled dot. For the handful of things a card invites you to do (add a pickup
+   point, edit the route, open the car's guide); a plain .link stays for the
+   quiet ones (undo, withdraw, switch). */
+.soft-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 34px;
+  padding: 0.25rem 0.8rem 0.25rem 0.3rem;
+  border: 1px solid var(--green-line);
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  transition: background var(--hover), border-color var(--hover), box-shadow var(--hover), transform var(--hover);
+}
+.soft-action > svg {
+  flex: none;
+  box-sizing: content-box;
+  padding: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--surface);
+  stroke-width: 2.4;
+}
+.soft-action:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--green) 16%, var(--green-soft));
+  border-color: var(--green);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--green) 22%, transparent);
+}
+.soft-action:active:not(:disabled) {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+.soft-action:disabled {
+  opacity: 0.5;
+}
 .icon-btn {
   display: inline-grid;
   place-items: center;
