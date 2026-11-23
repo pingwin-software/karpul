@@ -946,7 +946,7 @@ function Board({ session }: { session: Session }) {
         )}
         {is('approvals') && isAdmin && (
           <Approvals
-            version={desk.tick + waiting}
+            version={`${desk.tick}.${waiting}`}
             busyId={busyId}
             onApprove={(r) => void onApprove(r)}
             onDecline={onDecline}
