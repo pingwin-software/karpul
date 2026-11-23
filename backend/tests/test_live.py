@@ -77,12 +77,15 @@ def test_rejected_mutations_are_silent(client):
 
 
 def test_every_client_gets_the_event(client):
-    with client.websocket_connect("/api/ws") as a, client.websocket_connect("/api/ws") as b:
+    # One at a time: the tests' database is a single connection, and a socket
+    # looks its account up on it in a thread of its own. The hello says it is done.
+    with client.websocket_connect("/api/ws") as a:
         a.receive_json()
-        b.receive_json()
-        client.post("/api/rides", json=own_ride())
-        assert a.receive_json()["type"] == "ride.created"
-        assert b.receive_json()["type"] == "ride.created"
+        with client.websocket_connect("/api/ws") as b:
+            b.receive_json()
+            client.post("/api/rides", json=own_ride())
+            assert a.receive_json()["type"] == "ride.created"
+            assert b.receive_json()["type"] == "ride.created"
 
 
 def test_car_pool_edits_are_broadcast(client, admin_auth):
