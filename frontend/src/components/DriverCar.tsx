@@ -57,7 +57,7 @@ export function DriverCar({ ride, carState = null, onCarState, onGuide }: Props)
           </button>
         )}
         {ride.car_type === 'corporate' && onGuide && (
-          <button type="button" className="link driver-car-guide" onClick={onGuide}>
+          <button type="button" className="soft-action driver-car-guide" onClick={onGuide}>
             <PlugIcon size={15} /> {t.detail.howTo}
           </button>
         )}

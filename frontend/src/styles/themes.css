@@ -133,6 +133,12 @@
   background: #45300b;
   color: #fcd34d;
 }
+:root[data-resolved='dark'] .soft-action,
+:root[data-resolved='dark'] .route-add,
+:root[data-resolved='dark'] .driver-car-pt-electric,
+:root[data-resolved='dark'] .driver-car-pt-hybrid {
+  color: var(--green);
+}
 :root[data-resolved='dark'] .car-fact-warn dd,
 :root[data-resolved='dark'] .driver-car-issue {
   color: #fcd34d;
