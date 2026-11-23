@@ -10,8 +10,10 @@ import { ArrowRightIcon, CheckIcon } from './icons'
 import { Sheet } from './Sheet'
 
 interface Props {
-  /** Bumped by the board after any decision or live change, so the list reloads. */
-  version: number
+  /** Changes after any decision or live change, so the list reloads. A key of
+      two parts, never their sum: a decision's tick going up as the count of
+      waiting rides goes down in the same render would cancel out. */
+  version: string
   busyId: number | null
   onApprove: (ride: Ride) => void
   onDecline: (ride: Ride) => void
