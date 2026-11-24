@@ -3,7 +3,7 @@
 from datetime import date, datetime, time, timezone
 from enum import Enum
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import DateTime, UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -224,6 +224,12 @@ class Ride(SQLModel, table=True):
     # the ride (access.is_driver). Nobody by departure, it goes
     # (reminders.drop_driverless).
     needs_driver: bool = Field(default=False, sa_column_kwargs={"server_default": "0"})
+    # Until when the passengers have to find a driver (app/driverless.py),
+    # local wall time like the ride's own, so stored naive; None on a ride
+    # that has one, or one cancelled before deadlines (then departure counts).
+    driver_deadline: datetime | None = Field(default=None, sa_type=DateTime)
+    # The passengers and the admins were reminded that it still has no driver; once.
+    driver_nudged: bool = Field(default=False, sa_column_kwargs={"server_default": "0"})
     # A coming ride written from the shared car's paper log (app/backfill.py):
     # the log says who booked the car, not that they take passengers, so
     # nobody but whoever runs the ride puts anyone in it until the driver (or

@@ -136,6 +136,8 @@ export interface Ride {
   /** The driver cancelled a shared car with passengers in it: one of them may
    *  take the wheel (`takeOver`); `driver_name` is still who cancelled. */
   needs_driver: boolean
+  /** Until when (local time, `YYYY-MM-DDTHH:MM:SS`) someone can take a ride whose driver cancelled; null while it has a driver. */
+  driver_deadline?: string | null
   /** A coming ride from the shared car's paper log its driver has not confirmed:
    *  nobody but whoever runs it puts anyone in (`confirmRide`). */
   unconfirmed: boolean

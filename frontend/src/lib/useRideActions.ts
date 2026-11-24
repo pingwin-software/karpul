@@ -257,6 +257,13 @@ export function useRideActions({ me, rides, withBusy, upsertRide, removeRides, s
       setToast({ kind: 'ok', text: t.toasts.tookOver })
     })
 
+  /** An admin puts someone at the wheel of a shared car whose driver cancelled. */
+  const onPickDriver = (ride: Ride, person: Person) =>
+    withBusy(ride.id, async () => {
+      upsertRide(await api.pickDriver(ride.id, person.id))
+      setToast({ kind: 'ok', text: t.toasts.driverPicked(person.display_name) })
+    })
+
   /** The driver (or an admin) confirms a ride from the shared car's paper log. */
   const onConfirmRide = (ride: Ride) =>
     withBusy(ride.id, async () => {
@@ -294,5 +301,5 @@ export function useRideActions({ me, rides, withBusy, upsertRide, removeRides, s
       setToast({ kind: 'ok', text: noShow ? t.toasts.noShowSaid(name) : t.toasts.noShowUndone(name) })
     })
 
-  return { onHere, onNoShow, onJoin, afterLeave, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onConfirmRide, onClaim, onLate }
+  return { onHere, onNoShow, onJoin, afterLeave, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onPickDriver, onConfirmRide, onClaim, onLate }
 }

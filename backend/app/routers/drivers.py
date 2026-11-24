@@ -13,8 +13,9 @@ from ..access import booking_of, get_ride_or_404, may_run, on_behalf
 from ..admin import require_admin
 from ..auth import CredsDep, require_user
 from ..database import get_session, get_write_session
+from ..driverless import driver_found
 from ..events import ride_saved
-from ..models import Booking, CarType, Ride, utcnow
+from ..models import Booking, CarType, Ride, User, utcnow
 from ..push import notify
 from ..ride_removal import remove_rides
 from ..schemas import RideRead
@@ -35,6 +36,30 @@ SessionDep = Annotated[Session, Depends(get_session)]
 WriteSessionDep = Annotated[Session, Depends(get_write_session)]
 
 
+def _hand_to(session: Session, ride: Ride, driver: User, told_by: str) -> None:
+    """`driver` drives a ride whose driver cancelled: their seat, if they had
+    one, goes to the queue, the passengers are told `told_by` drives now (the
+    new driver's name), and every tab hears. Commits."""
+    booking = booking_of(ride, driver)
+    if booking is not None:
+        ride.bookings.remove(booking)
+        session.delete(booking)
+    ride.driver_id = driver.id
+    ride.driver_name = driver.display_name
+    driver_found(ride)
+    new_stops: list[Booking] = []
+    promoted = promote_waitlist(session, ride, new_stops)
+    session.add(ride)
+    session.commit()
+    session.refresh(ride)
+    ride_saved(ride, created=False)
+    notify(session, [b.passenger_id for b in ride.bookings if b not in promoted], "driver_found", ride, name=told_by)
+    if promoted:
+        notify(session, [b.passenger_id for b in promoted], "seat_freed", ride, driver=ride.driver_name)
+    for b in new_stops:
+        notify(session, [ride.driver_id], "stop_added", ride, name=b.passenger_name, place=b.pickup)
+
+
 @router.post("/{ride_id}/takeover", response_model=RideRead)
 def take_over(ride_id: int, session: WriteSessionDep, creds: CredsDep):
     """A passenger of a shared car whose driver cancelled (`needs_driver`)
@@ -46,25 +71,33 @@ def take_over(ride_id: int, session: WriteSessionDep, creds: CredsDep):
     ride = get_ride_or_404(session, ride_id)
     if not ride.needs_driver:
         raise HTTPException(status.HTTP_409_CONFLICT, "This ride already has a driver")
-    booking = booking_of(ride, user)
-    if booking is None:
+    if booking_of(ride, user) is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Only a passenger in this car can take it over")
-    ride.bookings.remove(booking)
-    session.delete(booking)
-    ride.driver_id = user.id
-    ride.driver_name = user.display_name
-    ride.needs_driver = False
-    new_stops: list[Booking] = []
-    promoted = promote_waitlist(session, ride, new_stops)
-    session.add(ride)
-    session.commit()
-    session.refresh(ride)
-    ride_saved(ride, created=False)
-    notify(session, [b.passenger_id for b in ride.bookings if b not in promoted], "driver_found", ride, name=user.display_name)
-    if promoted:
-        notify(session, [b.passenger_id for b in promoted], "seat_freed", ride, driver=ride.driver_name)
-    for b in new_stops:
-        notify(session, [ride.driver_id], "stop_added", ride, name=b.passenger_name, place=b.pickup)
+    _hand_to(session, ride, user, user.display_name)
+    return to_ride_read_dict(ride)
+
+
+class DriverPick(BaseModel):
+    driver_id: int
+
+
+@router.post("/{ride_id}/driver", response_model=RideRead)
+def pick_driver(ride_id: int, payload: DriverPick, session: WriteSessionDep, creds: CredsDep):
+    """Admin-only: a shared car whose driver cancelled gets a driver the
+    admin found, a passenger in it or anyone else with an account. Like a
+    takeover it is a rescue, so nobody's share is checked; the new driver is
+    told they were put down to drive."""
+    admin = require_admin(session, creds)
+    ride = get_ride_or_404(session, ride_id)
+    if not ride.needs_driver:
+        raise HTTPException(status.HTTP_409_CONFLICT, "This ride already has a driver")
+    driver = session.get(User, payload.driver_id)
+    if driver is None or driver.disabled:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Account not found")
+    audit.record(session, admin, "driver_picked", driver.display_name, ride=ride)
+    _hand_to(session, ride, driver, driver.display_name)
+    if driver.id != admin.id:
+        notify(session, [driver.id], "ride_assigned", ride, name=admin.display_name)
     return to_ride_read_dict(ride)
 
 

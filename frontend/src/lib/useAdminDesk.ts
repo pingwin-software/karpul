@@ -24,6 +24,7 @@ interface Deps {
 
 /**
  * The admin's desk on the board: the shared-car rides waiting for approval
+ * and those whose driver cancelled with nobody to drive yet
  * (components/Approvals.tsx), the own cars' plates the Beograd garage still
  * needs (components/GarageList.tsx), the "forgot password" asks (also under
  * Approvals), and the car pool's controls on the Shared cars sheet. `waiting`
@@ -43,9 +44,9 @@ export function useAdminDesk({ isAdmin, rides, resetsTick, withBusy, upsertRide,
   // How many wait: asked again whenever the board changes or a decision is made.
   useEffect(() => {
     if (!isAdmin) return
-    api
-      .approvals()
-      .then((list) => setWaitingRides(list.length))
+    // Shared cars past their share, and those whose driver cancelled with nobody at the wheel yet.
+    Promise.all([api.approvals(), api.driverless()])
+      .then(([pending, driverless]) => setWaitingRides(pending.length + driverless.length))
       .catch(() => undefined)
   }, [isAdmin, rides, tick])
 

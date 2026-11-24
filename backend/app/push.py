@@ -66,11 +66,11 @@ class Target:
 # Notifications sheet). Every `kind` notify() sends belongs to exactly one.
 CATEGORIES: dict[str, tuple[str, ...]] = {
     "seats": ("got_in", "got_out", "taken_out", "guest_taken_out", "seat_freed", "passenger_here", "no_show"),
-    "changes": ("change_asked", "change_agreed", "change_declined", "time_suggested", "suggestion_accepted", "suggestion_declined", "running_late", "ride_changed", "ride_removed", "ride_assigned", "stop_added", "driver_needed", "driver_found", "no_driver", "car_blocked"),
+    "changes": ("change_asked", "change_agreed", "change_declined", "time_suggested", "suggestion_accepted", "suggestion_declined", "running_late", "ride_changed", "ride_removed", "ride_assigned", "stop_added", "driver_needed", "driver_still_needed", "driver_found", "no_driver", "car_blocked"),
     "reminders": ("leaving_soon", "note_km", "log_yours", "log_claim"),
     "messages": ("message",),
     "requests": ("request_made", "request_answered"),
-    "approvals": ("approval_requested", "reset_requested", "ride_approved", "ride_declined", "garage_plate", "plate_registered", "approval_waiting"),
+    "approvals": ("approval_requested", "reset_requested", "ride_approved", "ride_declined", "garage_plate", "plate_registered", "approval_waiting", "driver_wanted"),
     "cars": ("car_issue", "fleet_registration", "fleet_insurance", "fleet_service", "fleet_tyres"),
 }
 CATEGORY_OF = {kind: category for category, kinds in CATEGORIES.items() for kind in kinds}
@@ -119,6 +119,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "suggestion_accepted": lambda name: f"{name} took your suggested time",
         "suggestion_declined": lambda name: f"{name} keeps the time as it was",
         "driver_needed": lambda driver: f"{driver} can't drive. Will you take the car?",
+        "driver_still_needed": lambda by: f"Still nobody to drive. Will you take the car? If not, the ride is off at {by}",
         "driver_found": lambda name: f"{name} drives now",
         "no_driver": lambda alternatives=0: "Nobody took over the ride, it is off"
         + ("" if not alternatives else f". {alternatives} other car{'s' if alternatives > 1 else ''} with free seats that day"),
@@ -148,6 +149,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "garage_plate": lambda name, plate: f"{name} comes to the Beograd office in {plate}: add it to the garage list",
         "plate_registered": lambda name, plate: f"{plate} is on the garage list ({name})",
         "approval_waiting": lambda name: f"{name}'s shared car still waits for an approval and leaves soon",
+        "driver_wanted": lambda name, by: f"{name} can't drive and no passenger took the shared car. Pick a driver or it is off at {by}",
         "car_blocked": lambda car, reason="": f"{car} is out of service on the day of your ride" + (f": {reason}" if reason else ""),
         "fleet_registration": lambda car, days=None, km=None: f"{car}: the registration " + _en_due(days),
         "fleet_insurance": lambda car, days=None, km=None: f"{car}: the insurance " + _en_due(days),
@@ -175,6 +177,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "suggestion_accepted": lambda name: f"{name} je prihvatio/la predloženo vreme",
         "suggestion_declined": lambda name: f"{name} zadržava vreme kakvo je bilo",
         "driver_needed": lambda driver: f"{driver} ne može da vozi. Hoćeš li ti da preuzmeš auto?",
+        "driver_still_needed": lambda by: f"Još uvek niko ne vozi. Hoćeš li ti da preuzmeš auto? Ako niko ne preuzme, vožnja se otkazuje u {by}",
         "driver_found": lambda name: f"Sada vozi {name}",
         "no_driver": lambda alternatives=0: "Niko nije preuzeo vožnju, otkazana je"
         + ("" if not alternatives else f". Tog dana ima mesta u još {_sr_cars(alternatives)}"),
@@ -204,6 +207,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "garage_plate": lambda name, plate: f"{name} dolazi u kancelariju u Beogradu autom {plate}: dodaj ga na spisak za garažu",
         "plate_registered": lambda name, plate: f"{plate} je na spisku za garažu ({name})",
         "approval_waiting": lambda name: f"Zajednički auto koji traži {name} još čeka odobrenje, a polazi uskoro",
+        "driver_wanted": lambda name, by: f"{name} ne može da vozi, a nijedan putnik nije preuzeo zajednički auto. Izaberi vozača ili se vožnja otkazuje u {by}",
         "car_blocked": lambda car, reason="": f"{car} je van upotrebe na dan tvoje vožnje" + (f": {reason}" if reason else ""),
         "fleet_registration": lambda car, days=None, km=None: f"{car}: registracija " + _sr_due(days),
         "fleet_insurance": lambda car, days=None, km=None: f"{car}: osiguranje " + _sr_due(days, "je isteklo"),

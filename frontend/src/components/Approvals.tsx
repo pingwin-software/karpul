@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
-import { fmtShortDate, fmtTime, shortCarName, toISODate } from '../lib/dates'
+import { fmtDeadline, fmtShortDate, fmtTime, shortCarName, toISODate } from '../lib/dates'
 import { errMsg } from '../lib/errors'
 import { useT } from '../lib/i18n'
 import type { Ride, WaitingResetAsk } from '../lib/types'
@@ -33,6 +33,10 @@ interface Props {
  * on the day plan, to see what else has the car that day. Approving checks the
  * car is still free (a pending ride holds no slot), so it can be refused.
  *
+ * Then the shared cars whose driver cancelled and that no passenger took
+ * over yet (GET /api/admin/driverless), soonest deadline first: a tap opens
+ * the ride, where *Pick a driver* and *Cancel the ride* are.
+ *
  * Above them, the people who forgot their password and asked for a new one
  * from the sign-in screen. Each shows the four-digit code the person sees, so
  * the admin can check it with them before approving; once approved, their
@@ -41,13 +45,14 @@ interface Props {
 export function Approvals({ version, busyId, onApprove, onDecline, onOpen, resetAsks, resetBusyId, onDecideReset, onClose }: Props) {
   const t = useT()
   const [rides, setRides] = useState<Ride[] | null>(null)
+  const [driverless, setDriverless] = useState<Ride[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api
-      .approvals()
-      .then((list) => {
+    Promise.all([api.approvals(), api.driverless()])
+      .then(([list, noDriver]) => {
         setRides(list)
+        setDriverless(noDriver)
         setError(null)
       })
       .catch((e) => setError(t.apiError(e instanceof Error ? e.message : String(e))))
@@ -102,7 +107,7 @@ export function Approvals({ version, busyId, onApprove, onDecline, onOpen, reset
           )}
         </section>
       )}
-      {rides?.length === 0 && resetAsks.length === 0 && <div className="card empty-card empty-card-short">{t.approvals.empty}</div>}
+      {rides?.length === 0 && resetAsks.length === 0 && driverless.length === 0 && <div className="card empty-card empty-card-short">{t.approvals.empty}</div>}
       {rides && rides.length > 0 && (
         <ul className="approval-list">
           {rides.map((r) => {
@@ -140,6 +145,37 @@ export function Approvals({ version, busyId, onApprove, onDecline, onOpen, reset
             )
           })}
         </ul>
+      )}
+      {driverless.length > 0 && (
+        <section className="approval-resets" aria-labelledby="approval-driverless-title">
+          <h3 id="approval-driverless-title" className="approval-heading">
+            {t.approvals.driverlessTitle}
+          </h3>
+          <ul className="approval-list">
+            {driverless.map((r) => {
+              const by = r.driver_deadline ? fmtDeadline(r.driver_deadline) : null
+              return (
+                <li key={r.id} className="card approval-item">
+                  <button type="button" className="approval-ride" title={t.approvals.open} onClick={() => onOpen(r)}>
+                    <Avatar name={r.driver_name} size="md" />
+                    <span className="approval-what">
+                      <strong>{r.driver_name}</strong>
+                      <span className="approval-when">
+                        {fmtShortDate(r.ride_date)} · {fmtTime(r.departure_time)}
+                        {r.return_time ? `–${fmtTime(r.return_time)}` : ''}
+                      </span>
+                      <span className="approval-car">
+                        {shortCarName(r.car_name)}
+                        <PowertrainMark carName={r.car_name} />
+                      </span>
+                      {by && <span className="approval-route">{t.approvals.driverlessUntil(by.time, by.day)}</span>}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
       )}
     </Sheet>
   )

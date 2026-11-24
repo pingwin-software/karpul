@@ -11,6 +11,10 @@ interface Props {
   busy: boolean
   onPick: (person: Person) => void
   onCancel: () => void
+  /** Who may be picked; by default `addable`, the colleagues not in the car yet. */
+  candidates?: (people: Person[], ride: Ride, query: string) => Person[]
+  /** The search box's words; by default *Search colleagues*. */
+  label?: string
 }
 
 /** At most this many names under the search box; typing narrows it down. */
@@ -18,9 +22,11 @@ const SHOWN = 8
 
 /**
  * Putting a colleague in the car: a search over the people with an account,
- * never a typed name (backend: join_ride refuses one nobody answers to).
+ * never a typed name (backend: join_ride refuses one nobody answers to). An
+ * admin picking a driver for a car whose driver cancelled uses it too, with
+ * `drivable` as its `candidates`.
  */
-export function PassengerPicker({ ride, busy, onPick, onCancel }: Props) {
+export function PassengerPicker({ ride, busy, onPick, onCancel, candidates = addable, label }: Props) {
   const t = useT()
   const listId = useId()
   const [people, setPeople] = useState<Person[] | null>(null)
@@ -38,7 +44,8 @@ export function PassengerPicker({ ride, busy, onPick, onCancel }: Props) {
     }
   }, [])
 
-  const matches = people ? addable(people, ride, query) : []
+  const matches = people ? candidates(people, ride, query) : []
+  const searchLabel = label ?? t.detail.findColleague
   const shown = matches.slice(0, SHOWN)
 
   return (
@@ -53,8 +60,8 @@ export function PassengerPicker({ ride, busy, onPick, onCancel }: Props) {
             aria-expanded="true"
             aria-controls={listId}
             aria-autocomplete="list"
-            aria-label={t.detail.findColleague}
-            placeholder={t.detail.findColleague}
+            aria-label={searchLabel}
+            placeholder={searchLabel}
             maxLength={80}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -71,7 +78,7 @@ export function PassengerPicker({ ride, busy, onPick, onCancel }: Props) {
           <XIcon size={18} />
         </button>
       </div>
-      <div id={listId} className="listbox people-pick-list" role="listbox" aria-label={t.detail.findColleague}>
+      <div id={listId} className="listbox people-pick-list" role="listbox" aria-label={searchLabel}>
         {people === null ? (
           <p className="people-pick-note">{failed ? t.common.somethingWrong : t.common.loading}</p>
         ) : shown.length === 0 ? (

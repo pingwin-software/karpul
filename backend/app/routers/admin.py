@@ -19,6 +19,7 @@ from .. import audit, fleet
 from ..admin import admin_by_config, admin_ids, configured_admins, is_admin, require_admin
 from ..auth import CredsDep, issue_reset, reset_ask_expired
 from ..database import get_session, get_write_session
+from ..driverless import deadline_of
 from ..events import disconnect, photos_changed, request_deleted, request_saved, resets_changed, ride_deleted, ride_saved
 from ..models import (
     AdminAction,
@@ -367,6 +368,22 @@ def approvals(session: SessionDep, creds: CredsDep):
         .order_by(Ride.ride_date, Ride.departure_time, Ride.id)
     )
     rides = list(session.exec(stmt).all())
+    extras = board_extras(session, rides)
+    return [to_ride_read_dict(r, extras) for r in rides]
+
+
+@router.get("/driverless", response_model=list[RideRead])
+def driverless(session: SessionDep, creds: CredsDep):
+    """Admin-only: the shared cars whose driver cancelled and that no
+    passenger took over yet, soonest deadline first (app/driverless.py): an
+    admin may pick a driver (routers/drivers.pick_driver) or cancel the ride."""
+    require_admin(session, creds)
+    stmt = (
+        select(Ride)
+        .where(Ride.needs_driver == True, Ride.ride_date >= date.today())  # noqa: E712 - SQL comparison
+        .options(selectinload(Ride.bookings), selectinload(Ride.waitlist), selectinload(Ride.legs))  # type: ignore[arg-type]
+    )
+    rides = sorted(session.exec(stmt).all(), key=lambda r: (deadline_of(r), r.id))
     extras = board_extras(session, rides)
     return [to_ride_read_dict(r, extras) for r in rides]
 

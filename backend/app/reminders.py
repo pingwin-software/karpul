@@ -4,7 +4,9 @@ odometer once a shared car should be back.
 `send_due_reminders` is the whole rule, run once a minute by `reminder_loop`
 from the app's lifespan while push is configured. The same loop also removes,
 push or no push, a shared-car ride whose driver cancelled and that nobody
-took over by departure (`drop_driverless`).
+took over by its deadline (`drop_driverless`, app/driverless.py), and
+reminds that ride's passengers and the admins once before the deadline
+(`send_driver_nudges`).
 
 *Leaving soon.* Each person chooses how long before departure they want it
 (`User.remind_before`, one of LEAD_CHOICES), so one ride's reminders go out
@@ -30,6 +32,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
+from .driverless import NUDGE_BEFORE, deadline_of
 from .models import CarType, ReminderSent, Ride, User
 from .push import notify, vapid
 
@@ -129,16 +132,45 @@ def send_km_reminders(session: Session, now: datetime) -> int:
 
 def drop_driverless(session: Session, now: datetime | None = None) -> int:
     """Remove every ride whose driver cancelled (`needs_driver`) and that
-    nobody took over by its departure: the passengers are told it is off, and
-    the car is free again. Returns how many went. Commits."""
+    nobody took over by its deadline (app/driverless.py): the passengers are
+    told it is off, and the car is free again. Returns how many went. Commits."""
     from .ride_removal import remove_rides
 
     now = now or datetime.now()
-    stmt = select(Ride).where(Ride.needs_driver.is_(True), Ride.ride_date <= now.date())  # type: ignore[attr-defined]
-    due = [r for r in session.exec(stmt) if datetime.combine(r.ride_date, r.departure_time) <= now]
+    # A deadline is never after departure, and at most the evening before.
+    stmt = select(Ride).where(Ride.needs_driver.is_(True), Ride.ride_date <= now.date() + timedelta(days=1))  # type: ignore[attr-defined]
+    due = [r for r in session.exec(stmt) if deadline_of(r) <= now]
     if due:
         remove_rides(session, None, due, tell_driver=False)
     return len(due)
+
+
+def send_driver_nudges(session: Session, now: datetime) -> int:
+    """`NUDGE_BEFORE` a driverless ride's deadline, remind its passengers that
+    one of them can still take the car, and the admins that they can pick a
+    driver; once (`Ride.driver_nudged`). Returns how many rides."""
+    from .admin import admin_ids
+
+    stmt = select(Ride).where(
+        Ride.needs_driver.is_(True),  # type: ignore[attr-defined]
+        Ride.driver_nudged.is_(False),  # type: ignore[attr-defined]
+        Ride.driver_deadline.is_not(None),  # type: ignore[union-attr]
+    )
+    nudged = 0
+    admins = None
+    for ride in session.exec(stmt):
+        deadline = deadline_of(ride)
+        if deadline <= now or deadline - now > NUDGE_BEFORE:
+            continue
+        if admins is None:
+            admins = admin_ids(session)
+        by = deadline.strftime("%H:%M")
+        notify(session, [b.passenger_id for b in ride.bookings], "driver_still_needed", ride, by=by)
+        notify(session, admins, "driver_wanted", ride, name=ride.driver_name, by=by)
+        ride.driver_nudged = True
+        session.add(ride)
+        nudged += 1
+    return nudged
 
 
 # A pending shared car that leaves within this many hours and nobody decided
@@ -181,6 +213,7 @@ def send_due_reminders(session: Session, now: datetime | None = None) -> int:
     told = send_departure_reminders(session, now)
     send_km_reminders(session, now)
     send_approval_nudges(session, now)
+    send_driver_nudges(session, now)
     daily_fleet_check(session, now)
     session.commit()
     return told

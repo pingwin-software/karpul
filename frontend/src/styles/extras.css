@@ -2150,6 +2150,78 @@
   100% { opacity: 0; transform: scale(1); }
 }
 
+/* Nobody at the wheel: the deadline bar runs down until a new driver drops
+   in and the amber tag gives way to a green one. The base styles are the end:
+   the driver found. */
+.wn-nodriver-seat {
+  position: relative;
+  display: grid;
+}
+.wn-nodriver-seat > * {
+  grid-area: 1 / 1;
+}
+.wn-nodriver-old {
+  opacity: 0;
+  animation: wn-nodriver-out 6s var(--ease-out) infinite;
+}
+.wn-nodriver-new {
+  animation: wn-nodriver-in 6s var(--ease-out) infinite;
+}
+.wn-nodriver-tags {
+  display: grid;
+  width: 60%;
+}
+.wn-nodriver-tags > * {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+}
+.wn-nodriver-tags .wn-line {
+  flex: 1;
+  background: currentColor;
+  opacity: 0.45;
+}
+.wn-nodriver-wanted {
+  opacity: 0;
+  animation: wn-nodriver-out 6s var(--ease-out) infinite;
+}
+.wn-nodriver-found {
+  background: var(--green-soft);
+  color: var(--green-dark);
+  animation: wn-nodriver-in 6s var(--ease-out) infinite;
+}
+.wn-nodriver-clock {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+  opacity: 0;
+  animation: wn-nodriver-out 6s var(--ease-out) infinite;
+}
+.wn-nodriver-clock i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #d97706;
+  transform-origin: left;
+  animation: wn-nodriver-run 6s linear infinite;
+}
+@keyframes wn-nodriver-out {
+  0%, 55% { opacity: 1; }
+  65%, 100% { opacity: 0; }
+}
+@keyframes wn-nodriver-in {
+  0%, 55% { opacity: 0; transform: scale(0.8); }
+  65%, 95% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+@keyframes wn-nodriver-run {
+  0% { transform: scaleX(1); }
+  55%, 100% { transform: scaleX(0.3); }
+}
+
 /* I'm here: the button is pressed and the green tag comes up under the passenger. */
 .wn-here-row {
   display: flex;

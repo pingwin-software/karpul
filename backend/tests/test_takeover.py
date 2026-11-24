@@ -2,13 +2,14 @@
 instead (`Ride.needs_driver`, POST /api/rides/{id}/takeover); and the
 driver's coffee hint."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 import pytest
 from sqlmodel import Session
 
+from app.driverless import ask_for_driver
 from app.models import Ride
-from app.reminders import drop_driverless
+from app.reminders import drop_driverless, send_driver_nudges
 from tests.conftest import patch_ride_notify
 
 DAY = date.today() + timedelta(days=14)
@@ -71,6 +72,8 @@ def test_the_driver_cancelling_asks_the_passengers_and_one_takes_the_wheel(clien
     held = client.get(f"/api/rides/{ride['id']}").json()
     assert held["needs_driver"] is True
     assert held["driver_name"] == "Ana Petrović"
+    # Two weeks ahead: the passengers have until the evening before.
+    assert held["driver_deadline"] == f"{(DAY - timedelta(days=1)).isoformat()}T18:00:00"
     assert sent == [("driver_needed", sorted([bob, cid]))]
 
     # Ana gave it up: she can neither edit nor take it back.
@@ -126,13 +129,105 @@ def test_a_cancelled_ride_is_not_the_drivers_share_any_more(client, car):
     assert again.status_code == 201, again.text
 
 
-def test_nobody_by_departure_and_the_ride_goes(client, car, engine):
+def test_nobody_by_the_deadline_and_the_ride_goes(client, car, engine):
+    ride = ride_with(client, car, "Bob Jović")
+    client.delete(f"/api/rides/{ride['id']}", headers=ANA)
+    evening = datetime.combine(DAY - timedelta(days=1), time(18))
+    with Session(engine) as session:
+        assert drop_driverless(session, evening - timedelta(minutes=1)) == 0
+        assert drop_driverless(session, evening) == 1
+        assert session.get(Ride, ride["id"]) is None
+
+
+def test_a_ride_from_before_deadlines_goes_at_departure(client, car, engine):
     ride = ride_with(client, car, "Bob Jović")
     client.delete(f"/api/rides/{ride['id']}", headers=ANA)
     with Session(engine) as session:
-        assert drop_driverless(session, datetime.combine(DAY, datetime.min.time())) == 0
-        assert drop_driverless(session, datetime.combine(DAY, datetime.min.time()) + timedelta(hours=8)) == 1
-        assert session.get(Ride, ride["id"]) is None
+        row = session.get(Ride, ride["id"])
+        row.driver_deadline = None
+        session.add(row)
+        session.commit()
+        assert drop_driverless(session, datetime.combine(DAY, time(7, 59))) == 0
+        assert drop_driverless(session, datetime.combine(DAY, time(8))) == 1
+
+
+def at(day, hh, mm=0):
+    return datetime.combine(day, time(hh, mm))
+
+
+@pytest.mark.parametrize(
+    ("cancelled", "deadline", "nudged"),
+    [
+        # Days ahead: the evening before, with a reminder to come.
+        (at(DAY - timedelta(days=3), 9), at(DAY - timedelta(days=1), 18), False),
+        # Three hours before that evening is still enough.
+        (at(DAY - timedelta(days=1), 15), at(DAY - timedelta(days=1), 18), True),
+        # Later that evening: an hour before it leaves.
+        (at(DAY - timedelta(days=1), 16), at(DAY, 7), False),
+        # The same morning: never sooner than half an hour from now...
+        (at(DAY, 6, 50), at(DAY, 7, 20), True),
+        # ...and never after it leaves.
+        (at(DAY, 7, 45), at(DAY, 8), True),
+    ],
+)
+def test_the_deadline_leaves_time_to_answer_and_to_rebook(cancelled, deadline, nudged):
+    ride = Ride(ride_date=DAY, departure_time=time(8))
+    ask_for_driver(ride, cancelled)
+    assert ride.driver_deadline == deadline
+    assert ride.driver_nudged is nudged
+
+
+def test_the_passengers_and_the_admins_are_reminded_once(client, car, engine, admin_auth, monkeypatch):
+    told = []
+    monkeypatch.setattr(
+        "app.reminders.notify", lambda session, ids, kind, ride=None, **a: told.append((kind, sorted(i for i in ids if i), a.get("by")))
+    )
+    ride = ride_with(client, car, "Bob Jović")
+    bob = uid(client, BOB)
+    ada = client.get("/api/auth/me", headers=admin_auth).json()["id"]
+    client.delete(f"/api/rides/{ride['id']}", headers=ANA)
+    evening = at(DAY - timedelta(days=1), 18)
+    with Session(engine) as session:
+        assert send_driver_nudges(session, evening - timedelta(hours=3, minutes=1)) == 0
+        assert send_driver_nudges(session, evening - timedelta(hours=3)) == 1
+        session.commit()
+        assert send_driver_nudges(session, evening - timedelta(hours=1)) == 0
+    assert told == [("driver_still_needed", [bob], "18:00"), ("driver_wanted", [ada], "18:00")]
+
+
+def test_an_admin_sees_the_driverless_rides_and_picks_a_driver(client, car, admin_auth, sent):
+    ride = ride_with(client, car, "Bob Jović", "Cid Ilić")
+    client.delete(f"/api/rides/{ride['id']}", headers=ANA)
+    assert client.get("/api/admin/driverless", headers=BOB).status_code == 403
+    listed = client.get("/api/admin/driverless", headers=admin_auth).json()
+    assert [r["id"] for r in listed] == [ride["id"]]
+
+    # Not an admin: only a passenger's own takeover.
+    dan = uid(client, {"X-User-Name": "Dan Kos"})
+    assert client.post(f"/api/rides/{ride['id']}/driver", json={"driver_id": dan}, headers=BOB).status_code == 403
+
+    sent.clear()
+    res = client.post(f"/api/rides/{ride['id']}/driver", json={"driver_id": dan}, headers=admin_auth)
+    assert res.status_code == 200, res.text
+    picked = res.json()
+    assert picked["needs_driver"] is False and picked["driver_deadline"] is None
+    assert picked["driver_name"] == "Dan Kos" and picked["driver_id"] == dan
+    assert len(picked["bookings"]) == 2
+    bob, cid = uid(client, BOB), uid(client, CID)
+    assert ("driver_found", sorted([bob, cid])) in sent and ("ride_assigned", [dan]) in sent
+    assert client.get("/api/admin/driverless", headers=admin_auth).json() == []
+    assert client.post(f"/api/rides/{ride['id']}/driver", json={"driver_id": dan}, headers=admin_auth).status_code == 409
+    log = client.get("/api/admin/log", headers=admin_auth).json()
+    assert any(line["action"] == "driver_picked" for line in log)
+
+
+def test_an_admin_may_pick_a_passenger_whose_seat_then_frees(client, car, admin_auth):
+    ride = ride_with(client, car, "Bob Jović", "Cid Ilić")
+    client.delete(f"/api/rides/{ride['id']}", headers=ANA)
+    bob = uid(client, BOB)
+    picked = client.post(f"/api/rides/{ride['id']}/driver", json={"driver_id": bob}, headers=admin_auth).json()
+    assert picked["driver_id"] == bob
+    assert [b["passenger_name"] for b in picked["bookings"]] == ["Cid Ilić"]
 
 
 def test_the_coffee_hint_is_the_drivers_switch(client, car):

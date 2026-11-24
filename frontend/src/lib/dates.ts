@@ -149,6 +149,18 @@ export function fmtShortDate(iso: string): string {
   return parseISODate(iso).toLocaleDateString(intlTag(), { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
+/**
+ * A local wall-clock moment from the API (`YYYY-MM-DDTHH:MM:SS`, no zone, like
+ * a ride's own date and time) as its clock time and its day: 'today',
+ * 'tomorrow' or a short date ("Wed, Nov 25"), for the sentences to word.
+ */
+export function fmtDeadline(stamp: string): { time: string; day: string } {
+  const [iso, clock = ''] = stamp.split('T')
+  const today = todayISO()
+  const day = iso === today ? 'today' : iso === toISODate(addDays(parseISODate(today), 1)) ? 'tomorrow' : fmtShortDate(iso)
+  return { time: fmtTime(clock.slice(0, 5)), day }
+}
+
 /** "Ana Petrović" → "AP"; a single word gives its first letter. */
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)

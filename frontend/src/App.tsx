@@ -328,7 +328,7 @@ function Board({ session }: { session: Session }) {
   // What the ride card does (lib/useRideActions.ts): seats, the queue, the
   // route, the driver's switches, removal, asks and answers.
   const actions = useRideActions({ me, rides, withBusy, upsertRide, removeRides, setToast, setConfirm })
-  const { onJoin, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onConfirmRide, onClaim, onLate, onHere, onNoShow } = actions
+  const { onJoin, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onPickDriver, onConfirmRide, onClaim, onLate, onHere, onNoShow } = actions
 
   const closeForm = useCallback(() => {
     setForm(null)
@@ -526,6 +526,7 @@ function Board({ session }: { session: Session }) {
       onDecline={onDecline}
       onClaim={(r) => void onClaim(r)}
       onTakeOver={(r) => void onTakeOver(r)}
+      onPickDriver={onPickDriver}
       onConfirmRide={(r) => void onConfirmRide(r)}
       onOfficeMail={(r) => setCarMailFor({ rides: [r] })}
       onAnswerChange={(r, agree) => void onAnswerChange(r, agree)}
