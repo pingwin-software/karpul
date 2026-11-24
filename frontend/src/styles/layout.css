@@ -405,10 +405,13 @@ main,
 }
 .approval-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
+/* Side by side while both fit; on a narrow phone or with large text each
+   takes a line of its own instead of running out of the row. */
 .approval-actions .btn {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 40px;
 }
 /* "Is this you?": a ride whose driver is a name with no account, offered to
