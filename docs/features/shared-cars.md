@@ -29,8 +29,19 @@ the car, the passengers are pushed `driver_needed`, and `is_driver` / `drives()`
 driver as the driver (their name stays as the snapshot; the ride no longer counts in their share). A
 passenger's `POST /api/rides/{id}/takeover` makes them the driver (their seat goes to the queue, the
 others are pushed `driver_found`; the share is not checked again, it is a rescue). The last passenger
-with an account leaving removes it, and `reminders.drop_driverless` (every tick of the reminder loop,
-push or no push) removes one nobody took by departure, pushing `no_driver`. On screen: a *Needs a
+with an account leaving removes it. The ride does not hold the car until it leaves: cancelling sets
+`Ride.driver_deadline` (`app/driverless.py`: the evening before at 18:00 while that is at least 3 hours
+away, else an hour before departure, never sooner than half an hour from the cancellation and never after
+departure; local wall time, stored naive), and `reminders.drop_driverless` (every tick of the reminder
+loop, push or no push) removes one nobody took by then, pushing `no_driver`; a ride from before deadlines
+goes at departure (`deadline_of`). Three hours before the deadline, the passengers get
+`driver_still_needed` and the admins `driver_wanted` (`send_driver_nudges`, once, `Ride.driver_nudged`;
+none when the deadline was that close already at the cancellation). An admin may put anyone at the wheel,
+a passenger or not (`POST /api/rides/{id}/driver`, `pick_driver`: like a takeover, no share check; the
+new driver is pushed `ride_assigned`, logged as `driver_picked`) or cancel the ride: *Pick a driver*
+(`PassengerPicker` with `drivable`) and *Cancel the ride* on the card's row, which shows everyone the
+deadline, and a *Needs a driver* list under *Approvals* (`GET /api/admin/driverless`, counted in the
+badge). On screen: a *Needs a
 driver* tag and an *I'll drive* row on the card (`.approval-row`), the tag on the Upcoming row, and the
 removal confirmation says so. Tests: `tests/test_takeover.py`. A driver may also say they would
 appreciate a coffee (`Ride.coffee_please`, a switch in the form's Advanced part, a *Coffee* fact on the

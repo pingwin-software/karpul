@@ -44,6 +44,7 @@ function card(ride: Ride, me: Me, extra: { isPast?: boolean; onJoin?: (...args: 
     onDecline: noop,
     onClaim: noop,
     onTakeOver: noop,
+    onPickDriver: vi.fn(async () => undefined),
     onConfirmRide: noop,
     onOfficeMail: noop,
     onAnswerChange: noop,
@@ -136,6 +137,20 @@ describe('CarDetail: the driver', () => {
     const logRide = aRide({ driver_id: null, driver_name: 'Mila Milic' })
     expect(card(logRide, MILA, { isPast: true }).button(t().claim)).not.toBeNull()
     expect(card(logRide, BOJAN).button(t().claim)).toBeNull()
+  })
+
+  it('asks the passengers, gives an admin Pick a driver and Cancel, and tells everyone the deadline', () => {
+    const driverless = withBojan({ needs_driver: true, driver_deadline: '2099-01-01T18:00:00' })
+    const passenger = card(driverless, BOJAN)
+    expect(passenger.button(t().takeOver)).not.toBeNull()
+    expect(passenger.button(t().pickDriver)).toBeNull()
+    const admin = card(driverless, BOSS)
+    expect(admin.button(t().pickDriver)).not.toBeNull()
+    expect(admin.button(t().cancelDriverless)).not.toBeNull()
+    expect(admin.button(t().takeOver)).toBeNull()
+    const outsider = card(driverless, MILA)
+    expect(outsider.button(t().pickDriver)).toBeNull()
+    expect(outsider.host.querySelector('.approval-deadline')?.textContent).toContain('18:00')
   })
 
   it('shows an admin Approve on a pending shared car, and nobody else', () => {

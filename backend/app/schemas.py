@@ -1056,6 +1056,9 @@ class RideRead(BaseModel):
     # The driver cancelled a shared car with passengers in it; one of them may
     # take the wheel (POST /api/rides/{id}/takeover).
     needs_driver: bool = False
+    # Until when (local time) one of them can; nobody by then, the ride is
+    # cancelled (app/driverless.py). None while it has a driver.
+    driver_deadline: datetime | None = None
     # From the shared car's paper log and not confirmed by its driver yet:
     # nobody else can get in (POST /api/rides/{id}/confirm).
     unconfirmed: bool = False

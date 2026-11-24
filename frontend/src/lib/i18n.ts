@@ -456,6 +456,13 @@ const en = {
     takeOverAsk: (driver: string) => `${driver} can't drive. Will you take the car?`,
     takeOverWait: (driver: string) => `${driver} can't drive. The passengers are asked whether one of them will.`,
     takeOver: "I'll drive",
+    takeOverAdmin: (driver: string) => `${driver} can't drive and no passenger has taken the car yet.`,
+    /** `day` is 'today', 'tomorrow' or a short date (lib/dates.ts fmtDeadline). */
+    driverDeadline: (time: string, day: string) =>
+      `If nobody takes the car by ${time} ${day === 'today' || day === 'tomorrow' ? day : `on ${day}`}, the ride is cancelled and the car is free again.`,
+    pickDriver: 'Pick a driver',
+    findDriver: 'Search for the driver',
+    cancelDriverless: 'Cancel the ride',
     unconfirmed: 'Not confirmed',
     confirmAsk: "This ride comes from the shared car's paper log. Until you confirm it, nobody else can get in.",
     officeMailAsk: 'The office has not had the mail about this car yet.',
@@ -855,6 +862,9 @@ const en = {
     open: 'Open the ride',
     resetsTitle: 'Forgotten passwords',
     ridesTitle: 'Shared cars',
+    driverlessTitle: 'Needs a driver',
+    driverlessUntil: (time: string, day: string) =>
+      `Off at ${time} ${day === 'today' || day === 'tomorrow' ? day : `on ${day}`} unless someone drives`,
     resetCode: (code: string) => `Code ${code}`,
     resetHint: 'Call them and check the code on their screen first: approving lets whoever asked set a new password.',
   },
@@ -896,6 +906,8 @@ const en = {
           return `${admin} declined a shared-car ride of ${subject}`
         case 'ride_confirmed':
           return `${admin} confirmed a ride from the paper log for ${subject}`
+        case 'driver_picked':
+          return `${admin} picked ${subject} to drive a shared car whose driver cancelled`
         case 'seat_added':
           return `${admin} put someone in the car of ${subject}`
         case 'seat_removed':
@@ -1236,6 +1248,7 @@ const en = {
     rideRemoved: 'Ride removed.',
     handedOver: 'Your passengers are asked whether one of them drives.',
     tookOver: "You're driving now.",
+    driverPicked: (name: string) => `${name} drives now.`,
     rideConfirmed: 'Ride confirmed. Colleagues can get in now.',
     officeMailed: 'Noted: the office has the mail.',
     takenOut: (name: string) => `${name} is out of the car and has been told.`,
@@ -1591,6 +1604,10 @@ const en = {
     done: 'Got it',
     step: (n: number, of: number) => `${n} of ${of}`,
     entries: {
+      noDriver: {
+        title: 'Nobody at the wheel? Not for long',
+        body: "When a driver cancels a shared car with people in it, the passengers no longer have until the minute it leaves to sort it out. The card now shows a **deadline**: the evening before at 18:00, or an hour before it leaves when it's short notice. A few hours before, everyone in the car gets one more nudge, and admins can **Pick a driver** or **Cancel the ride** right on the card, or find it under **Approvals**. Nobody by the deadline, the ride is off and the car is free for someone who still needs it. No more finding out at 08:00 sharp.",
+      },
       passkey: {
         title: 'Your thumb is the password now',
         body: "Tired of passwords? **Your account** now has **Passkeys**: tap **Add a passkey on this device**, show your phone your finger or your face, and from then on **Sign in with a passkey** on the sign-in screen lets you in without typing a thing. Your password keeps working, for the days your thumb is busy holding a coffee.",
@@ -2342,6 +2359,12 @@ const sr: Messages = {
     takeOverAsk: (driver) => `${driver} ne može da vozi. Hoćeš li ti da preuzmeš auto?`,
     takeOverWait: (driver) => `${driver} ne može da vozi. Putnici su pitani da li će neko od njih.`,
     takeOver: 'Ja ću voziti',
+    takeOverAdmin: (driver) => `${driver} ne može da vozi, a nijedan putnik još nije preuzeo auto.`,
+    driverDeadline: (time, day) =>
+      `Ako niko ne preuzme auto do ${day === 'today' ? 'danas' : day === 'tomorrow' ? 'sutra' : day} u ${time}, vožnja se otkazuje i auto je ponovo slobodan.`,
+    pickDriver: 'Izaberi vozača',
+    findDriver: 'Pronađi vozača',
+    cancelDriverless: 'Otkaži vožnju',
     unconfirmed: 'Nije potvrđena',
     confirmAsk: 'Ova vožnja je upisana iz papirnog dnevnika zajedničkog auta. Dok je ne potvrdiš, niko drugi ne može da uđe.',
     officeMailAsk: 'Kancelarija još nije dobila mejl za ovaj auto.',
@@ -2599,6 +2622,9 @@ const sr: Messages = {
     open: 'Otvori vožnju',
     resetsTitle: 'Zaboravljene lozinke',
     ridesTitle: 'Zajednički automobili',
+    driverlessTitle: 'Traži se vozač',
+    driverlessUntil: (time, day) =>
+      `Otkazuje se ${day === 'today' ? 'danas' : day === 'tomorrow' ? 'sutra' : day} u ${time} ako niko ne vozi`,
     resetCode: (code) => `Kod ${code}`,
     resetHint: 'Prvo ih pozovi i proveri kod na njihovom ekranu: odobrenje dozvoljava onome ko je tražio da izabere novu lozinku.',
   },
@@ -2638,6 +2664,8 @@ const sr: Messages = {
           return `${admin} je odbio/la vožnju zajedničkim autom, vozio/la bi ${subject}`
         case 'ride_confirmed':
           return `${admin} je potvrdio/la vožnju iz papirnog dnevnika, vozi ${subject}`
+        case 'driver_picked':
+          return `${admin} je izabrao/la novog vozača za zajednički auto čiji je vozač otkazao: ${subject}`
         case 'seat_added':
           return `${admin} je dodao/la putnika, vozi ${subject}`
         case 'seat_removed':
@@ -3102,6 +3130,7 @@ const sr: Messages = {
     rideRemoved: 'Vožnja je uklonjena.',
     handedOver: 'Putnici su pitani da li će neko od njih da vozi.',
     tookOver: 'Sada ti voziš.',
+    driverPicked: (name) => `Sada vozi ${name}.`,
     rideConfirmed: 'Vožnja je potvrđena. Kolege sada mogu da uđu.',
     officeMailed: 'Zabeleženo: kancelarija je dobila mejl.',
     takenOut: (name) => `Uklonjen/a iz auta i obavešten/a: ${name}.`,
@@ -3452,6 +3481,10 @@ const sr: Messages = {
     done: 'Važi',
     step: (n, of) => `${n} od ${of}`,
     entries: {
+      noDriver: {
+        title: 'Niko za volanom? Ne zadugo',
+        body: 'Kad vozač otkaže zajednički auto u kom ima putnika, putnici više nemaju vremena do samog polaska da se snađu. Kartica sada pokazuje **rok**: veče pre u 18:00, ili sat pre polaska kad je u poslednji čas. Nekoliko sati pre roka svi u autu dobijaju još jedan podsetnik, a administratori mogu da **Izaberu vozača** ili **Otkažu vožnju** pravo sa kartice, ili da je nađu u **Odobrenjima**. Ako niko ne preuzme do roka, vožnja se otkazuje i auto je slobodan za nekog kome zaista treba. Nema više iznenađenja tačno u 08:00.',
+      },
       passkey: {
         title: 'Tvoj palac je sada lozinka',
         body: 'Dosta ti je lozinki? **Tvoj nalog** sada ima **Pristupne ključeve**: dodirni **Dodaj pristupni ključ na ovom uređaju**, pokaži telefonu prst ili lice, i od tada te **Prijavi me pristupnim ključem** na ekranu za prijavu pušta bez kucanja. Lozinka i dalje važi, za dane kad ti je palac zauzet kafom.',

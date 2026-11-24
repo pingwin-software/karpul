@@ -91,6 +91,8 @@ interface Props {
   onClaim: (ride: Ride) => void
   /** A passenger drives a shared car whose driver cancelled (`needs_driver`). */
   onTakeOver: (ride: Ride) => void
+  /** An admin puts someone at the wheel of a shared car whose driver cancelled. */
+  onPickDriver: (ride: Ride, person: Person) => Promise<void>
   /** The driver (or an admin) confirms a ride from the shared car's paper log (`Ride.unconfirmed`). */
   onConfirmRide: (ride: Ride) => void
   /** Open the mail to the office about this shared car (CarMailSheet), for one nobody said went out. */
@@ -164,6 +166,7 @@ export function CarDetail({
   onDecline,
   onClaim,
   onTakeOver,
+  onPickDriver,
   onConfirmRide,
   onOfficeMail,
   onAnswerChange,
@@ -375,6 +378,8 @@ export function CarDetail({
           isPast={isPast}
           seated={!!myBooking}
           onTakeOver={onTakeOver}
+          onPickDriver={onPickDriver}
+          onCancelRide={onCancel}
           onConfirmRide={onConfirmRide}
           onClaim={onClaim}
         />

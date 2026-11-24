@@ -7,7 +7,7 @@ thread. The rules they share are `app/ride_edits.py` (an edit held to the
 creation rules, the consent fields) and `app/ride_removal.py` (a ride going)."""
 
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Annotated, Literal
 from uuid import uuid4
 
@@ -22,6 +22,7 @@ from ..admin import admin_ids, is_admin
 from ..auth import CredsDep, require_user
 from ..calendar import ride_ics
 from ..database import get_session, get_write_session
+from ..driverless import ask_for_driver
 from ..events import request_saved, ride_saved
 from ..fleet import plate_standing
 from ..models import Booking, Ride, RideRequest, User
@@ -283,8 +284,9 @@ def delete_ride(
         stmt = select(Ride).where(Ride.series_id == ride.series_id, Ride.ride_date > ride.ride_date, Ride.id != ride.id)
         doomed += [r for r in session.exec(stmt) if may_run(user, r)]
     handed = [r for r in doomed if hands_over(user, r)]
+    now = datetime.now()
     for r in handed:
-        r.needs_driver = True
+        ask_for_driver(r, now)
         session.add(r)
     remove_rides(session, user, [r for r in doomed if r not in handed])
     for r in handed:

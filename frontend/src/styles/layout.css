@@ -397,6 +397,12 @@ main,
   font-size: 0.86rem;
   line-height: 1.4;
 }
+/* When a shared car whose driver cancelled is off if nobody drives (app/driverless.py). */
+.approval-deadline {
+  display: block;
+  margin-top: 0.3rem;
+  font-weight: 600;
+}
 .approval-actions {
   display: flex;
   gap: 0.5rem;

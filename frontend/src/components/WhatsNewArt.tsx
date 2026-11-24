@@ -9,7 +9,7 @@ import type { DemoKey } from '../lib/whatsNew'
 export function WhatsNewArt({ demo }: { demo: DemoKey }) {
   return (
     <div className={`wn-art wn-${demo}`} aria-hidden="true">
-      {demo === 'passkey' ? <PasskeyDemo /> : demo === 'imHere' ? <ImHereDemo /> : demo === 'offlineRides' ? <OfflineRidesDemo /> : demo === 'forgotPassword' ? <ForgotPasswordDemo /> : demo === 'officeMail' ? <OfficeMailDemo /> : demo === 'carMail' ? <CarMailDemo /> : demo === 'tourSpotlight' ? <TourSpotlightDemo /> : demo === 'noYou' ? <NoYouDemo /> : demo === 'pickAfter' ? <PickAfterDemo /> : demo === 'whoWhere' ? <WhoWhereDemo /> : demo === 'outOfService' ? <OutOfServiceDemo /> : demo === 'fleetUpkeep' ? <FleetUpkeepDemo /> : demo === 'monthSummary' ? <MonthSummaryDemo /> : demo === 'pickColleague' ? <PickColleagueDemo /> : demo === 'impact' ? <ImpactDemo /> : demo === 'addedBy' ? <AddedByDemo /> : demo === 'seatNotice' ? <SeatNoticeDemo /> : demo === 'carWhere' ? <CarWhereDemo /> : demo === 'carBusy' ? <CarBusyDemo /> : demo === 'prefill' ? <PrefillDemo /> : <ConsentDemo />}
+      {demo === 'noDriver' ? <NoDriverDemo /> : demo === 'passkey' ? <PasskeyDemo /> : demo === 'imHere' ? <ImHereDemo /> : demo === 'offlineRides' ? <OfflineRidesDemo /> : demo === 'forgotPassword' ? <ForgotPasswordDemo /> : demo === 'officeMail' ? <OfficeMailDemo /> : demo === 'carMail' ? <CarMailDemo /> : demo === 'tourSpotlight' ? <TourSpotlightDemo /> : demo === 'noYou' ? <NoYouDemo /> : demo === 'pickAfter' ? <PickAfterDemo /> : demo === 'whoWhere' ? <WhoWhereDemo /> : demo === 'outOfService' ? <OutOfServiceDemo /> : demo === 'fleetUpkeep' ? <FleetUpkeepDemo /> : demo === 'monthSummary' ? <MonthSummaryDemo /> : demo === 'pickColleague' ? <PickColleagueDemo /> : demo === 'impact' ? <ImpactDemo /> : demo === 'addedBy' ? <AddedByDemo /> : demo === 'seatNotice' ? <SeatNoticeDemo /> : demo === 'carWhere' ? <CarWhereDemo /> : demo === 'carBusy' ? <CarBusyDemo /> : demo === 'prefill' ? <PrefillDemo /> : <ConsentDemo />}
     </div>
   )
 }
@@ -19,6 +19,34 @@ const Tick = () => (
     <path d="M4 8.5 7 11l5-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
+
+/** A car whose driver cancelled: the deadline runs down, a new driver drops in, the tag turns green. */
+function NoDriverDemo() {
+  return (
+    <div className="wn-card">
+      <div className="wn-here-row">
+        <span className="wn-nodriver-seat">
+          <span className="wn-pax-avatar wn-nodriver-old">DD</span>
+          <span className="wn-pax-avatar wn-nodriver-new">SK</span>
+        </span>
+        <span className="wn-here-text">
+          <span className="wn-line wn-line-label" />
+          <span className="wn-nodriver-tags">
+            <span className="tag tag-amber wn-nodriver-wanted">
+              <span className="wn-line" />
+            </span>
+            <span className="wn-nodriver-found">
+              <span className="wn-line" />
+            </span>
+          </span>
+        </span>
+      </div>
+      <div className="wn-nodriver-clock">
+        <i />
+      </div>
+    </div>
+  )
+}
 
 /** The sign-in card: the password field fades, the passkey button is pressed, a tick lets you in. */
 function PasskeyDemo() {

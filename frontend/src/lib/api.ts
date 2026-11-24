@@ -310,6 +310,8 @@ export const api = {
   /** Admin: a shared-car ride past the driver's share, let through or refused (refused: the ride goes). */
   approveRide: (id: number) => request<Ride>(`/api/rides/${id}/approve`, { method: 'POST' }),
   takeOver: (id: number) => request<Ride>(`/api/rides/${id}/takeover`, { method: 'POST' }),
+  pickDriver: (id: number, driverId: number) =>
+    request<Ride>(`/api/rides/${id}/driver`, json('POST', { driver_id: driverId })),
   confirmRide: (id: number) => request<Ride>(`/api/rides/${id}/confirm`, { method: 'POST' }),
   /** The mail to the office about this shared car went out; `series`: it covered the coming weeks too. */
   officeMailed: (id: number, series = false) =>
@@ -431,6 +433,7 @@ export const api = {
 
   users: () => request<AdminUser[]>('/api/admin/users'),
   approvals: () => request<Ride[]>('/api/admin/approvals'),
+  driverless: () => request<Ride[]>('/api/admin/driverless'),
   /** The "forgot password" asks waiting for an admin (Approvals). */
   resetAsks: () => request<WaitingResetAsk[]>('/api/admin/reset-requests'),
   decideResetAsk: (id: number, approve: boolean) =>

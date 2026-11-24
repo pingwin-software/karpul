@@ -26,3 +26,16 @@ export function addable(people: Person[], ride: Ride, query: string): Person[] {
     ride.bookings.some((b) => b.passenger_id === p.id || (b.passenger_id === null && sameName(b.passenger_name, p.display_name)))
   return people.filter((p) => !taken(p) && (!q || fold(p.display_name).includes(q)))
 }
+
+/**
+ * Who an admin may put at the wheel of a shared car whose driver cancelled:
+ * everyone with an account but the driver who gave it up, passengers in it
+ * included (backend: routers/drivers.pick_driver), passengers first.
+ */
+export function drivable(people: Person[], ride: Ride, query: string): Person[] {
+  const q = fold(query.trim())
+  const seated = (p: Person) => ride.bookings.some((b) => b.passenger_id === p.id)
+  return people
+    .filter((p) => p.id !== ride.driver_id && (!q || fold(p.display_name).includes(q)))
+    .sort((a, b) => Number(seated(b)) - Number(seated(a)))
+}
