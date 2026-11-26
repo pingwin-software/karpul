@@ -154,10 +154,10 @@ route reversed.
   message names the date.
 - **Extra pickup points:** up to 6 places, before the start or on the way, where passengers
   can get in.
-- **Passengers can add and remove each other:** lets anyone already in the car put a
-  colleague in or take one out (useful for a team trip). You can always do both.
-- **Passengers can add pickup points:** on by default. Turn it off if your route is fixed;
-  passengers then choose only from the points already on it.
+- **Passengers:** two switches together. **Can add and remove each other** lets anyone already
+  in the car put a colleague in or take one out (useful for a team trip); you can always do
+  both. **Can add their own pickup points** is on by default; turn it off if your route is
+  fixed, and passengers then choose only from the points already on it.
 - **Distance** (one way, in km) and **Chip in** (per seat, e.g. "300 din"). Nothing is
   charged in the app; it is only the agreement, written where passengers see it. Between the
   Beograd and Novi Sad offices the distance fills itself in.
@@ -165,22 +165,20 @@ route reversed.
 - **Notes:** meeting point, detours, luggage.
 
 Switching back to **Simple** keeps what you filled in; the foot of the form lists the extras
-that are still set.
+that are still set. Editing a ride always shows the whole form.
 
 ### Running your ride
 
-Open your ride: **Edit** sits right on the card, beside the **⋮** menu, which has the rest:
+Open your ride: **Edit** sits right on the card (the passenger switches are in there too),
+beside the **⋮** menu, which has the rest:
 
-- **Edit ride**, **Duplicate ride**, **Remove ride**. On a weekly ride there is also
+- **Duplicate ride** and **Remove ride**. On a weekly ride there is also
   **Remove this and following rides**.
-- **Let passengers manage seats** / **Let passengers add pickup points** (and their "Stop…"
-  opposites).
 - **Share ride** and **Add to calendar** (see [section 8](#8-notifications-calendar-and-sharing)).
 
 On the card itself you can **Add a colleague** (a search over everyone with an account: type a
 few letters and tap the name; someone without an account has to register first) and take a
-passenger out. Under the route, **Add a pickup point** goes straight to the place
-picker and then where on the way it is. **Edit the route** opens the whole route over the full screen,
+passenger out. Under the route, **Edit the route** opens the whole route over the full screen,
 with who gets in where: tap a place to
 pick it again (a pickup point also says where on the way it goes), **×** takes a pickup point off,
 **Add a pickup point** puts a new one in, and nothing changes until **Save route**. A passenger whose

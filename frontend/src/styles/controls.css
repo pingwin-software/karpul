@@ -201,6 +201,20 @@ input[type='checkbox'] {
   line-height: 1.4;
   color: var(--muted);
 }
+/* Switches about one thing, as one box with a rule between the rows. */
+.switch-group {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+.switch-group > .switch-row {
+  border: 0;
+  border-radius: 0;
+}
+.switch-group > .switch-row + .switch-row {
+  border-top: 1px solid var(--border);
+}
 /* Fluent's TabList: the choices sit on the page, the picked one semibold with
    a short accent bar under it. The bar is one element (.seg-thumb, see
    components/Segmented.tsx) that slides to the next choice; the buttons only

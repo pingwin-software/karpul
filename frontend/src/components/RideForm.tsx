@@ -13,7 +13,7 @@ import { PlaceDialog } from './PlaceDialog'
 import { PlaceInput } from './PlaceInput'
 import { Avatar } from './Avatar'
 import { DriverPicker, type Driver } from './DriverPicker'
-import { ChevronRightIcon, HandIcon, PinIcon, PlusIcon, TrashIcon, XIcon } from './icons'
+import { ChevronRightIcon, HandIcon, PinIcon, PlusIcon, XIcon } from './icons'
 import { SegThumb } from './Segmented'
 import { Sheet } from './Sheet'
 import { CarField, ExtrasFields, RepeatField, SeatsField, WayBackField, WhenField } from './RideFormParts'
@@ -23,7 +23,7 @@ interface Props {
   date: string
   userName: string
   cars: CorporateCar[]
-  /** Editing this ride (the sheet says "Edit ride" and offers Delete). */
+  /** Editing this ride (the sheet says "Edit ride"; removing it is in the card's ⋮). */
   existing?: Ride | null
   /** Pre-fill a new ride from this one ("Duplicate ride"). */
   template?: Ride | null
@@ -42,7 +42,6 @@ interface Props {
   canAskApproval?: boolean
   /** `wayBack` is the mirror ride a one-way ride asked for with it (a second create). */
   onSubmit: (input: RideInput, wayBack?: RideInput) => void
-  onDelete?: () => void
   onClose: () => void
 }
 
@@ -55,7 +54,7 @@ interface Picking {
 
 
 /** The "Add ride" / "Edit ride" bottom sheet. */
-export function RideForm({ date, userName, cars, existing, template, request = null, slot = null, previous = null, prefill = true, onPrefillChange, submitting, error, canAskApproval = false, onSubmit, onDelete, onClose }: Props) {
+export function RideForm({ date, userName, cars, existing, template, request = null, slot = null, previous = null, prefill = true, onPrefillChange, submitting, error, canAskApproval = false, onSubmit, onClose }: Props) {
   const t = useT()
   const seed = existing ?? template ?? null
   const me = useMe()
@@ -127,13 +126,17 @@ export function RideForm({ date, userName, cars, existing, template, request = n
   const repeatTooFar = repeat && weeklyCount(rideDate, repeatUntil) > MAX_REPEAT_WEEKS + 1
   const repeatTooEarly = repeat && repeatUntil < rideDate
 
-  const advanced = mode === 'advanced'
+  // An edit shows the whole ride: there is nothing to keep short on a ride already made.
+  const advanced = !!existing || mode === 'advanced'
   // Whose passenger list the switch is about: the admin's own, or the driver's.
   const ownRide = existing ? drives(existing, me) : driver.id === me.id
   const listDriver = existing?.driver_name ?? driver.name
   const manageHint = passengersManage
     ? ownRide ? t.form.manageOn : t.form.manageOnFor(listDriver)
     : ownRide ? t.form.manageOff : t.form.manageOffFor(listDriver)
+  // Whose ride it is goes without saying when it is your own.
+  const driverShown = existing?.driver_name ?? driver.name
+  const showDriver = picksDriver || (existing ? !drives(existing, me) : driver.id !== me.id)
   function setMode(next: Mode) {
     setModeState(next)
     try {
@@ -390,20 +393,13 @@ export function RideForm({ date, userName, cars, existing, template, request = n
       onSubmit={submit}
       onClose={onClose}
       footer={
-        <>
-          <button type="submit" className="btn btn-primary btn-block" disabled={submitting || !!localError || distanceBad || checkingCar}>
-            {submitting ? t.common.saving : existing ? t.form.saveChanges : t.form.addTitle}
-          </button>
-          {existing && onDelete && (
-            <button type="button" className="btn btn-outline-danger btn-block" disabled={submitting} onClick={onDelete}>
-              <TrashIcon size={18} /> {t.form.deleteRide}
-            </button>
-          )}
-        </>
+        <button type="submit" className="btn btn-primary btn-block" disabled={submitting || !!localError || distanceBad || checkingCar}>
+          {submitting ? t.common.saving : existing ? t.form.saveChanges : t.form.addTitle}
+        </button>
       }
     >
       {/* Sticky, so the way back to the short form is never scrolled away. */}
-      <div className="form-mode">
+      {!existing && <div className="form-mode">
         <div className="segmented" role="radiogroup" aria-label={t.form.detailLevel}>
           <SegThumb count={2} index={advanced ? 1 : 0} />
           <button type="button" role="radio" aria-checked={!advanced} className={advanced ? 'seg' : 'seg seg-on'} onClick={() => setMode('simple')}>
@@ -413,7 +409,7 @@ export function RideForm({ date, userName, cars, existing, template, request = n
             {t.form.advanced}
           </button>
         </div>
-      </div>
+      </div>}
 
       {request && (
         <div className="banner banner-ok form-answering">
@@ -428,13 +424,13 @@ export function RideForm({ date, userName, cars, existing, template, request = n
           only an admin adding a ride may choose whose it is. */}
       {picksDriver ? (
         <DriverPicker value={driver} meId={me.id} onChange={setDriver} />
-      ) : (
+      ) : showDriver ? (
         <div className="form-driver">
-          <Avatar name={existing?.driver_name ?? userName} size="sm" />
-          <span className="form-driver-name">{existing?.driver_name ?? userName}</span>
+          <Avatar name={driverShown} size="sm" />
+          <span className="form-driver-name">{driverShown}</span>
           <span className="form-driver-role">{t.form.driver}</span>
         </div>
-      )}
+      ) : null}
 
       {fresh && previous && (
         <div className="field">
@@ -454,16 +450,25 @@ export function RideForm({ date, userName, cars, existing, template, request = n
 
       <SeatsField seats={seats} minSeats={minSeats} maxSeats={maxSeats} onSeats={setSeats} />
 
+      {/* What the passengers may do themselves, both switches in one place. */}
       {advanced && (
         <div className="field">
-          <span className="field-label">{t.form.passengerList}</span>
-          <label className="switch-row">
-            <span className="switch-row-text">
-              <span className="switch-row-title">{t.form.canManage}</span>
-              <span className="switch-row-desc">{manageHint}</span>
-            </span>
-            <input type="checkbox" checked={passengersManage} onChange={(e) => setPassengersManage(e.target.checked)} />
-          </label>
+          <span className="field-label">{t.form.passengersMay}</span>
+          <div className="switch-group">
+            <label className="switch-row">
+              <span className="switch-row-text">
+                <span className="switch-row-title">{t.form.canManage}</span>
+                <span className="switch-row-desc">{manageHint}</span>
+              </span>
+              <input type="checkbox" checked={passengersManage} onChange={(e) => setPassengersManage(e.target.checked)} />
+            </label>
+            <label className="switch-row">
+              <span className="switch-row-text">
+                <span className="switch-row-title">{t.form.canAddStops}</span>
+              </span>
+              <input type="checkbox" checked={passengersAddStops} onChange={(e) => setPassengersAddStops(e.target.checked)} />
+            </label>
+          </div>
         </div>
       )}
 
@@ -602,16 +607,6 @@ export function RideForm({ date, userName, cars, existing, template, request = n
               setPicking(null)
             }}
           />
-        )}
-        {advanced && <p className="hint">{t.form.stopsHint}</p>}
-        {advanced && (
-          <label className="switch-row">
-            <span className="switch-row-text">
-              <span className="switch-row-title">{t.form.canAddStops}</span>
-              <span className="switch-row-desc">{passengersAddStops ? t.form.addStopsOn : t.form.addStopsOff}</span>
-            </span>
-            <input type="checkbox" checked={passengersAddStops} onChange={(e) => setPassengersAddStops(e.target.checked)} />
-          </label>
         )}
       </div>
 

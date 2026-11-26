@@ -65,9 +65,6 @@ interface Props {
   onSwitch?: (ride: Ride, from: { ride: Ride; bookingId: number }, pickup: string, newStop?: NewStop | null) => void
   /** Move a passenger (yourself, or anyone if you may manage seats) to another pickup point, or a new one. */
   onMovePickup: (ride: Ride, bookingId: number, pickup: string, newStop?: NewStop | null) => void
-  /** The driver (or an admin) puts another pickup point on the route. */
-  /** The driver (or an admin) puts a pickup point on the route straight from `AddStop`. */
-  onAddStop: (ride: Ride, stop: string, where: NewStop) => void
   /** The route edited in `RouteEditor`, saved; resolves true when it went through. */
   onSaveRoute: (ride: Ride, patch: Partial<RideInput>) => Promise<boolean>
   onShare: (ride: Ride) => void
@@ -81,10 +78,6 @@ interface Props {
   onCancel: (ride: Ride) => void
   onEdit: (ride: Ride) => void
   onDuplicate: (ride: Ride) => void
-  /** The driver's switch: may the passengers add and remove each other? */
-  onTogglePassengersManage: (ride: Ride) => void
-  /** The driver's switch: may the passengers put new pickup points on the route? */
-  onTogglePassengersAddStops: (ride: Ride) => void
   /** Admin: a shared car past the driver's one a week, let through or refused. */
   onApprove: (ride: Ride) => void
   onDecline: (ride: Ride) => void
@@ -154,7 +147,6 @@ export function CarDetail({
   switchFrom = null,
   onSwitch,
   onMovePickup,
-  onAddStop,
   onSaveRoute,
   onShare,
   onDownloadCalendar,
@@ -163,8 +155,6 @@ export function CarDetail({
   onCancel,
   onEdit,
   onDuplicate,
-  onTogglePassengersManage,
-  onTogglePassengersAddStops,
   onApprove,
   onDecline,
   onClaim,
@@ -235,8 +225,8 @@ export function CarDetail({
   const [asking, setAsking] = useState<'join' | 'wait' | null>(null)
   const [choosing, setChoosing] = useState<'join' | 'wait' | null>(null)
   const [movingPickup, setMovingPickup] = useState<false | 'pick' | 'new'>(false)
-  // Whoever runs the ride: straight to a new pickup point, or the whole route.
-  const [routing, setRouting] = useState<'add' | 'edit' | null>(null)
+  // Whoever runs the ride: the whole route on its own screen.
+  const [editingRoute, setEditingRoute] = useState(false)
   const [showMap, setShowMap] = useState(false)
   const mapConfig = useMapConfig()
   // Without the maps (KARPUL_MAPS) none of this shows.
@@ -247,9 +237,8 @@ export function CarDetail({
   // Your request that day starts near this route: offer to get in there.
   const hint = mapsAllowed && seatOnOffer ? stopHint(ride, myRequest) : null
   const hasStops = allStops(ride).length > 0
-  const roomForStop = allStops(ride).length < MAX_STOPS
   // Off, a passenger picks from the route as it is; the driver still adds places.
-  const mayAddStop = roomForStop && (ride.passengers_add_stops || runsIt)
+  const mayAddStop = allStops(ride).length < MAX_STOPS && (ride.passengers_add_stops || runsIt)
   const pickupOptions = [
     ...ride.stops_before.map((s) => ({ value: s, label: s, hint: t.detail.beforeStart })),
     { value: '', label: ride.origin, hint: t.detail.start },
@@ -257,8 +246,6 @@ export function CarDetail({
   ]
   const withElsewhere = mayAddStop ? [...pickupOptions, { value: ELSEWHERE, label: t.detail.elsewhere }] : pickupOptions
   const choosingPlace = choosing !== null
-  // A passenger's own *Add a pickup point*: getting in, queueing or moving their seat to a new place.
-  const passengerAddsStop = !isPast && !isDriver && mayAddStop && (seatOnOffer || canWait || !!myBooking)
   const switching = !!switchFrom && !!onSwitch
   // A route that is only its start, with nowhere new allowed, has nothing to ask.
   const asksPickup = hasStops || mayAddStop
@@ -292,19 +279,6 @@ export function CarDetail({
   const mapItems = mapsAllowed ? [{ label: t.map.navigate, icon: <NavigateIcon size={18} />, onSelect: () => openRoute(ride) }] : []
   const menuItems = runsIt
     ? [
-        { label: t.detail.editRide, icon: <PencilIcon size={18} />, onSelect: () => onEdit(ride), disabled: busy },
-        {
-          label: ride.passengers_manage ? t.detail.stopManage : t.detail.letManage,
-          icon: <UsersIcon size={18} />,
-          onSelect: () => onTogglePassengersManage(ride),
-          disabled: busy || isPast,
-        },
-        {
-          label: ride.passengers_add_stops ? t.detail.stopAddStops : t.detail.letAddStops,
-          icon: <PinIcon size={18} />,
-          onSelect: () => onTogglePassengersAddStops(ride),
-          disabled: busy || isPast,
-        },
         ...(canGive ? [{ label: t.detail.giveCar, icon: <CarIcon size={18} />, onSelect: () => setGiving(true), disabled: busy }] : []),
         { label: t.detail.duplicate, icon: <CopyIcon size={18} />, onSelect: () => onDuplicate(ride), disabled: busy },
         ...shareItems,
@@ -342,7 +316,7 @@ export function CarDetail({
               )}
             </span>
           </div>
-          {/* Editing is the thing whoever runs a ride does most: in plain sight, not only in the ⋮. */}
+          {/* Editing is the thing whoever runs a ride does most: in plain sight, and only here (not again in the ⋮). */}
           {runsIt && (
             <button type="button" className="btn btn-soft driver-edit" disabled={busy} onClick={() => onEdit(ride)}>
               <PencilIcon size={16} />
@@ -441,49 +415,22 @@ export function CarDetail({
           </button>
         )}
         {showMap && <RouteMapSheet ride={ride} onClose={() => setShowMap(false)} />}
-        {!runsIt && passengerAddsStop && (
-          <span className="trip-actions">
-            <button
-              type="button"
-              className="soft-action"
-              disabled={busy}
-              onClick={() => (myBooking ? setMovingPickup('new') : setChoosing(seatOnOffer ? 'join' : 'wait'))}
-            >
-              <PlusIcon size={14} /> {t.detail.addStop}
-            </button>
-          </span>
-        )}
+        {/* The whole route on one screen, *Add a pickup point* included. A passenger
+            puts a new place on the route through *Get in* or their pickup's *Edit*. */}
         {runsIt && !isPast && (
           <span className="trip-actions">
-            {roomForStop && (
-              <button type="button" className="soft-action" disabled={busy} onClick={() => setRouting('add')}>
-                <PlusIcon size={14} /> {t.detail.addStop}
-              </button>
-            )}
-            <button type="button" className="soft-action" disabled={busy} onClick={() => setRouting('edit')}>
+            <button type="button" className="soft-action" disabled={busy} onClick={() => setEditingRoute(true)}>
               <PencilIcon size={14} /> {t.detail.editRoute}
             </button>
           </span>
         )}
-        {runsIt && !isPast && routing === 'add' && (
-          <AddStop
-            ride={ride}
-            submitLabel={t.common.add}
-            busy={busy}
-            onCancel={() => setRouting(null)}
-            onSubmit={(place, where) => {
-              setRouting(null)
-              onAddStop(ride, place, where)
-            }}
-          />
-        )}
-        {runsIt && !isPast && routing === 'edit' && (
+        {runsIt && !isPast && editingRoute && (
           <RouteEditor
             ride={ride}
             busy={busy}
-            onClose={() => setRouting(null)}
+            onClose={() => setEditingRoute(false)}
             onSave={async (patch) => {
-              if (await onSaveRoute(ride, patch)) setRouting(null)
+              if (await onSaveRoute(ride, patch)) setEditingRoute(false)
             }}
           />
         )}
