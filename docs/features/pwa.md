@@ -16,7 +16,7 @@ through the Share menu (`ios()` also catches an iPad that calls itself a Mac). S
 running standalone, the board opens with an *Install Karpul* card (above the board on a phone,
 floating in the bottom corner on a wide screen): *Install* runs the browser's dialog, *Not now* /
 *Got it* puts it away for good in this browser (`karpul.installHint`), and *Install the app* in the
-drawer's *Settings* group stays while the browser can still install, bringing the card back on iOS.
+menu's *Settings* group stays while the browser can still install, bringing the card back on iOS.
 Nothing under `/api` is ever cached, and navigations to `/api`, `/docs`, `/redoc` and `/openapi.json`
 are left to FastAPI (`navigateFallbackDenylist`). `lib/pwa.ts` registers the worker from `main.tsx`
 (`registerType: 'prompt'`): a new build waits instead of reloading under the user's fingers, `App.tsx`

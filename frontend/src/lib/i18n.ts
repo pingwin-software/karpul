@@ -96,7 +96,8 @@ const en = {
     } as Record<LiveStatus, string>,
   },
 
-  view: { label: 'View', upcoming: 'Upcoming', week: 'Week', day: 'Day' },
+  /** The three places. `week` is a view that is gone: its name stays for the usage counts it left behind. */
+  view: { label: 'View', upcoming: 'Rides', day: 'Cars', you: 'You', week: 'Week' },
 
   plan: {
     label: 'Day plan',
@@ -110,6 +111,8 @@ const en = {
     from: (time: string) => `from ${time}`,
     you: 'You',
     pin: (time: string) => `Take it at ${time}`,
+    /** On a shared car's row: the ride form on that car. */
+    bookCar: 'Book',
     edit: (driver: string) => `Edit the ride of ${driver}`,
     barLabel: (driver: string, when: string, origin: string, destination: string, pax: number) =>
       `${driver}, ${when}, ${origin} to ${destination}, ${enPlural(pax, 'passenger', 'passengers')}`,
@@ -122,10 +125,26 @@ const en = {
     overview: 'The whole day',
   },
 
-  fab: {
-    addRide: 'Schedule a ride',
-    addHint: 'You drive: a shared car or your own',
-    askHint: 'Someone else drives, you need a seat',
+  /** The one way to add anything: a button, then who drives. */
+  newRide: {
+    button: 'New ride',
+    title: 'New ride',
+    shared: 'Shared car',
+    sharedHint: 'You drive one of the shared cars',
+    own: 'My car',
+    ownHint: 'You drive, colleagues ride along',
+    ask: 'I need a seat',
+    askHint: 'Someone else drives',
+  },
+
+  /** The card on top of the list: the next ride you are part of. */
+  next: {
+    label: 'Next',
+    youDrive: 'You drive.',
+    inCar: (n: number) => (n === 0 ? 'Nobody is in yet.' : `${n} in the car.`),
+    drives: (name: string) => `${name} drives.`,
+    getIn: (place: string) => `You get in at ${place}.`,
+    open: 'Open the ride',
   },
 
   sidebar: {
@@ -486,6 +505,7 @@ const en = {
     pickup: 'Pickup',
     start: 'Start',
     getsInAt: (place: string) => `Gets in at ${place}`,
+    seatsFree: (n: number) => `${enPlural(n, 'seat', 'seats')} free`,
     getInHere: (names: string[]) => `Getting in here: ${names.join(', ')}`,
     whereGetIn: 'Where do you get in?',
     changePickup: 'Change pickup',
@@ -1189,6 +1209,10 @@ const en = {
     changeAsked: 'Change asked',
     seats: (n: number) => enPlural(n, 'seat', 'seats'),
     stops: (n: number) => enPlural(n, 'stop', 'stops'),
+    /** Whoever drives, when it is you. */
+    you: 'You',
+    /** A row read aloud: when, the way, who drives what. */
+    row: (time: string, origin: string, destination: string, driver: string, car: string) => `${time}, ${origin} to ${destination}, ${driver} · ${car}`,
   },
 
   filters: {
@@ -1198,6 +1222,8 @@ const en = {
     mine: 'My rides',
     joined: "I'm in",
     search: 'Search by place or driver',
+    /** The button that opens the filters. */
+    filter: 'Filter',
     noMatch: 'No rides match.',
     clear: 'Clear filters',
   },
@@ -1398,16 +1424,15 @@ const en = {
       {
         title: 'Find your way around',
         steps: [
-          '**Upcoming** lists every ride for the next 90 days, a heading per day. **Week** is one week, a day at a time. **Day** shows who has which shared car when.',
-          'The green **+** (on a computer, **Schedule a ride** at the top of the list) adds a ride: book a shared car or offer your own. **Ask for a ride** is for when someone else drives.',
-          'The ☰ menu holds your account, **Your rides**, **Shared cars**, help and settings.',
-          'The lamp in the top bar is lit while the board is live: what colleagues do shows up as it happens.',
+          '**Rides** lists every ride for the next 90 days, a heading per day, with your next one on top. **Cars** shows who has which shared car when. **You** holds your account, **Your rides**, help and settings.',
+          '**New ride** adds one. It asks who drives first: a **Shared car**, **My car**, or **I need a seat** when someone else drives.',
+          'The lamp beside the title is lit while the board is live: what colleagues do shows up as it happens.',
         ],
       },
       {
         title: 'Get a seat in a car',
         steps: [
-          'In **Upcoming**, tap **Free seats** to hide full cars, or search for a place or a driver.',
+          'In **Rides**, the filter beside the search box shows only **Free seats**; or search for a place or a driver.',
           'Tap a ride to open it, then **Get in this car**.',
           'Choose where you get in. **Somewhere else…** adds a new place to the route. The driver is told.',
           '**Leave** takes you out. Already in a car that day? Another car offers **Switch to this car**.',
@@ -1423,10 +1448,10 @@ const en = {
       {
         title: 'Offer a ride',
         steps: [
-          'Tap **+**. Pick **Shared car** or **My own car**, the passenger seats, the day, the times and the route, then **Add ride**.',
+          'Tap **New ride**, then **Shared car** or **My car**. Pick the passenger seats, the day, the times and the route, then **Add ride**.',
           '**One way** removes the return time and offers **Add the way back too** for another day.',
           '**Advanced** adds a weekly repeat (up to 26 weeks), pickup points, distance, chip-in, coffee and a note. Chip-in is only the agreement: nothing is charged here.',
-          'Your ride\'s ⋮ menu edits, duplicates, shares or removes it. Your passengers are told when it moves or is removed.',
+          'Your ride\'s ⋯ menu edits, duplicates, shares or removes it. Your passengers are told when it moves or is removed.',
           'On the card you can add a colleague (search for them by name), take one out and add a pickup point.',
         ],
       },
@@ -1437,14 +1462,14 @@ const en = {
           'Type a place and pick it from the suggestions: the offices, the shared cars\' homes and places colleagues used before. A suggestion puts the place on the map too.',
           'The **Map** button beside a place opens the place picker: tap one of the **Saved places**, or search for an address. An address or **Pick on the map** opens a big map: move it until the ring is on the spot and tap **Use this point**. **Use my location** starts where you are.',
           'A pin is optional. Everyone in Karpul can see it, so a corner or a landmark is better than your front door.',
-          'On a ride, the map button beside each place opens it in your maps app. **Show on map** draws the whole route; **Open the route in Maps** in the ⋮ menu starts the navigation.',
+          'On a ride, the map button beside each place opens it in your maps app. **Show on map** draws the whole route; **Open the route in Maps** in the ⋯ menu starts the navigation.',
           'Asked for a ride with a pinned start? A car passing close by offers to pick you up there.',
         ],
       },
       {
         title: 'Shared cars',
         steps: [
-          'A shared car cannot be double-booked. **Day** shows when each one is free; tap a free stretch to book it.',
+          'A shared car cannot be double-booked. **Cars** shows when each one is free: tap a free stretch, or **Book**, to take it.',
           'Each person gets one shared-car ride a day and one a week, and no more than 24 hours in a row, unless the admins set it otherwise. Past that, **Ask an admin to approve it**. A ride awaiting approval does not hold the car. A car out of service cannot be booked on those days.',
           'Before your first drive, read the **Shared car guide**: charging with the company card and the Mazda 6e.',
           'In the car, note the odometer: **Note the start**, **Hand over** when someone else drives, **Car is back** with the battery and anything wrong.',
@@ -1455,7 +1480,7 @@ const en = {
       {
         title: 'No car going your way',
         steps: [
-          'Tap **Ask for a ride**: the day, roughly when, from and to.',
+          'Tap **New ride**, then **I need a seat**: the day, roughly when, from and to.',
           'Drivers who drive that way are notified, and anyone can **Offer a ride** from the board. You get the seat and a notification.',
         ],
       },
@@ -1471,14 +1496,14 @@ const en = {
         steps: [
           'Settings, **Notifications**: **Turn on**, then choose what to hear about and how long before you leave to be reminded.',
           'On an iPhone, add Karpul to the home screen first (Share, **Add to Home Screen**).',
-          '**Add to calendar** in a ride\'s ⋮ menu saves that ride. **Your rides** has a calendar feed address with all of your rides; keep it to yourself.',
+          '**Add to calendar** in a ride\'s ⋯ menu saves that ride. **Your rides** has a calendar feed address with all of your rides; keep it to yourself.',
           '**Share ride** sends a link that opens the ride for a colleague.',
         ],
       },
       {
         title: 'Your account',
         steps: [
-          'Tap your name at the top of the menu to add a photo, change your name, phone or password, or sign out.',
+          'Tap your name on **You** (on a computer, at the top of the sidebar) to add a photo, change your name, phone or password, or sign out.',
           'Your phone number is shown on the rides you drive, so passengers can call you.',
           'Forgot your password? Ask an admin for a reset link.',
           'When a new version is ready, a card says so: trace the bolt, or use the plain button.',
@@ -1490,7 +1515,7 @@ const en = {
         steps: [
           '**Approvals** lists shared-car rides waiting for an answer. **Approve** books the car; **Decline** removes the ride.',
           'An admin can edit or remove any ride and manage its seats. In the ride form, tap the driver line to add a ride in someone else\'s name.',
-          'In **Shared cars**, ⋮ on a car edits, retires or deletes it and **Add shared car** is at the foot. **Mark as fixed** clears a reported problem, ⋮ on a report puts it right or removes it, and **Usage** shows how the cars are used.',
+          'In **Shared cars**, ⋯ on a car edits, retires or deletes it and **Add shared car** is at the foot. **Mark as fixed** clears a reported problem, ⋯ on a report puts it right or removes it, and **Usage** shows how the cars are used.',
           '**People** makes admins, issues a password reset link (pass it on yourself) and deletes accounts.',
           '**All rides** is every ride in a date range, with a spreadsheet download. **Admin log** lists every change made to someone else\'s ride, a car or an account.',
         ],
@@ -1578,14 +1603,12 @@ const en = {
     skip: 'Skip the tour',
     menu: 'Take the tour',
     steps: {
-      find: ['Find a ride', 'Upcoming lists every ride from today on, Week shows one week day by day, and Day plans the shared cars by the hour. Open a ride to take a seat in it.'],
-      offer: ['Driving somewhere?', 'The green plus adds your ride: the car, the seats, the day and the route. Colleagues going your way get in, and you are told when they do.'],
-      cars: ['The shared cars', 'They are in the menu: how each one stands (kilometres, battery, anything wrong) and how to charge one with the company card.'],
+      find: ['Three places', 'Rides lists every ride from today on, your next one on top. Cars is the shared cars by the hour. You is your account, your rides and the settings.'],
+      offer: ['Driving somewhere?', 'New ride asks who drives first: a shared car, your own, or you need a seat. Then the day and the route. Colleagues going your way get in, and you are told when they do.'],
+      cars: ['The shared cars', 'Each car has its day as a timetable here: tap a free stretch, or Book, to take it. Tap a car to see how it stands (kilometres, battery, anything wrong).'],
     } as Record<TourStep, [string, string]>,
     /** Where a step reads differently beside the dock on a wide screen. */
     wide: {
-      offer: 'Schedule a ride, at the top of the list, is where you book a shared car or offer your own: the car, the seats, the day and the route. Ask for a ride, under it, is for when someone else drives.',
-      cars: 'They are on the left: how each one stands (kilometres, battery, anything wrong) and how to charge one with the company card.',
     } as Partial<Record<TourStep, string>>,
   },
 
@@ -1597,9 +1620,13 @@ const en = {
     done: 'Got it',
     step: (n: number, of: number) => `${n} of ${of}`,
     entries: {
+      newLook: {
+        title: 'Karpul got a haircut',
+        body: "Same app, a lot less on screen. Three tabs now: **Rides** (your next one sits on top), **Cars** (each shared car's day as a timetable, with **Book** on its row) and **You** (your rides, settings and help, which used to hide behind the menu). One button adds anything: **New ride** asks who drives first, so nobody books a seat when they meant a car. Opening a ride shows the people before the paperwork, and the button you came for stays put at the bottom. The cars finally look like themselves, too.",
+      },
       giveCar: {
         title: 'Pass the keys, not the buck',
-        body: "Driving, but someone in the car would rather take the wheel? Open the ride's **⋮** and tap **Give the car to a passenger**, then pick who. They drive from now on and you take their seat, so nobody loses a place. Not coming along after all? Just get out afterwards. The new driver and the rest of the car are told, and nobody has to cancel anything.",
+        body: "Driving, but someone in the car would rather take the wheel? Open the ride's **⋯** and tap **Give the car to a passenger**, then pick who. They drive from now on and you take their seat, so nobody loses a place. Not coming along after all? Just get out afterwards. The new driver and the rest of the car are told, and nobody has to cancel anything.",
       },
       noDriver: {
         title: 'Nobody at the wheel? Not for long',
@@ -2004,7 +2031,7 @@ const sr: Messages = {
     },
   },
 
-  view: { label: 'Prikaz', upcoming: 'Predstojeće', week: 'Sedmica', day: 'Dan' },
+  view: { label: 'Prikaz', upcoming: 'Vožnje', day: 'Automobili', you: 'Ti', week: 'Sedmica' },
 
   plan: {
     label: 'Plan dana',
@@ -2018,6 +2045,7 @@ const sr: Messages = {
     from: (time) => `od ${time}`,
     you: 'Ti',
     pin: (time) => `Uzmi ga u ${time}`,
+    bookCar: 'Rezerviši',
     edit: (driver) => `Izmeni vožnju (vozi ${driver})`,
     barLabel: (driver, when, origin, destination, pax) => `${driver}, ${when}, ${origin} do ${destination}, ${srPassengers(pax)}`,
     book: (car, from, to) => `Rezerviši ${car}, slobodno od ${from} do ${to}`,
@@ -2029,10 +2057,24 @@ const sr: Messages = {
     overview: 'Ceo dan',
   },
 
-  fab: {
-    addRide: 'Zakaži vožnju',
-    addHint: 'Voziš ti: zajednički ili svoj auto',
-    askHint: 'Vozi neko drugi, tebi treba mesto',
+  newRide: {
+    button: 'Nova vožnja',
+    title: 'Nova vožnja',
+    shared: 'Zajednički auto',
+    sharedHint: 'Voziš jedan od zajedničkih automobila',
+    own: 'Moj auto',
+    ownHint: 'Voziš ti, kolege idu s tobom',
+    ask: 'Treba mi mesto',
+    askHint: 'Vozi neko drugi',
+  },
+
+  next: {
+    label: 'Sledeća',
+    youDrive: 'Voziš ti.',
+    inCar: (n) => (n === 0 ? 'Još niko nije ušao.' : `${srPassengers(n)} u autu.`),
+    drives: (name) => `Vozi ${name}.`,
+    getIn: (place) => `Ulaziš: ${place}.`,
+    open: 'Otvori vožnju',
   },
 
   sidebar: {
@@ -2387,6 +2429,7 @@ const sr: Messages = {
     pickup: 'Ulazak',
     start: 'Polazak',
     getsInAt: (place) => `Ulazi: ${place}`,
+    seatsFree: (n) => srPlural(n, 'slobodno mesto', 'slobodna mesta', 'slobodnih mesta'),
     getInHere: (names) => `Ovde ulaze: ${names.join(', ')}`,
     whereGetIn: 'Gde ulaziš?',
     changePickup: 'Promeni mesto ulaska',
@@ -3072,6 +3115,8 @@ const sr: Messages = {
     changeAsked: 'Traži se saglasnost',
     seats: srSeats,
     stops: (n) => srPlural(n, 'usputna stanica', 'usputne stanice', 'usputnih stanica'),
+    you: 'Ti',
+    row: (time, origin, destination, driver, car) => `${time}, ${origin} do ${destination}, ${driver} · ${car}`,
   },
 
   filters: {
@@ -3081,6 +3126,7 @@ const sr: Messages = {
     mine: 'Moje vožnje',
     joined: 'Imam mesto',
     search: 'Traži po mestu ili vozaču',
+    filter: 'Filter',
     noMatch: 'Nijedna vožnja ne odgovara.',
     clear: 'Poništi filtere',
   },
@@ -3279,16 +3325,15 @@ const sr: Messages = {
       {
         title: 'Snalaženje',
         steps: [
-          '**Predstojeće** prikazuje sve vožnje u narednih 90 dana, po danima. **Sedmica** prikazuje jednu sedmicu, dan po dan. **Dan** pokazuje ko ima koji zajednički auto i kada.',
-          'Zeleno **+** (na računaru, **Zakaži vožnju** na vrhu liste) dodaje vožnju: rezerviše zajednički auto ili nudi tvoj. **Zatraži prevoz** je za kad vozi neko drugi.',
-          'U meniju ☰ su tvoj nalog, **Tvoje vožnje**, **Zajednički automobili**, pomoć i podešavanja.',
-          'Lampica u gornjoj traci svetli dok je tabla uživo: šta kolege urade, vidiš odmah.',
+          '**Vožnje** prikazuju sve vožnje u narednih 90 dana, po danima, a tvoja sledeća je na vrhu. **Automobili** pokazuju ko ima koji zajednički auto i kada. Pod **Ti** su tvoj nalog, **Tvoje vožnje**, pomoć i podešavanja.',
+          '**Nova vožnja** dodaje vožnju. Prvo pita ko vozi: **Zajednički auto**, **Moj auto**, ili **Treba mi mesto** kad vozi neko drugi.',
+          'Lampica pored naslova svetli dok je tabla uživo: šta kolege urade, vidiš odmah.',
         ],
       },
       {
         title: 'Kako da dobiješ mesto u autu',
         steps: [
-          'U prikazu **Predstojeće** dodirni **Slobodna mesta** da sakriješ pune automobile, ili potraži mesto ili vozača.',
+          'U **Vožnjama**, filter pored pretrage prikazuje samo **Slobodna mesta**; ili potraži mesto ili vozača.',
           'Dodirni vožnju da je otvoriš, pa **Uđi u ovaj auto**.',
           'Izaberi gde ulaziš. **Negde drugde…** dodaje novo mesto na rutu. Vozač dobija obaveštenje.',
           '**Izađi** te vadi iz auta. Već si u nekom autu tog dana? Drugi auto nudi **Pređi u ovaj auto**.',
@@ -3304,10 +3349,10 @@ const sr: Messages = {
       {
         title: 'Kako da ponudiš vožnju',
         steps: [
-          'Dodirni **+**. Izaberi zajednički ili svoj auto, broj mesta za putnike, dan, vreme i rutu, pa **Dodaj vožnju**.',
+          'Dodirni **Nova vožnja**, pa **Zajednički auto** ili **Moj auto**. Izaberi broj mesta za putnike, dan, vreme i rutu, pa **Dodaj vožnju**.',
           '**U jednom smeru** uklanja vreme povratka i nudi **Dodaj i povratak** za drugi dan.',
           '**Napredno** dodaje ponavljanje svake sedmice (do 26 sedmica), mesta ulaska, razdaljinu, doprinos, kafu i napomenu. Doprinos je samo dogovor: ovde se ništa ne naplaćuje.',
-          'Meni ⋮ na tvojoj vožnji služi da je izmeniš, dupliraš, podeliš ili ukloniš. Putnici dobijaju obaveštenje kad se vožnja pomeri ili ukloni.',
+          'Meni ⋯ na tvojoj vožnji služi da je izmeniš, dupliraš, podeliš ili ukloniš. Putnici dobijaju obaveštenje kad se vožnja pomeri ili ukloni.',
           'Na kartici vožnje možeš da dodaš kolegu (potražiš ga po imenu), izvadiš nekog iz auta i dodaš mesto ulaska.',
         ],
       },
@@ -3318,14 +3363,14 @@ const sr: Messages = {
           'Upiši mesto i izaberi ga iz predloga: kancelarije, mesta zajedničkih automobila i mesta koja su kolege već koristile. Predlog stavlja mesto i na mapu.',
           'Dugme **Mapa** pored mesta otvara biranje mesta: dodirni jedno od **Sačuvana mesta**, ili pretraži adresu. Adresa ili **Izaberi na mapi** otvara veliku mapu: pomeraj je dok krug ne bude na tom mestu i dodirni **Uzmi ovu tačku**. **Moja lokacija** počinje od mesta gde si.',
           'Tačka nije obavezna. Vide je svi u Karpulu, pa je ugao ili poznato mesto bolje od ulaznih vrata.',
-          'Na vožnji, dugme sa mapom pored svakog mesta otvara ga u aplikaciji za mape. **Prikaži na mapi** crta celu rutu; **Otvori rutu u Mapama** u ⋮ meniju pokreće navigaciju.',
+          'Na vožnji, dugme sa mapom pored svakog mesta otvara ga u aplikaciji za mape. **Prikaži na mapi** crta celu rutu; **Otvori rutu u Mapama** u ⋯ meniju pokreće navigaciju.',
           'Tražio/la si vožnju sa označenim polaskom? Auto koji prolazi blizu nudi da te pokupi tu.',
         ],
       },
       {
         title: 'Zajednički automobili',
         steps: [
-          'Zajednički auto ne može dvaput da se rezerviše za isto vreme. **Dan** pokazuje kada je koji slobodan; dodirni slobodan deo da ga rezervišeš.',
+          'Zajednički auto ne može dvaput da se rezerviše za isto vreme. **Automobili** pokazuju kada je koji slobodan: dodirni slobodan deo, ili **Rezerviši**, da ga uzmeš.',
           'Svako ima jednu vožnju zajedničkim autom dnevno i jednu sedmično, i ne duže od 24 sata zaredom, osim ako administratori ne podese drugačije. Preko toga, **Zatraži odobrenje administratora**. Vožnja koja čeka odobrenje ne drži auto. Auto van upotrebe ne može da se rezerviše tih dana.',
           'Pre prve vožnje pročitaj **Vodič za zajednički auto**: punjenje službenom karticom i Mazda 6e.',
           'U autu upisuj kilometražu: **Upiši početnu**, **Predaj volan** kad vozi neko drugi, **Auto je vraćen** sa stanjem baterije i eventualnim problemima.',
@@ -3336,7 +3381,7 @@ const sr: Messages = {
       {
         title: 'Niko ne ide tvojim putem',
         steps: [
-          'Dodirni **Zatraži prevoz**: dan, otprilike vreme, odakle i dokle.',
+          'Dodirni **Nova vožnja**, pa **Treba mi mesto**: dan, otprilike vreme, odakle i dokle.',
           'Vozači koji voze tim putem dobijaju obaveštenje, a svako može da dodirne **Ponudi prevoz** na tabli. Ti dobijaš mesto i obaveštenje.',
         ],
       },
@@ -3352,14 +3397,14 @@ const sr: Messages = {
         steps: [
           'Podešavanja, **Obaveštenja**: **Uključi**, pa izaberi o čemu da te obaveštavamo i koliko pre polaska da te podsetimo.',
           'Na iPhone-u prvo dodaj Karpul na početni ekran (Deli, **Dodaj na početni ekran**).',
-          '**Dodaj u kalendar** u meniju ⋮ čuva tu vožnju. U **Tvoje vožnje** je adresa kalendara sa svim tvojim vožnjama; ne deli je ni sa kim.',
+          '**Dodaj u kalendar** u meniju ⋯ čuva tu vožnju. U **Tvoje vožnje** je adresa kalendara sa svim tvojim vožnjama; ne deli je ni sa kim.',
           '**Podeli vožnju** šalje link koji kolegi otvara tu vožnju.',
         ],
       },
       {
         title: 'Tvoj nalog',
         steps: [
-          'Dodirni svoje ime na vrhu menija da dodaš fotografiju, promeniš ime, telefon ili lozinku, ili da se odjaviš.',
+          'Dodirni svoje ime pod **Ti** (na računaru, na vrhu bočne trake) da dodaš fotografiju, promeniš ime, telefon ili lozinku, ili da se odjaviš.',
           'Tvoj broj telefona se vidi na vožnjama koje voziš, da bi te putnici mogli pozvati.',
           'Zaboravljena lozinka? Zatraži od administratora link za novu lozinku.',
           'Kad je nova verzija spremna, pojavi se kartica: prevuci munju ili dodirni obično dugme.',
@@ -3371,7 +3416,7 @@ const sr: Messages = {
         steps: [
           '**Odobrenja** prikazuje vožnje zajedničkim autom koje čekaju odgovor. **Odobri** rezerviše auto; **Odbij** uklanja vožnju.',
           'Administrator može da izmeni ili ukloni bilo koju vožnju i upravlja njenim mestima. U formi za vožnju dodirni red sa vozačem da dodaš vožnju u nečije ime.',
-          'U **Zajedničkim automobilima**, ⋮ na autu ga menja, povlači ili briše, a dodavanje je na dnu liste. **Označi kao rešeno** briše prijavljeni problem, ⋮ na prijavi je ispravlja ili uklanja, a **Korišćenje** pokazuje kako se automobili koriste.',
+          'U **Zajedničkim automobilima**, ⋯ na autu ga menja, povlači ili briše, a dodavanje je na dnu liste. **Označi kao rešeno** briše prijavljeni problem, ⋯ na prijavi je ispravlja ili uklanja, a **Korišćenje** pokazuje kako se automobili koriste.',
           '**Ljudi** služi da postaviš administratore, napraviš link za novu lozinku (prosleđuješ ga lično) i obrišeš naloge.',
           '**Sve vožnje** su sve vožnje u izabranom periodu, uz preuzimanje kao tabelu. **Dnevnik administratora** beleži svaku izmenu tuđe vožnje, auta ili naloga.',
         ],
@@ -3456,13 +3501,11 @@ const sr: Messages = {
     skip: 'Preskoči obilazak',
     menu: 'Obilazak aplikacije',
     steps: {
-      find: ['Nađi vožnju', 'Predstojeće su sve vožnje od danas, Nedelja pokazuje jednu nedelju dan po dan, a Dan raspoređuje zajedničke automobile po satima. Otvori vožnju da zauzmeš mesto.'],
-      offer: ['Ideš negde kolima?', 'Zeleni plus dodaje tvoju vožnju: auto, mesta, dan i putanju. Kolege koje idu tvojim putem ulaze, a ti dobijaš obaveštenje.'],
-      cars: ['Zajednički automobili', 'U meniju su: kako koji stoji (kilometraža, baterija, kvarovi) i kako se puni službenom karticom.'],
+      find: ['Tri mesta', 'Vožnje su sve vožnje od danas, a tvoja sledeća je na vrhu. Automobili su zajednički automobili po satima. Ti su tvoj nalog, tvoje vožnje i podešavanja.'],
+      offer: ['Ideš negde kolima?', 'Nova vožnja prvo pita ko vozi: zajednički auto, tvoj auto, ili ti treba mesto. Zatim dan i putanju. Kolege koje idu tvojim putem ulaze, a ti dobijaš obaveštenje.'],
+      cars: ['Zajednički automobili', 'Ovde svaki auto ima svoj dan kao red vožnje: dodirni slobodan deo, ili Rezerviši, da ga uzmeš. Dodirni auto da vidiš kako stoji (kilometraža, baterija, kvarovi).'],
     },
     wide: {
-      offer: 'Zakaži vožnju, na vrhu liste, rezerviše zajednički auto ili nudi tvoj: auto, mesta, dan i putanju. Zatraži prevoz, ispod njega, je za kad vozi neko drugi.',
-      cars: 'Levo su: kako koji stoji (kilometraža, baterija, kvarovi) i kako se puni službenom karticom.',
     },
   },
 
@@ -3474,9 +3517,13 @@ const sr: Messages = {
     done: 'Važi',
     step: (n, of) => `${n} od ${of}`,
     entries: {
+      newLook: {
+        title: 'Karpul se podšišao',
+        body: 'Ista aplikacija, mnogo manje toga na ekranu. Sada su tu tri kartice: **Vožnje** (tvoja sledeća je na vrhu), **Automobili** (dan svakog zajedničkog auta kao red vožnje, sa **Rezerviši** u njegovom redu) i **Ti** (tvoje vožnje, podešavanja i pomoć, koji su se krili iza menija). Jedno dugme dodaje sve: **Nova vožnja** prvo pita ko vozi, pa niko ne traži mesto kad je hteo auto. Kad otvoriš vožnju, prvo vidiš ljude, pa tek onda papirologiju, a dugme zbog kog si došao/la stoji na dnu. I automobili konačno liče na sebe.',
+      },
       giveCar: {
         title: 'Predaj ključeve, ne problem',
-        body: 'Voziš, a neko u autu bi radije seo za volan? Otvori **⋮** na vožnji, dodirni **Predaj auto putniku** i izaberi kome. Od tada vozi on/ona, a ti dobijaš to mesto u autu, pa niko ne ostaje bez mesta. Ipak ne ideš? Posle samo izađi iz auta. Novi vozač i ostali u autu dobijaju obaveštenje, i niko ne mora ništa da otkazuje.',
+        body: 'Voziš, a neko u autu bi radije seo za volan? Otvori **⋯** na vožnji, dodirni **Predaj auto putniku** i izaberi kome. Od tada vozi on/ona, a ti dobijaš to mesto u autu, pa niko ne ostaje bez mesta. Ipak ne ideš? Posle samo izađi iz auta. Novi vozač i ostali u autu dobijaju obaveštenje, i niko ne mora ništa da otkazuje.',
       },
       noDriver: {
         title: 'Niko za volanom? Ne zadugo',

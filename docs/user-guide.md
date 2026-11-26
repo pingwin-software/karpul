@@ -6,7 +6,7 @@ day, then explains every part of the app. The last section is for admins.
 
 The app speaks English and Serbian; the names of buttons below are the English ones.
 
-The short version of this guide is in the app itself: ☰ → **Help** → **How to use Karpul**.
+The short version of this guide is in the app itself: **You** → **Help** → **How to use Karpul**.
 
 **Contents**
 
@@ -55,55 +55,59 @@ home screen, starts instantly and can send you notifications.
 - **iPhone / iPad:** tap **Share** in Safari's bar, then **Add to Home Screen**. On an
   iPhone this is required for notifications.
 - Put the card away with **Not now**; you can bring it back later from
-  ☰ → **Settings** → **Install the app**.
+  **You** → **Settings** → **Install the app**.
 
 ### Language and theme
 
-☰ → **Settings** holds the **language** switch (English / Serbian) and the **theme**
+**You** → **Settings** holds the **language** switch (English / Serbian) and the **theme**
 (light, dark or follow the phone). The language switch is also on the sign-in screen.
 
 ---
 
 ## 2. Finding your way around
 
-**The top bar** has the ☰ menu button, the title and a small lamp. A lit lamp means the board
-is live: what colleagues do shows up on your screen as it happens, with no need to refresh.
+**The title** at the top names the place you are in, with a small lamp beside it. A lit lamp
+means the board is live: what colleagues do shows up on your screen as it happens, with no
+need to refresh.
 
-**The three views.** On a phone they are the tabs at the bottom; on a computer, the switch in
-the toolbar. Karpul remembers the one you used last.
+**The three places.** On a phone they are the tabs at the bottom; on a computer, the first two
+are at the top of the sidebar and the third is the sidebar itself. Karpul remembers the one you
+used last.
 
-| View | What it is for |
+| Place | What it is for |
 | --- | --- |
-| **Upcoming** | Every ride from today for the next 90 days, one heading per day, one row per car. The quickest way to find a seat. |
-| **Week** | One week at a time. Pick a day on the strip at the top, then swipe through that day's cars. |
-| **Day** | One day as a schedule of the shared cars (and own cars on the road), as a timeline or a clock. The best view to see when a shared car is free and book it. |
+| **Rides** | Every ride from today for the next 90 days: your next one as a card on top, then one heading per day and one row per ride. The quickest way to find a seat. |
+| **Cars** | One day as a timetable of the shared cars (and own cars on the road), each car on its own row. The place to see when a shared car is free and book it. The same day can be read as a clock or on a map. |
+| **You** | Everything that is not about one ride: your account, **Your rides**, the **Shared cars** and their guide, settings and help. |
 
-**The green plus** at the bottom right (on a computer, the **+** at the right of the toolbar)
-adds a ride. It is the only add button in the app.
+**New ride**, the green button beside the tabs (on a computer, at the head of the list), adds
+anything. It asks who drives first: **Shared car**, **My car**, or **I need a seat** when
+someone else drives. It is the only add button in the app.
 
-**The ☰ menu** holds everything that is not about one ride:
+**You** holds:
 
 - your name at the top: **Your account**,
 - **Your rides**, **Shared cars** and the **Shared car guide**,
 - **Manage** (admins only): approvals, people, places, all rides, the admin log,
+- **Settings**: **Notifications**, **Install the app**, theme and language,
 - **Help**: the guide, **What's new**, **Take the tour** (the three cards a new account sees
-  on its first visit), **Contact support**, **Report a bug or send feedback**,
-- **Settings** at the foot: **Notifications**, **Install the app**, theme and language.
+  on its first visit), **Contact support**, **Report a bug or send feedback**.
 
-On a computer the menu is always open down the left side.
+On a computer all of this is always open down the left side.
 
-The phone's **back button** closes whatever sheet or menu is on top, so it never throws you
+The phone's **back button** closes whatever sheet or screen is on top, so it never throws you
 out of the app.
 
 ---
 
 ## 3. Tutorial: get a seat in a car
 
-1. Open **Upcoming**. Use the chips at the top to narrow the list: **Free seats** hides the
-   full cars. Type a place or a driver's name in the search box to find a ride going your way.
-2. **Tap a row.** The ride opens: the driver, when it **Leaves** and **Returns**, the route
-   from start to destination with any pickup points, and who is already in the car.
-3. Tap **Get in this car**, and it asks **Where do you get in?**: tap a place on the route. If none
+1. Open **Rides**. The filter button beside the search box narrows the list: **Free seats**
+   hides the full cars. Type a place or a driver's name in the search box to find a ride going
+   your way.
+2. **Tap a row.** The ride opens: when it leaves, the way and the car on top, then who drives
+   and who is already in it, then the route with any pickup points.
+3. Tap **Get in this car**, the button pinned at the bottom, and it asks **Where do you get in?**: tap a place on the route. If none
    of them suits you, choose **Somewhere else…**: the place picker opens over the whole screen, the same one
    as for a ride's places. Pick a saved place or an address, **Pick on the map** to put the ring on
    the exact spot, or just use the words you typed; then say where on the way it is. The place is
@@ -116,7 +120,7 @@ That is it. Some more things you can do from there:
 - **Switch cars:** if you are already in a car that day, the button on another car reads
   **Switch to this car**. One tap moves you.
 - **Change your pickup point** later with **Change pickup**.
-- **Call the driver:** if the driver gave a phone number, **Call the driver** is on the card.
+- **Call the driver:** if the driver gave a phone number, the phone button is on the driver's row.
 - **Write to the car:** open **Messages** on the ride. Everyone in the car is notified.
   Use it for "I have a big suitcase", a detour, and so on.
 - **Running late (drivers):** on the day of your ride, until an hour after it was due to leave,
@@ -132,7 +136,7 @@ off the waiting lists for that day. **Stop waiting** takes you off by hand.
 
 ## 4. Tutorial: offer a ride
 
-1. Tap the green **+**.
+1. Tap **New ride**, then **Shared car** or **My car**.
 2. The form opens on **Simple**, which asks only what every ride needs:
    - **Car:** **Shared car** (pick which one) or **My own car** (type a short description,
      e.g. "grey Octavia", so passengers can find it).
@@ -170,7 +174,7 @@ that are still set. Editing a ride always shows the whole form.
 ### Running your ride
 
 Open your ride: **Edit** sits right on the card (the passenger switches are in there too),
-beside the **⋮** menu, which has the rest:
+beside the **⋯** menu, which has the rest:
 
 - **Duplicate ride** and **Remove ride**. On a weekly ride there is also
   **Remove this and following rides**.
@@ -252,7 +256,7 @@ that nobody has to add.
 - **On a ride.** The small map button beside each place opens it in your maps app (Google Maps),
   by its point when it has one, else by its name. **Show on map** draws the whole route: the
   driver's start with their initials, the pickup points numbered in order, your own pickup in
-  green. On a computer the map sits on the ride card. **Open the route in Maps** (in the ⋮ menu,
+  green. On a computer the map sits on the ride card. **Open the route in Maps** (in the ⋯ menu,
   or at the foot of the map) starts the navigation with every pickup point on the way; a
   passenger gets **Directions to my pickup**.
 - **Requests.** A ride request with a pinned start also reaches drivers who pass within about
@@ -285,7 +289,7 @@ so someone else can still book that time.
 
 ### Before you drive: the Shared car guide
 
-☰ → **Shared car guide** (also **How to charge and drive it** on any shared-car ride) explains,
+**You** → **Shared car guide** (also **How to charge and drive it** on any shared-car ride) explains,
 with pictures:
 
 - **Charging with the company card**: park, hold the card on the reader, plug in, and stop
@@ -296,7 +300,7 @@ with pictures:
 
 ### Car status
 
-☰ → **Shared cars** shows every shared car's **odometer**, **battery**, whether it is **clean**
+**You** → **Shared cars** shows every shared car's **odometer**, **battery**, whether it is **clean**
 and any **reported** problems, with who said so and when. Figures marked *about* are guessed
 from the rides since the last reading. The same summary appears under the car's name on a
 shared-car ride. Each card also says **where the car is**: on the road (where to, with whom,
@@ -336,7 +340,7 @@ one takes it by departure time, it is removed and everyone is told.
 
 ## 7. No car going your way? Ask for a ride
 
-Use **Ask for a ride** (at the top of *Upcoming*, under the filters, and under the day's cars in *Week*):
+Tap **New ride**, then **I need a seat**:
 the day, roughly when, from and to, and a note ("any time before 9").
 
 Your request shows on the board under that day, among the people **Looking for a ride**, and
@@ -352,7 +356,7 @@ closed for you. **Withdraw** removes it.
 
 ### Notifications
 
-☰ → **Settings** → **Notifications**, then **Turn on** (once per browser or phone). Choose what
+**You** → **Settings** → **Notifications**, then **Turn on** (once per browser or phone). Choose what
 you want to hear about:
 
 | Category | You are told when |
@@ -372,21 +376,21 @@ If the browser says notifications are blocked, allow them in the site settings a
 
 ### Calendar
 
-- **Add to calendar** in a ride's ⋮ menu downloads that one ride as a calendar file.
-- ☰ → **Your rides** → **Calendar feed** is an address you can subscribe to in Google
+- **Add to calendar** in a ride's ⋯ menu downloads that one ride as a calendar file.
+- **You** → **Your rides** → **Calendar feed** is an address you can subscribe to in Google
   Calendar, Outlook or Apple Calendar: all your rides, kept up to date by itself. Anyone with
   the address sees your rides, so keep it to yourself. **New address** replaces it if it
   leaks (then subscribe to the new one).
 
 ### Sharing a ride
 
-**Share ride** in the ⋮ menu opens the phone's share sheet (or copies the link). The link opens
+**Share ride** in the ⋯ menu opens the phone's share sheet (or copies the link). The link opens
 that ride in Karpul and shows a preview in chat apps. Only signed-in colleagues can see the
 ride itself.
 
 ### Your rides
 
-☰ → **Your rides** shows rides **Driven**, **Ridden along**, **People carried** and **km shared**,
+**You** → **Your rides** shows rides **Driven**, **Ridden along**, **People carried** and **km shared**,
 this month and all time, and your **Past rides**.
 
 Under **Off the road** it adds up what your rides saved: **car km saved**, and roughly the
@@ -399,7 +403,7 @@ floor. Admins see the whole team's figures under **Shared cars** → **Usage**.
 
 ## 9. Your account
 
-Tap your name at the top of the ☰ menu to open **Your account**:
+Tap your name at the top of **You** to open **Your account**:
 
 - **Photo:** **Add a photo**, then drag and zoom it into the square and **Use this photo**.
   Everyone signed in sees it next to your name.
@@ -413,7 +417,7 @@ glowing bolt with your finger (or use **Update without the trace**). You can tur
 off under **Notifications** → **New version notice**; the app then updates itself the next
 time you open it.
 
-**Found a bug, or have an idea?** ☰ → **Help** → **Report a bug or send feedback** writes an
+**Found a bug, or have an idea?** **You** → **Help** → **Report a bug or send feedback** writes an
 email for you with the details needed to look into it. **Contact support** lists who to call
 about a car, the app or organisation.
 
@@ -421,21 +425,21 @@ about a car, the app or organisation.
 
 ## 10. For admins
 
-Admins see the **Manage** group in the ☰ menu. An admin can also run any ride: edit it, remove
+Admins see the **Manage** group under **You**. An admin can also run any ride: edit it, remove
 it and manage its seats, exactly as its driver could. When an admin edits or removes someone's
 ride, the driver is notified.
 
 - **Approvals:** shared-car rides waiting for approval, soonest first. A count on the menu
-  item (and a dot on ☰) shows when something is waiting. **Approve** reserves the car (refused
+  item (and a dot on the **You** tab) shows when something is waiting. **Approve** reserves the car (refused
   if the car got booked meanwhile); **Decline** removes the ride and tells the driver.
 - **Adding a ride for someone else:** in the ride form, tap the driver line and pick a person.
   They become the driver and are notified. Rides an admin adds are never held for approval.
-- **Shared cars:** an admin manages the pool on the same car cards everyone sees. ⋮ on a car
+- **Shared cars:** an admin manages the pool on the same car cards everyone sees. ⋯ on a car
   edits it (name, plate, seats, where it departs from, and its odometer and battery: a changed
   reading is saved as a report in the admin's name), **Retire**s a car that left the pool
   (its history stays; retired cars are listed under the others, where **Restore** brings one
   back) or deletes one never used, and **Add shared car** is at the foot of the list. On a
-  card, **Mark as fixed** clears a reported problem, and ⋮ on a report under *Recent reports*
+  card, **Mark as fixed** clears a reported problem, and ⋯ on a report under *Recent reports*
   puts a wrong reading right (**Edit**) or takes the report out (**Remove**), so the car's
   status falls back on the one before; both go in the admin log. The **Usage** tab is a
   dashboard over 30, 90 or 365 days: the pool's use, rides, hours out and km, then a card per
@@ -463,7 +467,7 @@ ride, the driver is notified.
 ## 11. Questions and troubleshooting
 
 **I can't book the shared car: it says it is taken.** Someone has it at that time. Open the
-**Day** view to see when it is free, or pick another car.
+**Cars** tab to see when it is free, or pick another car.
 
 **It says I am over my share of the shared car.** Use **Ask an admin to approve it**, or use your
 own car. See [The fair share](#the-fair-share).
@@ -485,4 +489,4 @@ works from. Use it from home or the office, or ask support.
 **Two people with the same name?** Karpul does not allow two accounts with the same first name
 and surname. Register with a distinguishing name (e.g. a middle initial).
 
-Still stuck? ☰ → **Help** → **Contact support**.
+Still stuck? **You** → **Help** → **Contact support**.

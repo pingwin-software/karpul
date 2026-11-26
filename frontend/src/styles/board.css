@@ -63,39 +63,6 @@
 .today-chip:hover {
   background: color-mix(in srgb, var(--text) 4%, var(--surface));
 }
-.dates-strip {
-  position: relative;
-  display: flex;
-  gap: 0.3rem;
-  padding: 2px;
-  touch-action: pan-y;
-}
-/* The picked day, as Fluent's calendar marks it: a brand-tinted cell with a
-   short accent bar along its foot. It is one element behind the seven days
-   that slides to the selected one (DateCarousel.tsx sets --date-i). The width
-   is a seventh of the strip minus its padding and the six gaps, and each step
-   is one cell plus a gap. */
-.date-thumb {
-  position: absolute;
-  top: 2px;
-  bottom: 2px;
-  left: 2px;
-  width: calc((100% - 4px - 6 * 0.3rem) / 7);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--green) 10%, transparent);
-  transform: translateX(calc(var(--date-i, 0) * (100% + 0.3rem)));
-  transition: transform var(--dur-gentle) var(--ease-out);
-}
-.date-thumb::after {
-  content: '';
-  position: absolute;
-  left: 30%;
-  right: 30%;
-  bottom: 0;
-  height: 3px;
-  border-radius: 2px 2px 0 0;
-  background: var(--green);
-}
 .date {
   position: relative;
   z-index: 1;
@@ -113,58 +80,6 @@
   color: var(--text);
   transition: background var(--hover), border-color var(--hover), color var(--hover), box-shadow var(--hover),
     transform var(--hover);
-}
-.date:hover:not(.date-selected) {
-  background: color-mix(in srgb, var(--text) 5%, transparent);
-}
-.date-wd {
-  font-size: 0.74rem;
-  font-weight: 500;
-  color: var(--muted);
-}
-.date-md {
-  font-size: 0.98rem;
-  font-weight: 600;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-}
-.date-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--green);
-  margin-top: 2px;
-}
-.date-dot-off {
-  visibility: hidden;
-}
-.date-today .date-wd {
-  color: var(--green);
-}
-.date-today .date-md {
-  color: var(--green);
-  font-weight: 700;
-}
-.date-past {
-  color: var(--muted);
-}
-.date-past .date-dot {
-  background: var(--border-strong);
-}
-.date-selected,
-.date-selected:hover {
-  background: transparent;
-}
-.date-selected .date-wd {
-  color: var(--green);
-  font-weight: 600;
-}
-.date-selected .date-md {
-  color: var(--green);
-  font-weight: 700;
-}
-.date-selected .date-dot {
-  visibility: hidden;
 }
 .week-nav {
   display: inline-flex;
@@ -196,80 +111,6 @@
   align-items: center;
   gap: 0.15rem;
 }
-.cars-strip {
-  flex: 1;
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  scrollbar-width: none;
-  padding: 4px 2px 8px;
-}
-.cars-strip::-webkit-scrollbar {
-  display: none;
-}
-.car-tile {
-  flex: 0 0 88px;
-  scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  min-height: 92px;
-  padding: 0.8rem 0.5rem 0.65rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-card);
-  transition: background var(--hover), border-color var(--hover), opacity var(--hover), box-shadow var(--hover),
-    transform var(--hover);
-}
-.car-tile:hover {
-  box-shadow: var(--shadow-hover);
-}
-.car-tile svg {
-  color: var(--muted);
-}
-.car-tile-art {
-  display: grid;
-  place-items: center;
-  height: 28px;
-  max-width: 100%;
-}
-.car-tile-name {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  max-width: 100%;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-.car-tile-name-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.car-tile-seats {
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--muted);
-}
-.car-tile-full .car-tile-seats {
-  color: var(--red);
-}
-.car-tile-selected,
-.car-tile-selected:hover {
-  border-color: var(--green-line);
-  background: color-mix(in srgb, var(--green) 6%, var(--surface));
-  box-shadow: var(--shadow-card);
-}
-.car-tile-selected svg,
-.car-tile-selected .car-tile-seats {
-  color: var(--green);
-}
 .skeleton {
   border-style: dashed;
   box-shadow: none;
@@ -285,47 +126,112 @@
   flex-direction: column;
   gap: 1.25rem;
 }
+
+/* The head of a ride: the day, then the time large beside the car's picture,
+   the way, and what the ride is for you. No card: it sits on the ground, the
+   way a large title does. */
+.ride-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0 0.25rem;
+}
+.ride-head-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 40px;
+}
+.ride-head-day {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+.ride-head-day small {
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--muted);
+}
+.ride-head-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: -0.4rem;
+}
+.ride-head-tools .icon-btn {
+  background: var(--fill);
+  color: var(--green);
+}
+.ride-head-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.ride-head-time {
+  font-size: 3.25rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.ride-head-car {
+  flex: none;
+  margin-bottom: 0.2rem;
+}
+.ride-head-route {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.ride-head-sub {
+  color: var(--muted);
+}
+.ride-head-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.ride-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 34px;
+  padding: 0 0.9rem 0 0.6rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+/* What the ride waits on (a change, an approval, a driver), between the head and the people. */
+.ride-asks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ride-asks:empty {
+  display: none;
+}
 .driver-card {
   padding: 1.15rem 1.2rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
 }
-.driver-head {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
 .driver-edit {
   flex: none;
-  margin-left: auto;
-  gap: 0.35rem;
-  padding-inline: 0.75rem;
-}
-.driver-edit + .menu {
-  margin-left: 0;
-}
-.driver-head .menu {
-  margin-left: auto;
-  margin-right: -0.5rem;
-}
-.driver-id {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-/* The whole name, on two lines if it needs them: a cut-off name has no other place to be read. */
-.driver-id strong {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  font-size: 1.06rem;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  overflow-wrap: break-word;
+  min-height: 36px;
+  padding-inline: 0.95rem;
 }
 .driver-role {
   display: flex;
@@ -334,19 +240,6 @@
   gap: 0.45rem;
   font-size: 0.82rem;
   color: var(--muted);
-}
-/* "Call the driver": a plain tel: link dressed as a button, the number beside
-   the words so you can see whom you are ringing. */
-.driver-call {
-  justify-content: flex-start;
-}
-.driver-call-number {
-  margin-left: auto;
-  color: var(--muted);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .driver-weekly {
   display: inline-flex;
@@ -357,14 +250,6 @@
   content: '·';
   margin-right: 0.25rem;
 }
-.driver-times {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.8rem 1rem;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-}
 .when {
   flex: 1;
   display: flex;
@@ -372,30 +257,9 @@
   gap: 0.1rem;
   min-width: 0;
 }
-.when-sep {
-  flex: none;
-  display: inline-grid;
-  color: var(--muted);
-}
-.when-sep + .when {
-  align-items: flex-end;
-  text-align: right;
-}
-.when-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
 .when-value {
   font-size: 1.05rem;
   font-weight: 600;
-}
-.driver-times .when-value {
-  font-size: 1.4rem;
-  letter-spacing: -0.025em;
-  line-height: 1.15;
 }
 /* The way, as a line: a ring at the start, a small dot per pickup point, a
    filled dot at the end, and the rule between them drawn by each stop. */
@@ -544,11 +408,6 @@
 .driver-car-pt-electric svg {
   fill: currentColor;
 }
-/* A passenger's "Suggest another time", under the driver card's head. */
-.suggest-link {
-  align-self: flex-start;
-  margin: 0 0 0.6rem;
-}
 /* Distance and chip-in: two small figures with their labels above. */
 .facts {
   display: grid;
@@ -609,10 +468,3 @@
   white-space: nowrap;
 }
 
-/* --- View switch ---------------------------------------------------------- */
-.view-switch .seg {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-}

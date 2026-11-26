@@ -284,9 +284,6 @@
   background: var(--surface-2);
   color: var(--muted);
 }
-.empty-card-btn:hover {
-  border-color: var(--green-line);
-}
 
 /* The admins' push tester at the foot of the Notifications sheet. */
 .push-test {

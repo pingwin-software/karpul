@@ -23,7 +23,7 @@ interface Props {
   date: string
   userName: string
   cars: CorporateCar[]
-  /** Editing this ride (the sheet says "Edit ride"; removing it is in the card's ⋮). */
+  /** Editing this ride (the sheet says "Edit ride"; removing it is in the card's ⋯). */
   existing?: Ride | null
   /** Pre-fill a new ride from this one ("Duplicate ride"). */
   template?: Ride | null
@@ -31,6 +31,10 @@ interface Props {
   request?: RideRequest | null
   /** A new ride in a company car's free stretch, picked on the day plan (components/DayPlan.tsx). */
   slot?: { carId: number; departure: string; ret: string } | null
+  /** Whose car, when *New ride* already asked (components/AddRideButton.tsx): the form opens on it. */
+  kind?: CarType
+  /** Which shared car, when its *Book* was tapped on the day plan. */
+  car?: number
   /** The last ride you drove (backend: GET /api/rides/last): a new ride starts as a copy of it while `prefill` is on. */
   previous?: Ride | null
   /** The account's choice (`User.prefill_rides`), switched in the form itself. */
@@ -54,7 +58,7 @@ interface Picking {
 
 
 /** The "Add ride" / "Edit ride" bottom sheet. */
-export function RideForm({ date, userName, cars, existing, template, request = null, slot = null, previous = null, prefill = true, onPrefillChange, submitting, error, canAskApproval = false, onSubmit, onClose }: Props) {
+export function RideForm({ date, userName, cars, existing, template, request = null, slot = null, kind, car, previous = null, prefill = true, onPrefillChange, submitting, error, canAskApproval = false, onSubmit, onClose }: Props) {
   const t = useT()
   const seed = existing ?? template ?? null
   const me = useMe()
@@ -77,8 +81,8 @@ export function RideForm({ date, userName, cars, existing, template, request = n
   const [last] = useState(() => (fresh && !prefill ? BLANK_ROUTE() : loadLastRoute()))
   const [mode, setModeState] = useKept<Mode>('rideForm.mode', () => (isAdvancedRide(fill) ? 'advanced' : loadMode()))
   const [rideDate, setRideDate] = useKept('rideForm.rideDate', existing?.ride_date ?? request?.request_date ?? date)
-  const [carType, setCarType] = useKept<CarType>('rideForm.carType', slot ? 'corporate' : (fillCarType(fill) ?? (cars.length ? 'corporate' : 'own')))
-  const [carId, setCarId] = useKept<number | ''>('rideForm.carId', slot?.carId ?? fillCarId(fill) ?? cars[0]?.id ?? '')
+  const [carType, setCarType] = useKept<CarType>('rideForm.carType', slot ? 'corporate' : (kind ?? fillCarType(fill) ?? (cars.length ? 'corporate' : 'own')))
+  const [carId, setCarId] = useKept<number | ''>('rideForm.carId', slot?.carId ?? car ?? fillCarId(fill) ?? cars[0]?.id ?? '')
   const [carName, setCarName] = useKept('rideForm.carName', fill?.car_type === 'own' ? fill.car_name : last.car_name)
   // A shared car kept somewhere (CorporateCar.home) starts a new ride there.
   const homeOf = (type: CarType, id: number | '') => (type === 'corporate' ? (cars.find((c) => c.id === id)?.home ?? '') : '')

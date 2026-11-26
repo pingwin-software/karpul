@@ -1,52 +1,60 @@
 /* --- Dark theme --------------------------------------------------------------
-   The same tokens, darker: the ground nearly black, cards a step up, the green
+   The same tokens, darker: the ground black, cells a step up, the green
    brightened so it still reads as the accent. lib/theme.ts puts the person's
    choice on the root as data-theme (nothing for "Auto") and what is on screen
    as data-resolved; the tokens are also under the media query so a dark phone
    never paints light before the script runs. */
 :root[data-theme='dark'] {
-  --bg: #1a1a1a;
-  --surface: #292929;
-  --surface-2: #333333;
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
   --text: #ffffff;
-  --muted: #adadad;
-  --border: #3d3d3d;
-  --border-strong: #525252;
+  --muted: #a1a1a6;
+  --border: #38383a;
+  --border-strong: #48484a;
   --green: #3ecf8e;
   --green-dark: #2fb377;
-  --green-soft: #17332a;
-  --green-line: #245c46;
-  --red: #f0656a;
-  --red-soft: #3a2022;
-  --blue: #7ca6ff;
-  --blue-soft: #1c2a44;
-  --shadow: 0 0 2px rgba(0, 0, 0, 0.24), 0 1px 2px rgba(0, 0, 0, 0.28);
-  --shadow-hover: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
-  --shadow-pop: 0 0 8px rgba(0, 0, 0, 0.24), 0 14px 28px rgba(0, 0, 0, 0.28);
-  --shadow-card: 0 0 2px rgba(0, 0, 0, 0.24), 0 2px 4px rgba(0, 0, 0, 0.28);
+  --green-soft: #15302a;
+  --green-line: #1f4a3a;
+  --red: #ff6961;
+  --red-soft: #3a1f20;
+  --blue: #6aa9ff;
+  --blue-soft: #16263f;
+  --fill: rgba(118, 118, 128, 0.24);
+  --fill-strong: rgba(118, 118, 128, 0.36);
+  --seg-thumb: #636366;
+  --switch-on: #30d158;
+  --shadow: none;
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-card: none;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #1a1a1a;
-    --surface: #292929;
-    --surface-2: #333333;
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --surface-2: #2c2c2e;
     --text: #ffffff;
-    --muted: #adadad;
-    --border: #3d3d3d;
-    --border-strong: #525252;
+    --muted: #a1a1a6;
+    --border: #38383a;
+    --border-strong: #48484a;
     --green: #3ecf8e;
     --green-dark: #2fb377;
-    --green-soft: #17332a;
-    --green-line: #245c46;
-    --red: #f0656a;
-    --red-soft: #3a2022;
-    --blue: #7ca6ff;
-    --blue-soft: #1c2a44;
-    --shadow: 0 0 2px rgba(0, 0, 0, 0.24), 0 1px 2px rgba(0, 0, 0, 0.28);
-    --shadow-hover: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
-    --shadow-pop: 0 0 8px rgba(0, 0, 0, 0.24), 0 14px 28px rgba(0, 0, 0, 0.28);
-    --shadow-card: 0 0 2px rgba(0, 0, 0, 0.24), 0 2px 4px rgba(0, 0, 0, 0.28);
+    --green-soft: #15302a;
+    --green-line: #1f4a3a;
+    --red: #ff6961;
+    --red-soft: #3a1f20;
+    --blue: #6aa9ff;
+    --blue-soft: #16263f;
+    --fill: rgba(118, 118, 128, 0.24);
+    --fill-strong: rgba(118, 118, 128, 0.36);
+    --seg-thumb: #636366;
+    --switch-on: #30d158;
+    --shadow: none;
+    --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.4);
+    --shadow-pop: 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 12px 40px rgba(0, 0, 0, 0.6);
+    --shadow-card: none;
     color-scheme: dark;
   }
 }
@@ -64,8 +72,13 @@
   color: #10141a;
 }
 /* The bright dark-theme green carries dark ink, like the primary button. */
-:root[data-resolved='dark'] span.plus-circle svg {
+:root[data-resolved='dark'] .fab,
+:root[data-resolved='dark'] .list-filter-on .icon-btn {
   color: #10141a;
+}
+/* An amber word on a dark cell. */
+:root[data-resolved='dark'] .session-flag {
+  color: #ffd60a;
 }
 :root[data-resolved='dark'] .toast {
   background: #eceef1;
@@ -163,12 +176,6 @@
   .feed-row .btn {
     margin-left: auto;
   }
-  .topbar {
-    margin-inline: -0.85rem;
-  }
-  .fab {
-    right: 1rem;
-  }
   .backdrop-sheet {
     padding: 0;
     align-items: end;
@@ -239,20 +246,9 @@
     width: 44px;
     height: 44px;
   }
-  .cars-arrow {
-    display: none;
-  }
   .week-btn {
     width: 36px;
     height: 36px;
-  }
-  .fab:hover .plus-circle {
-    /* Hover sticks after a tap on a phone; without this the plus would spring
-       back to the hover size and stay there instead of returning to rest. */
-    transform: none;
-  }
-  .fab.fab-pressed .plus-circle {
-    transform: scale(0.88);
   }
 }
 
@@ -314,26 +310,14 @@
   }
   .app-wide .topbar {
     position: relative;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 1rem;
     min-height: var(--toolbar);
     margin: 0;
     padding: 0 1.5rem 0 2rem;
-    background: var(--surface);
-    backdrop-filter: none;
   }
   .toolbar-title {
-    font-size: 1.3rem;
-    font-weight: 650;
-    letter-spacing: -0.025em;
-  }
-  .topbar-center {
-    width: 360px;
-  }
-  .topbar-center .seg {
-    min-height: 34px;
-    font-size: 0.88rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
   }
   .app-wide .topbar-right {
     gap: 0.9rem;
@@ -419,7 +403,7 @@
   }
   /* The list and the pane read as one: the open row is lifted toward it. */
   .split .session-open {
-    box-shadow: 0 0 0 1px var(--green), var(--shadow-hover);
+    background: var(--green-soft);
   }
   /* The day headings stick to the top of the list's own pane. */
   .split .upcoming-head {
@@ -427,73 +411,10 @@
     margin-inline: -1.5rem;
     padding-inline: 1.65rem;
   }
-  .split .filters {
-    position: relative;
-  }
   .app-wide .toast {
     left: calc(50% + var(--dock) / 2);
   }
 
-  /* The day's rides down the side column instead of a strip to scroll. */
-  .cars-vertical .cars-strip {
-    flex-direction: column;
-    gap: 0.5rem;
-    overflow: visible;
-    padding: 0;
-  }
-  .cars-vertical .car-tile {
-    flex: none;
-    display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) auto;
-    grid-template-areas:
-      'art name time'
-      'art route seats'
-      'art driver seats';
-    align-items: center;
-    column-gap: 0.85rem;
-    row-gap: 0.05rem;
-    min-height: 0;
-    padding: 0.75rem 1rem 0.75rem 0.75rem;
-    text-align: left;
-  }
-  .cars-vertical .car-tile-art {
-    grid-area: art;
-    width: 64px;
-    height: 46px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-2);
-  }
-  .cars-vertical .car-tile-selected .car-tile-art {
-    background: var(--surface);
-  }
-  .cars-vertical .car-tile-name {
-    grid-area: name;
-    justify-content: flex-start;
-    font-size: 0.92rem;
-  }
-  .cars-vertical .car-tile-route {
-    grid-area: route;
-    font-size: 0.8rem;
-  }
-  .cars-vertical .car-tile-driver {
-    grid-area: driver;
-    font-size: 0.8rem;
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .cars-vertical .car-tile-time {
-    grid-area: time;
-    justify-self: end;
-    font-size: 0.92rem;
-  }
-  .cars-vertical .car-tile-seats {
-    grid-area: seats;
-    justify-self: end;
-    align-self: start;
-    font-size: 0.8rem;
-  }
 }
 /* A laptop gives the panes a little more of the width. */
 @media (min-width: 1024px) and (max-width: 1279px) {
@@ -537,12 +458,6 @@
   .split-pane .detail > .odo + .pax {
     margin-top: 1.25rem;
   }
-  .split-pane .driver-times {
-    padding: 1rem 1.25rem;
-  }
-  .split-pane .driver-times .when-value {
-    font-size: 1.85rem;
-  }
   .split-pane .trip-stop {
     font-size: 1.05rem;
   }
@@ -580,14 +495,11 @@
    Under a mouse, the things you can open rise a little and their shadow
    deepens; the press sets them back down. Touch never sees any of it: a
    phone's hover sticks after the tap. */
-@media (hover: hover) and (pointer: fine) {
-  .session:hover:not(.session-open),
-  .car-tile:hover:not(.car-tile-selected) {
+@media (hover: hover) and (pointer: fine) {.session:hover:not(.session-open) {
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
   }
-  .session:active,
-  .car-tile:active {
+  .session:active {
     transform: translateY(0) scale(0.99);
     transition-duration: 0.08s;
   }
@@ -609,13 +521,6 @@
   }
   .driver-car-guide:hover svg {
     transform: scale(1.12);
-  }
-  .topbar-menu svg path {
-    transition: d var(--hover);
-  }
-  /* The drawer's two bars even out under the pointer. */
-  .topbar-menu:hover svg path {
-    d: path('M4 8.5h16M4 15.5h16');
   }
 }
 

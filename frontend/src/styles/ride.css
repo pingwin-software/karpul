@@ -1,8 +1,7 @@
 /* --- Upcoming sessions ---------------------------------------------------- */
-/* One heading per day, one row per ride: the time on the left, the way as
-   the headline, who drives what underneath, and one word on the right for
-   your place in it. On a phone a tapped row unfolds the full ride under it,
-   hung off a green rule; on a wide screen it opens in the pane beside. */
+/* Your next ride as a card on top (grouped.css), then a heading per day and a
+   grouped list under it, one row per ride. A tapped row opens its ride: on a
+   screen of its own on a phone, in the pane beside on a wide screen. */
 .upcoming {
   display: flex;
   flex-direction: column;
@@ -17,115 +16,47 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
+/* A row of the list (a `.group-row`): the time, the way over who drives, and
+   one word trailing for how it stands for you. */
 .session {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.3rem;
-  width: 100%;
-  padding: 0.85rem 1rem 0.9rem 1.1rem;
-  text-align: left;
-  color: var(--text);
-  transition: border-color var(--hover), box-shadow var(--hover), transform var(--hover), background var(--hover);
-}
-.session:hover {
-  box-shadow: var(--shadow-hover);
-}
-/* Yours (you drive or sit in it): a green edge, not a green card. */
-.session-mine::before {
-  content: '';
-  position: absolute;
-  left: -1px;
-  top: 16px;
-  bottom: 16px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--green);
-}
-.session-open,
-.session-open:hover {
-  border-color: var(--green-line);
-  background: color-mix(in srgb, var(--green) 6%, var(--surface));
-}
-/* Line one: the clock and its return on the left, your place on the right. */
-.session-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  min-height: 24px;
+  --group-inset: 4.85rem;
+  min-height: 60px;
 }
 .session-time {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  min-width: 0;
-}
-.session-time .when-value {
+  flex: none;
+  width: 3.1rem;
   font-size: 1rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
 }
-.session-time small {
-  font-size: 0.8rem;
-  color: var(--muted);
-  white-space: nowrap;
-}
-/* Line two: the way, at full width, wrapping before it is ever clipped. */
 .session-route {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
-  overflow-wrap: anywhere;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 0.3rem;
 }
 .session-arrow {
-  display: inline-block;
-  margin: 0 0.35rem;
-  vertical-align: -2px;
-  color: var(--muted);
-}
-/* Line three: who drives what, quietly. */
-.session-sub {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 0;
-  font-size: 0.84rem;
-  color: var(--muted);
-}
-.session-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.session-stops {
   flex: none;
+  color: var(--muted);
+}
+/* What needs someone: a driver, an approval, an answer. */
+.session-flag {
+  color: #a15c00;
+}
+.session-state {
+  flex: none;
+  font-size: 0.9rem;
+  color: var(--muted);
   white-space: nowrap;
 }
-.session-stops::before {
-  content: '·';
-  margin-right: 0.35rem;
-}
-/* Free seats: an outlined pill, so it reads apart from the filled "Driving" and "You're in". */
-.session-seats {
-  padding: 0.08rem 0.5rem;
-  border: 1px solid var(--green-line);
-  border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 600;
+.session-state-mine {
   color: var(--green);
-  white-space: nowrap;
+  font-weight: 600;
+}
+/* The open row, beside its ride on a wide screen. */
+.session-open,
+.session-open:active {
+  background: var(--green-soft);
 }
 /* One ride on a screen of its own, on a phone (components/RidePage.tsx): over
    the board, under every sheet's backdrop (10) and above the tab bar and the
@@ -193,7 +124,7 @@
   }
 }
 .session-skeleton .session {
-  min-height: 96px;
+  min-height: 60px;
 }
 
 /* --- Passengers in the car ------------------------------------------------ */
@@ -206,16 +137,9 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 .pax-list > li + li {
-  border-top: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 var(--border);
 }
 /* Someone who just got in grows into the list (lib/motion.ts useArrivals),
    so the rows below slide down instead of jumping: a grid row from 0 to its
@@ -238,8 +162,7 @@
   align-items: center;
   gap: 0.8rem;
   min-height: 60px;
-  padding: 0.6rem 0.9rem;
-  background: var(--surface);
+  padding: 0.6rem 1rem;
   transition: background var(--hover);
 }
 .pax-name {
@@ -254,10 +177,44 @@
   white-space: nowrap;
 }
 .pax-row-me {
-  background: color-mix(in srgb, var(--green-soft) 50%, var(--surface));
+  background: none;
 }
-.add-row,
-.dropzone {
+
+/* An empty seat: a dashed ring where the next avatar goes. */
+.pax-empty {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 1.5px dashed color-mix(in srgb, var(--muted) 55%, transparent);
+  border-radius: 50%;
+}
+.pax-free .pax-pickup {
+  font-size: 0.9rem;
+}
+.pax-call {
+  background: var(--fill);
+  color: var(--green);
+}
+/* The one thing your place in the ride lets you do now (CarDetail.tsx): pinned
+   to the foot of the ride's own screen, or of its pane on a wide screen, over
+   a fade so what scrolls under it does not run into the button. */
+.ride-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: 0 -1.1rem;
+  padding: 1.25rem 1.1rem calc(0.9rem + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 62%, transparent);
+  pointer-events: none;
+}
+.ride-bar > * {
+  pointer-events: auto;
+}
+.ride-bar .btn {
+  min-height: 52px;
+  font-size: 1.05rem;
+}
+.add-row {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -273,8 +230,7 @@
   font-size: 0.92rem;
   transition: background 0.12s, border-color 0.12s;
 }
-.add-row:hover:not(:disabled),
-.dropzone:hover:not(:disabled) {
+.add-row:hover:not(:disabled) {
   background: var(--green-soft);
   border-color: var(--green);
 }
@@ -301,31 +257,6 @@
 }
 .pax-add .btn {
   flex: none;
-}
-.dropzone {
-  flex-direction: column;
-  gap: 0.25rem;
-  min-height: 132px;
-  border-radius: var(--radius);
-  color: var(--text);
-  text-align: center;
-}
-.dropzone > svg {
-  color: var(--green);
-  margin-bottom: 0.25rem;
-}
-.dropzone > span {
-  font-size: 0.84rem;
-  font-weight: 400;
-  color: var(--muted);
-}
-.dropzone-still {
-  cursor: default;
-  border-color: var(--border-strong);
-  background: var(--surface-2);
-}
-.dropzone-still > svg {
-  color: var(--muted);
 }
 /* The "get in" row inside the passenger list is a row of the list. */
 .pax-list .add-row {
@@ -1611,102 +1542,7 @@
   padding: 0.4rem 0.8rem;
   font-size: 0.86rem;
 }
-.upcoming-ask {
-  margin-bottom: 0.25rem;
-}
 .form-answering {
   margin-bottom: 0.25rem;
 }
 
-/* A wide screen's two ways in (RideActions in components/AddRideButton.tsx),
-   at the top of the list column: the green card books a shared car or offers
-   your own, the quieter, lower one under it asks for a seat. Each says who
-   drives. The column is narrow, so they stack rather than sit side by side. */
-.ride-actions {
-  display: grid;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.ride-action {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  min-height: 52px;
-  padding: 0.55rem 0.85rem;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  text-align: left;
-  box-shadow: var(--shadow);
-  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.12s;
-}
-.ride-action:hover {
-  border-color: var(--green);
-  box-shadow: var(--shadow-hover);
-}
-.ride-action:active {
-  transform: scale(0.98);
-}
-.ride-action:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 2px;
-}
-.ride-action-mark {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--green-soft);
-  color: var(--green);
-}
-.ride-action-text {
-  display: grid;
-  gap: 0.1rem;
-  min-width: 0;
-}
-.ride-action-text strong {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-.ride-action-text small {
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-  line-height: 1.3;
-}
-.ride-action-add {
-  min-height: 68px;
-  padding-block: 0.75rem;
-  border-color: transparent;
-  background: var(--green);
-  color: #fff;
-}
-.ride-action-add:hover {
-  border-color: transparent;
-  background: var(--green-dark);
-}
-.ride-action-add .ride-action-mark {
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-}
-.ride-action-add .ride-action-text strong {
-  font-size: 1.05rem;
-}
-/* The green card's line under the title: white on the green, like the title. */
-.ride-action-add .ride-action-text small {
-  color: #fff;
-}
-/* The bright dark-theme green carries dark ink, like the primary button. */
-:root[data-resolved='dark'] .ride-action-add,
-:root[data-resolved='dark'] .ride-action-add .ride-action-mark,
-:root[data-resolved='dark'] .ride-action-add .ride-action-text small {
-  color: #10141a;
-}
-:root[data-resolved='dark'] .ride-action-add .ride-action-mark {
-  background: rgba(0, 0, 0, 0.12);
-}

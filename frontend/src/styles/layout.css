@@ -1,16 +1,16 @@
 /* --- Layout -------------------------------------------------------------- */
 :root {
   /* The dock (76px) and the gap under it. */
-  --tabbar: 88px;
+  --tabbar: 84px;
 }
 .app {
   max-width: 600px;
   margin: 0 auto;
-  padding: 0 1.1rem calc(var(--tabbar) + 6.5rem + env(safe-area-inset-bottom));
+  padding: 0 1.1rem calc(var(--tabbar) + 1.5rem + env(safe-area-inset-bottom));
   /* A view sliding out goes 40px past the edge (SlideSwitch). Unclipped, that
-     overflow widens a phone's layout viewport for the length of the slide, and
-     the fixed tab bar and plus jump with it. `clip`, not `hidden`: no scroll
-     container, so the sticky top bar and day headings still stick. */
+  overflow widens a phone's layout viewport for the length of the slide, and
+  the fixed tab bar jumps with it. `clip`, not `hidden`: no scroll
+  container, so the sticky day headings still stick. */
   overflow-x: clip;
 }
 main,
@@ -20,28 +20,27 @@ main,
   gap: 1.25rem;
 }
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* A phone's large title: it scrolls away with the page, as iOS's does. */
+  display: flex;
   align-items: center;
-  min-height: 3.5rem;
-  margin: 0 -1.1rem 1rem;
-  padding: calc(0.45rem + env(safe-area-inset-top)) 0.7rem 0.45rem;
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: saturate(1.4) blur(14px);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-}
-.topbar-menu {
-  justify-self: start;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  margin: 0 0 0.6rem;
+  padding: calc(0.9rem + env(safe-area-inset-top)) 0.15rem 0;
 }
 .topbar-title {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.08rem;
-  font-weight: 650;
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+/* The dock keeps the name small beside its mark. */
+.drawer-head .topbar-title {
+  font-size: 1.15rem;
   letter-spacing: -0.02em;
 }
 .topbar-title svg {
@@ -606,9 +605,7 @@ main,
 .pt-mark-petrol {
   color: var(--muted);
 }
-.pt-mark svg,
-.car-tile .pt-mark svg,
-.car-tile-selected .pt-mark svg {
+.pt-mark svg {
   color: inherit;
 }
 

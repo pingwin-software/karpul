@@ -6,7 +6,7 @@ and why. Keep them in step with the code like CLAUDE.md itself.
 
 **Admins run every ride.** `may_run` in `app/access.py` lets the driver *or an admin* edit and
 remove a ride (and its following weeks) and manage its seats; the frontend twin is `runs()` in
-`lib/me.ts` (`Me.admin`), which `CarDetail` uses for the ⋮ menu, the card's own *Edit* button
+`lib/me.ts` (`Me.admin`), which `CarDetail` uses for the ⋯ menu, the card's own *Edit* button
 (`.driver-edit`) and the seat controls. An admin can
 also add a ride in someone else's name: `RideCreate.driver_id` (create only; anyone else naming
 another account is a 403, an unknown one a 404), chosen in `RideForm` through `DriverPicker`
@@ -19,7 +19,7 @@ land together: a ride added in someone's name, someone's ride edited (`audit.dif
 and after in words) or removed, a seat added or taken out in someone's car (`_on_behalf`: an admin
 acting on a ride they do not drive; their own rides are never logged), and every pool-car and account
 change in `routers/cars.py` / `routers/admin.py`. Lines are snapshots in words, no foreign keys, so they
-outlive the ride, car or person. On screen: *Admin log* in the drawer (`AdminLog`), a heading per day,
+outlive the ride, car or person. On screen: *Admin log* in the menu (the *You* tab, or the dock; `AdminLog`), a heading per day,
 the changes as chips with the old value struck through; a line about a ride that still exists opens it
 on the day plan. A new action needs its sentence in `adminLog.line` (both languages) and a new field
 its label in `adminLog.fields`. Tests: `tests/test_admin_rides.py`.

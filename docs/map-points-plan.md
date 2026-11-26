@@ -40,7 +40,7 @@ Fast and useful before any of the rest lands.
   `allStops` in route order. Google Maps URLs open the app on Android and iOS; Apple Maps users
   get the web page, which is acceptable.
 - `CarDetail`: every point of the route (origin, stops, destination) gets a small pin button
-  (`PinIcon` already exists) that opens the search link; the ⋮ menu gets *Open the route in
+  (`PinIcon` already exists) that opens the search link; the ⋯ menu gets *Open the route in
   Maps* for the driver.
 - Tests: `maps.test.ts` (encoding, `|` in names, the order with `stops_before`).
 - i18n: `detail.openInMaps`, `detail.routeInMaps` in `en` and `sr`.

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { AccountSheet } from './components/AccountSheet'
 import { AddCarCard } from './components/AddCarCard'
-import { AddRideFab, RideActions } from './components/AddRideButton'
+import { NewRideButton, NewRideFab, NewRideSheet, type NewRideKind } from './components/AddRideButton'
 import { AdminLog } from './components/AdminLog'
 import { Approvals } from './components/Approvals'
 import { GarageList } from './components/GarageList'
@@ -11,14 +11,12 @@ import { CarGuide } from './components/CarGuide'
 import { CarMailSheet } from './components/CarMailSheet'
 import { owesOfficeMail, sharedCarRides } from './lib/carMail'
 import { HowTo } from './components/HowTo'
-import { CarCarousel } from './components/CarCarousel'
 import { CarDetail } from './components/CarDetail'
 import { ConfirmDialog } from './components/ConfirmDialog'
-import { DateCarousel } from './components/DateCarousel'
 import { DayPlan, type Slot } from './components/DayPlan'
 import { FeedbackSheet } from './components/FeedbackSheet'
-import { FluentIcon, type FluentName } from './components/FluentIcon'
-import { ArrowRightIcon, CalendarIcon, ClockIcon, HandIcon, ListIcon, MenuIcon } from './components/icons'
+import { NavIcon, type NavName } from './components/NavIcon'
+import { ArrowRightIcon } from './components/icons'
 import { Logo } from './components/Logo'
 import { MyRides } from './components/MyRides'
 import { NotificationsSheet } from './components/NotificationsSheet'
@@ -26,16 +24,14 @@ import { PeopleAdmin } from './components/PeopleAdmin'
 import { PlacesAdmin } from './components/PlacesAdmin'
 import { RideLog } from './components/RideLog'
 import { RequestForm } from './components/RequestForm'
-import { RequestList } from './components/RequestList'
 import { UpdateScreen } from './components/UpdateScreen'
 import { RidePage } from './components/RidePage'
 import { RideForm } from './components/RideForm'
-import { Dock, Sidebar } from './components/Sidebar'
+import { Dock, YouPage } from './components/Sidebar'
 import { SlideSwitch } from './components/SlideSwitch'
 import { SupportSheet } from './components/SupportSheet'
 import { WhatsNew } from './components/WhatsNew'
 import { forReader, loadSeen, markSeen, unseen, WHATS_NEW, type WhatsNewEntry } from './lib/whatsNew'
-import { SegThumb } from './components/Segmented'
 import { Upcoming } from './components/Upcoming'
 import { api, isNetworkError } from './lib/api'
 import type { Confirm } from './lib/confirm'
@@ -48,11 +44,11 @@ import { messages, useT } from './lib/i18n'
 import { addDays, parseISODate, toISODate, todayISO } from './lib/dates'
 import { loadSnapshot, OFFLINE_DAYS, rememberRides, useOfflineSnapshot } from './lib/offline'
 import { useSlideDir } from './lib/motion'
-import { drives, isMyRequest, MeContext, myBooking, runs, type Me } from './lib/me'
+import { isMyRequest, MeContext, myBooking, runs, type Me } from './lib/me'
 import { resubscribePush } from './lib/push'
 import { useUpdateNotices, useUpdateReady } from './lib/pwa'
-import type { Ride, RideInput, RideRequest } from './lib/types'
-import { boardRange, daySelection, upcomingSelection, VIEWS, type View } from './lib/selection'
+import type { CarType, Ride, RideInput, RideRequest } from './lib/types'
+import { boardRange, upcomingSelection, VIEWS, type View } from './lib/selection'
 import { keepFor, restoreScroll, useKept } from './lib/keep'
 import { useBoard } from './lib/useBoard'
 import { useOverlays } from './lib/useOverlays'
@@ -69,18 +65,21 @@ import { SeatNotices } from './components/SeatNotices'
 import { Tour } from './components/Tour'
 import { clearNotices } from './lib/notices'
 
-type FormState = { mode: 'create'; template?: Ride; request?: RideRequest; slot?: Slot } | { mode: 'edit'; ride: Ride } | null
+/** `kind` and `car` are what *New ride* or a car's *Book* already answered: whose car, and which shared one. */
+type FormState = { mode: 'create'; template?: Ride; request?: RideRequest; slot?: Slot; kind?: CarType; car?: number } | { mode: 'edit'; ride: Ride } | null
 
 /**
- * "Upcoming" lists every session from today on; "Week" is the day board with
- * the date strip; "Day" is one day as a timeline of who has which car when
- * (components/DayPlan.tsx). The choice is remembered per browser.
+ * The three places: *Rides* (`upcoming`) lists every ride from today on, your
+ * next one on top; *Cars* (`day`) is the shared cars and one day as a timeline
+ * of who has which car when (components/DayPlan.tsx); *You* (`you`, a phone's
+ * third tab; a wide screen has it docked down the left edge) is your account
+ * and everything that is not about one ride. The choice is remembered per browser.
  */
 const VIEW_KEY = 'karpul.view'
 
 /** The sheets and drawers, by name (lib/useOverlays.ts); each renders at the foot of the board. */
 type Overlay =
-  | 'sidebar'
+  | 'newRide'
   | 'account'
   | 'guide'
   | 'howTo'
@@ -101,7 +100,7 @@ type Overlay =
 function loadView(): View {
   try {
     const v = localStorage.getItem(VIEW_KEY)
-    return v === 'week' || v === 'day' ? v : 'upcoming'
+    return v === 'day' || v === 'you' ? v : 'upcoming'
   } catch {
     return 'upcoming'
   }
@@ -225,7 +224,8 @@ function Board({ session }: { session: Session }) {
     api
       .ride(Number(m[1]))
       .then((ride) => {
-        setViewState('week')
+        // A ride still ahead opens in the list; one already gone, on its day's plan.
+        setViewState(ride.ride_date >= todayISO() ? 'upcoming' : 'day')
         setSelectedDate(ride.ride_date)
         setCarSel(ride.id)
         if (wantsMail && owesOfficeMail(ride) && runs(ride, me)) setCarMailFor({ rides: [ride] })
@@ -400,6 +400,8 @@ function Board({ session }: { session: Session }) {
       // The response is the ride as saved, so the board needs no reload; a
       // date outside the loaded range changes `range` and loads on its own.
       setSelectedDate(input.ride_date)
+      // Added from *You*: land on the list, where the new ride is.
+      if (view === 'you') setViewState('upcoming')
     } catch (e) {
       setFormError(errMsg(e))
       setFormAsk(asksApproval(e))
@@ -420,18 +422,16 @@ function Board({ session }: { session: Session }) {
   }
 
 
-  const upcoming = view === 'upcoming'
+  // *You* keeps the list's days loaded under it, so coming back to *Rides* is instant.
+  const upcoming = view !== 'day'
   const dayRides = upcoming ? [] : rides.filter((r) => r.ride_date === selected)
-  const dayRequests = upcoming ? [] : openRequests.filter((r) => r.request_date === selected)
   const isPast = !upcoming && selected < todayISO()
-  const myRideToday = dayRides.find((r) => myBooking(r, me) !== undefined) ?? null
-  const askedToday = dayRequests.some((r) => isMyRequest(r, me))
   const canAdd = !isPast
 
-  // Which tile is open on the day, and which row in the upcoming list (lib/selection.ts).
+  // Which row is open in the list (lib/selection.ts). *You* is a phone's tab:
+  // on a wide screen the same menu is docked, so the list shows instead.
   const wide = useWide()
-  const selection = daySelection(carSel, dayRides, me)
-  const openRide = selection !== null ? (dayRides.find((r) => r.id === selection) ?? null) : null
+  const page: View = wide && view === 'you' ? 'upcoming' : view
   // The home-screen install offer (lib/install.ts): a card once, the drawer item after.
   const installMode = useInstallMode()
   const installDismissed = useInstallDismissed()
@@ -460,7 +460,7 @@ function Board({ session }: { session: Session }) {
     <SeatNotices
       floating={wide}
       onSeeDay={(iso) => {
-        setViewState('week')
+        setViewState('day')
         setSelected(iso)
       }}
     />
@@ -471,22 +471,20 @@ function Board({ session }: { session: Session }) {
   // it was picked in; a wide screen shows it in the pane beside the list.
   const pageRide = !wide && carSel !== null ? (rides.find((r) => r.id === carSel) ?? null) : null
 
-  const openNewCar = () => setForm({ mode: 'create' })
+  // *New ride* asks who drives first (AddRideButton.tsx); a shared car needs a pool.
+  const newKinds: NewRideKind[] = [...(cars.length > 0 ? (['corporate'] as const) : []), 'own', 'ask']
+  const pickNewRide = (kind: NewRideKind) => {
+    hide('newRide')
+    if (kind === 'ask') openAsk(upcoming ? todayISO() : selected)
+    else setForm({ mode: 'create', kind })
+  }
 
-  // Motion (lib/motion.ts): Upcoming sits left of Week, so switching slides
-  // the new view in from that side; the day board slides the way the
-  // calendar moved (only while it is showing, so a date picked from the
-  // upcoming list does not replay when you switch); the driver card slides
-  // from the tile you tapped. Each is a keyed wrapper, so the slide plays
-  // once, on mount.
-  const viewDir = useSlideDir(view, (v) => VIEWS.indexOf(v as View))
-  const dayDir = useSlideDir(view === 'week' ? selected : '', (iso) => (iso ? parseISODate(iso).getTime() : NaN))
-  const tileDir = useSlideDir(selection === null ? '' : String(selection), (id) => {
-    const i = dayRides.findIndex((r) => String(r.id) === id)
-    return i < 0 ? NaN : i
-  })
+  // Motion (lib/motion.ts): Rides sits left of Cars, Cars left of You, so
+  // switching slides the new place in from that side. A keyed wrapper, so the
+  // slide plays once, on mount.
+  const viewDir = useSlideDir(page, (v) => VIEWS.indexOf(v as View))
 
-  /** Unfold a row in the upcoming list; the week view follows it, should you switch. */
+  /** Open a row of the list; the day plan follows it, should you switch. */
   const openUpcoming = (rideId: number | null) => {
     setCarSel(rideId)
     const ride = rideId !== null ? rides.find((r) => r.id === rideId) : undefined
@@ -545,82 +543,28 @@ function Board({ session }: { session: Session }) {
     />
   )
 
-  // The week view's three parts: one column on a phone (a tapped tile opens
-  // its ride on a screen of its own), the tiles and your own place beside the
-  // open ride on a wide screen.
-  const dayTiles = loading ? (
-    <div className="cars cars-skeleton" aria-busy="true">
-      <span className="car-tile skeleton" />
-      <span className="car-tile skeleton" />
-      <span className="car-tile skeleton" />
-    </div>
-  ) : dayRides.length === 0 ? null : (
-    <CarCarousel rides={dayRides} selected={wide ? selection : (pageRide?.id ?? null)} onSelect={setCarSel} vertical={wide} />
-  )
-  const dayDetail = loading ? null : openRide ? (
-    wide && <SlideSwitch id={String(openRide.id)} dir={tileDir}>
-      {detailFor(openRide)}
-    </SlideSwitch>
-  ) : (
-    <AddCarCard isPast={isPast} />
-  )
-  // Nothing suits you that day: ask for a ride. In a car, driving or past, there is nothing to ask.
-  const canAskToday = !isPast && !askedToday && !myRideToday && !dayRides.some((r) => drives(r, me))
-  const dayYou = loading ? null : (
-    <>
-      {canAskToday && !wide && (
-        <button type="button" className="add-row add-row-quiet" onClick={() => openAsk(selected)}>
-          <HandIcon size={18} />
-          {t.requests.ask}
-        </button>
-      )}
-      <RequestList requests={dayRequests} isPast={isPast} busy={busyId !== null} onOffer={onOffer} onWithdraw={(r) => void onWithdraw(r)} />
-    </>
-  )
-
-  // A wide screen's two ways in, at the top of the list column (AddRideButton.tsx):
-  // book or offer a ride, or ask for a seat, for the day on screen.
-  const wideActions = loading ? null : (
-    <RideActions onAdd={canAdd ? openNewCar : undefined} onAsk={canAskToday ? () => openAsk(selected) : undefined} />
-  )
-
-  const viewIcons: Record<View, ReactNode> = {
-    upcoming: <ListIcon size={16} />,
-    week: <CalendarIcon size={16} />,
-    day: <ClockIcon size={16} />,
-  }
-  // On a phone the views are a floating dock instead: the same radio group,
-  // the active tab's mark filled on a solid green pill. The pill glides to the
-  // picked tab, stretching as it goes, and the mark it lands on jumps and
-  // settles (both keyed, so they replay).
-  const tabMarks: Record<View, FluentName> = { upcoming: 'list', week: 'calendar', day: 'clock' }
+  // A phone's three places: a capsule floating over the board, the picked tab
+  // in the tint with its mark filled, on one grey pill that glides to it
+  // (keyed, so the stretch replays). *New ride* floats beside it.
+  const tabMarks: Record<View, NavName> = { upcoming: 'calendar', day: 'car', you: 'person' }
   const tabBar = (
     <nav className="tabbar" role="radiogroup" aria-label={t.view.label}>
       <div className="tabbar-track" style={{ '--tab': VIEWS.indexOf(view) } as CSSProperties}>
         <span className="tab-glider" aria-hidden="true">
-          {/* Keyed, so the pill stretches as it sets off each time. */}
           <span key={view} className="tab-glider-pill" />
         </span>
         {VIEWS.map((v) => (
-          <button key={v} type="button" role="radio" aria-checked={view === v} className={view === v ? 'tab tab-on' : 'tab'} onClick={() => setView(v)}>
+          <button key={v} type="button" role="radio" aria-checked={view === v} className={view === v ? 'tab tab-on' : 'tab'} data-tour={`tab-${v}`} onClick={() => setView(v)}>
             <span className="tab-pill" aria-hidden="true">
-              <FluentIcon key={view === v ? 'on' : 'off'} className="tab-icon" name={tabMarks[v]} variant={view === v ? 'filled' : 'regular'} size={30} />
+              <NavIcon key={view === v ? 'on' : 'off'} className="tab-icon" name={tabMarks[v]} variant="filled" size={24} />
+              {v === 'you' && isAdmin && waiting + plates > 0 && <span className="tab-dot" />}
             </span>
             <span className="tab-label">{t.view[v]}</span>
+            {v === 'you' && isAdmin && waiting + plates > 0 && <span className="sr-only">{t.approvals.count(waiting + plates)}</span>}
           </button>
         ))}
       </div>
     </nav>
-  )
-  const viewSwitch = (
-    <div className="segmented view-switch" role="radiogroup" aria-label={t.view.label}>
-      <SegThumb count={VIEWS.length} index={VIEWS.indexOf(view)} />
-      {VIEWS.map((v) => (
-        <button key={v} type="button" role="radio" aria-checked={view === v} className={view === v ? 'seg seg-on' : 'seg'} onClick={() => setView(v)}>
-          {viewIcons[v]} {t.view[v]}
-        </button>
-      ))}
-    </div>
   )
 
   // The day plan: the timeline, and the ride a bar was tapped for beside it on
@@ -636,6 +580,8 @@ function Board({ session }: { session: Session }) {
       onSelect={setCarSel}
       onDate={setSelected}
       onBook={(slot) => setForm({ mode: 'create', slot })}
+      onBookCar={canAdd ? (car) => setForm({ mode: 'create', kind: 'corporate', car }) : undefined}
+      onCar={() => openSharedCars('cars')}
       onEdit={(ride) => setForm({ mode: 'edit', ride })}
     />
   )
@@ -645,6 +591,8 @@ function Board({ session }: { session: Session }) {
   // The app menu's items: a drawer under the ☰ on a phone, docked down the
   // left edge on a wide screen.
   const menu = {
+    view: page,
+    onView: setView,
     userName,
     handle: user.username,
     isAdmin,
@@ -695,28 +643,7 @@ function Board({ session }: { session: Session }) {
         {wide && <Dock {...menu} />}
         <div className="workspace">
           <header className="topbar">
-            {wide ? (
-              <h1 className="toolbar-title">{t.view[view]}</h1>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="icon-btn topbar-menu"
-                  aria-label={t.common.menu}
-                  aria-haspopup="dialog"
-                  aria-expanded={is('sidebar')}
-                  aria-controls={is('sidebar') ? 'app-sidebar' : undefined}
-                  onClick={() => show('sidebar')}
-                >
-                  <MenuIcon size={22} />
-                  {isAdmin && waiting + plates > 0 && <span className="topbar-dot" aria-label={t.approvals.count(waiting + plates)} />}
-                </button>
-                <h1 className="topbar-title">
-                  <Logo /> Karpul
-                </h1>
-              </>
-            )}
-            {wide && <div className="topbar-center">{viewSwitch}</div>}
+            <h1 className={wide ? 'toolbar-title' : 'topbar-title'}>{t.view[page]}</h1>
             <div className="topbar-right">
               <span className={`live live-${liveStatus}`} role="status" title={t.live.title[liveStatus]}>
                 <span className="live-dot" aria-hidden="true" />
@@ -731,42 +658,36 @@ function Board({ session }: { session: Session }) {
             {!wide && installCard}
             {!wide && pushCard}
 
-            {/* One switch for the three views, so the one leaving slides out as the next comes in. */}
-            <SlideSwitch id={view} dir={viewDir}>
-              {upcoming &&
+            {/* One switch for the three places, so the one leaving slides out as the next comes in. */}
+            <SlideSwitch id={page} dir={viewDir}>
+              {page === 'upcoming' &&
                 (loading ? (
-                  <div className="session-list session-skeleton" aria-busy="true">
-                    <span className="card session skeleton" />
-                    <span className="card session skeleton" />
-                    <span className="card session skeleton" />
+                  <div className="group session-list session-skeleton" aria-busy="true">
+                    <span className="group-row session skeleton" />
+                    <span className="group-row session skeleton" />
+                    <span className="group-row session skeleton" />
                   </div>
                 ) : rides.length === 0 && openRequests.length === 0 ? (
                   <>
-                    {wide && <RideActions onAdd={openNewCar} onAsk={() => openAsk(todayISO())} />}
+                    {wide && <NewRideButton onClick={() => show('newRide')} />}
                     <AddCarCard isPast={false} emptyTitle={t.empty.noUpcoming} />
-                    {!wide && (
-                      <button type="button" className="add-row add-row-quiet" onClick={() => openAsk(todayISO())}>
-                        {t.requests.ask}
-                      </button>
-                    )}
                   </>
                 ) : (
                   <div className={wide ? 'split' : undefined}>
                     {wrapSide(
                       <>
-                        {wide && <RideActions onAdd={openNewCar} onAsk={() => openAsk(todayISO())} />}
+                        {wide && <NewRideButton onClick={() => show('newRide')} />}
                         <Upcoming
-                        rides={rides}
-                        requests={openRequests}
-                        busy={busyId !== null}
-                        onAsk={() => openAsk(todayISO())}
-                        onOffer={onOffer}
-                        onWithdraw={(r) => void onWithdraw(r)}
-                        openId={openUpcomingId}
-                        onOpen={wide ? (id) => id !== null && openUpcoming(id) : openUpcoming}
-                        opensPage={!wide}
-                        showAsk={!wide}
-                      />
+                          rides={rides}
+                          requests={openRequests}
+                          busy={busyId !== null}
+                          onOffer={onOffer}
+                          onWithdraw={(r) => void onWithdraw(r)}
+                          onHere={(r, id, here) => void onHere(r, id, here)}
+                          openId={openUpcomingId}
+                          onOpen={wide ? (id) => id !== null && openUpcoming(id) : openUpcoming}
+                          opensPage={!wide}
+                        />
                       </>,
                     )}
                     {wide && openUpcomingRide && (
@@ -777,11 +698,11 @@ function Board({ session }: { session: Session }) {
                   </div>
                 ))}
 
-              {view === 'day' &&
+              {page === 'day' &&
                 (wide ? (
                   <div className="split split-day">
                     <div className="split-side" data-scroll-pane="">
-                      {wideActions}
+                      {canAdd && <NewRideButton onClick={() => show('newRide')} />}
                       {dayPlan}
                     </div>
                     <aside className="split-pane" data-scroll-pane="" aria-label={planPicked?.car_name ?? t.plan.label}>
@@ -792,38 +713,17 @@ function Board({ session }: { session: Session }) {
                   dayPlan
                 ))}
 
-              {view === 'week' &&
-                (wide ? (
-                  <div className="split split-week">
-                    <div className="split-side" data-scroll-pane="">
-                      {wideActions}
-                      <DateCarousel selected={selected} rides={rides} onSelect={setSelected} />
-                      <SlideSwitch id={selected} dir={dayDir}>
-                        {dayTiles}
-                        {dayYou}
-                      </SlideSwitch>
-                    </div>
-                    <div className="split-pane" data-scroll-pane="">
-                      <SlideSwitch id={selected} dir={dayDir}>{dayDetail}</SlideSwitch>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <DateCarousel selected={selected} rides={rides} onSelect={setSelected} />
-                    <SlideSwitch id={selected} dir={dayDir}>
-                      {dayTiles}
-                      {dayDetail}
-                      {dayYou}
-                    </SlideSwitch>
-                  </>
-                ))}
+              {page === 'you' && <YouPage {...menu} />}
             </SlideSwitch>
           </main>
         </div>
 
-        {!wide && canAdd && <AddRideFab onClick={openNewCar} />}
-
-        {!wide && tabBar}
+        {!wide && (
+          <div className="bottom-bar">
+            {tabBar}
+            {canAdd && <NewRideFab onClick={() => show('newRide')} />}
+          </div>
+        )}
 
         {pageRide && (
           <RidePage key={pageRide.id} ride={pageRide} onClose={() => setCarSel(null)}>
@@ -835,7 +735,7 @@ function Board({ session }: { session: Session }) {
         {wide && pushCard}
         {wide && seatNotices}
 
-        {is('sidebar') && !wide && <Sidebar {...menu} onClose={closer('sidebar')} />}
+        {is('newRide') && <NewRideSheet kinds={newKinds} onPick={pickNewRide} onClose={closer('newRide')} />}
 
         {is('guide') && <CarGuide onSupport={() => show('support')} onClose={closer('guide')} />}
 
@@ -846,7 +746,7 @@ function Board({ session }: { session: Session }) {
         {is('whatsNew') && <WhatsNew entries={newsShown.length ? newsShown : news} onClose={closeNews} />}
         {is('support') && <SupportSheet onFeedback={() => show('feedback')} onClose={closer('support')} />}
 
-        {is('feedback') && <FeedbackSheet user={`${userName} (@${user.username})`} view={view} onClose={closer('feedback')} />}
+        {is('feedback') && <FeedbackSheet user={`${userName} (@${user.username})`} view={page} onClose={closer('feedback')} />}
 
         {is('myRides') && <MyRides user={user} onNotice={notice} onClose={closer('myRides')} />}
 
@@ -879,6 +779,8 @@ function Board({ session }: { session: Session }) {
             template={form.mode === 'create' ? form.template : null}
             request={form.mode === 'create' ? form.request : null}
             slot={form.mode === 'create' ? form.slot : null}
+            kind={form.mode === 'create' ? form.kind : undefined}
+            car={form.mode === 'create' ? form.car : undefined}
             previous={lastRide}
             prefill={prefill}
             onPrefillChange={onPrefillChange}

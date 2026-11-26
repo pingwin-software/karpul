@@ -1091,20 +1091,6 @@
   font-variant-numeric: tabular-nums;
   vertical-align: 1px;
 }
-/* The same, folded into a dot on the ☰ while the drawer is shut. */
-.topbar-menu {
-  position: relative;
-}
-.topbar-dot {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #f59e0b;
-  box-shadow: 0 0 0 2px var(--bg);
-}
 .drawer-item:hover:not(:disabled) {
   background: color-mix(in srgb, var(--text) 6%, transparent);
 }

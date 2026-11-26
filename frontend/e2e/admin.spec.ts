@@ -62,9 +62,9 @@ function isoDay(offset: number) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-/** The drawer: under the ☰ on a phone, docked on a desktop. */
+/** The menu: the You tab on a phone, docked on a desktop. */
 async function drawer(page: Page, info: TestInfo, item: RegExp) {
-  if (info.project.name === 'phone') await page.getByRole('button', { name: 'Menu' }).click()
+  if (info.project.name === 'phone') await page.getByRole('radio', { name: 'You' }).click()
   await page.getByRole('button', { name: item }).first().click()
 }
 
@@ -98,7 +98,8 @@ test('a shared car past the share is asked for, approved by an admin, and a plat
   await mila.reload()
 
   // A second shared car today is past the share: the form offers to ask an admin.
-  await mila.getByRole('button', { name: 'Schedule a ride' }).click()
+  await mila.getByRole('button', { name: 'New ride' }).click()
+  await mila.getByRole('button', { name: /^My car/ }).click()
   const form = mila.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'Shared car' }).click()
   await form.getByRole('button', { name: 'Which shared car' }).click()

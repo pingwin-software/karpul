@@ -16,12 +16,11 @@ import {
 } from '../lib/dayPlan'
 import { useT } from '../lib/i18n'
 import { mapsOn, useMapConfig } from '../lib/places'
-import { useWide } from '../lib/useWide'
 import { drives, runs, seatedIn, useMe } from '../lib/me'
 import type { CorporateCar, Ride } from '../lib/types'
 import { avatarTone } from '../lib/tone'
 import { Avatar } from './Avatar'
-import { PowertrainMark } from './CarArt'
+import { CarGlyph, PowertrainMark } from './CarArt'
 import { DatePicker } from './DatePicker'
 import { DayClock } from './DayClock'
 import { DayMap } from './DayMap'
@@ -50,6 +49,10 @@ interface Props {
   onSelect: (rideId: number) => void
   onDate: (iso: string) => void
   onBook: (slot: Slot) => void
+  /** *Book* on a shared car's row: the ride form on that car, the times still to pick. Left out on a past day. */
+  onBookCar?: (carId: number) => void
+  /** A shared car's name opens how it stands (components/SharedCars.tsx). */
+  onCar?: () => void
   /** Open the ride form on a ride you run (yours, or anyone's for an admin). */
   onEdit: (ride: Ride) => void
 }
@@ -106,7 +109,7 @@ function minuteAt(gap: Gap, e: { clientX: number; currentTarget: Element }): num
  * any ride for an admin) is edited from the plan too: picked, it grows a
  * pencil at its end, and a double click goes straight to the form.
  */
-export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSelect, onDate, onBook, onEdit }: Props) {
+export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSelect, onDate, onBook, onBookCar, onCar, onEdit }: Props) {
   const t = useT()
   const me = useMe()
   const today = todayISO()
@@ -116,13 +119,11 @@ export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSele
   // pointer leaves (`on` false), so the pin pops out where it was.
   const [pins, setPins] = useState<Record<string, { min: number; on: boolean }>>({})
   const pinOff = (key: string) => setPins((p) => (p[key]?.on ? { ...p, [key]: { ...p[key], on: false } } : p))
-  // A wide screen has a square to spare, so the day opens as a clock there;
-  // a phone keeps the roads, which scroll sideways under a thumb.
-  const wide = useWide()
   const [chosen, setChosen] = useState<Shape | null>(loadShape)
   // The map is a shape only while there are map tiles (lib/places.ts).
   const SHAPES = mapsOn(useMapConfig()) ? ALL_SHAPES : ALL_SHAPES.filter((s) => s !== 'map')
-  const fallback: Shape = wide ? 'clock' : 'timeline'
+  // The timetable first, everywhere: the clock and the map are other ways to read the same day.
+  const fallback: Shape = 'timeline'
   const shape: Shape = chosen && SHAPES.includes(chosen) ? chosen : fallback
   const pickShape = (next: Shape) => {
     track(`plan.${next}`)
@@ -260,12 +261,26 @@ export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSele
     return (
       <div key={row.key} className="plan-car">
         <div className="plan-car-head">
-          <span className="plan-car-name">
-            <span>{shortCarName(row.label)}</span>
-            <PowertrainMark carName={row.label} />
+          <CarGlyph carName={row.label} size={24} className="plan-car-art" />
+          <span className="plan-car-text">
+            {row.car && onCar ? (
+              <button type="button" className="plan-car-name plan-car-open" onClick={onCar}>
+                <span>{shortCarName(row.label)}</span>
+                <PowertrainMark carName={row.label} />
+              </button>
+            ) : (
+              <span className="plan-car-name">
+                <span>{shortCarName(row.label)}</span>
+                <PowertrainMark carName={row.label} />
+              </span>
+            )}
+            <span className={free ? 'plan-status plan-status-free' : 'plan-status'}>{status(row)}</span>
           </span>
-          {row.car && <span className="plan-plate">{row.car.plate}</span>}
-          <span className={free ? 'plan-status plan-status-free' : 'plan-status'}>{status(row)}</span>
+          {row.car && onBookCar && (
+            <button type="button" className="btn btn-sm plan-book" onClick={() => onBookCar(row.car!.id)}>
+              {t.plan.bookCar}
+            </button>
+          )}
         </div>
         <div className={['plan-road', !row.bars.length && 'plan-road-empty', bookable && 'plan-road-ticks'].filter(Boolean).join(' ')}>
           {bookable && hours.filter((h) => !inGap(h)).map((h) => tick(h, at(h, axis), false))}

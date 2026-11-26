@@ -1,36 +1,39 @@
 /* ---------------------------------------------------------------------------
-   Karpul — a light, card-based board.
+   Karpul — a quiet, grouped board.
 
-   Fluent 2 in Karpul green: one green accent for "selected / go" (step 80 of
-   the brand ramp below), white cards on a neutral ground, Fluent's two-part
-   elevation shadows, 4px controls, 8px cards and 12px sheets, Segoe UI
-   Variable where the system has it and Inter everywhere else. A phone gets one column; from 1024px wide the
-   board opens into two panes (the list beside the open ride, see "Wide
-   screens" at the end).
+   Apple's conventions in Karpul green: one green tint for "selected / go",
+   white cells on the grouped grey ground with no stroke and no shadow, every
+   control a capsule or a filled box (12px controls, 22px cards, 30px sheets),
+   the system font (San Francisco on Apple's devices) and the bundled Inter
+   everywhere else. A phone gets one column; from 1024px wide the board opens
+   into two panes (the list beside the open ride, see "Wide screens" at the end).
    Semantic class names (.card, .date, .car-tile, .pax-row, .panel, …) are
    the contract the components render against.
 --------------------------------------------------------------------------- */
 
 @theme {
-  --color-bg: #f5f5f5;
+  /* iOS's grouped greys: the ground, a cell on it, and the labels. */
+  --color-bg: #f2f2f7;
   --color-surface: #ffffff;
-  --color-surface-2: #f0f0f0;
-  --color-text: #242424;
-  --color-muted: #616161;
-  --color-border: #e0e0e0;
-  --color-border-strong: #d1d1d1;
+  --color-surface-2: #ebebf0;
+  --color-text: #000000;
+  --color-muted: #636366;
+  --color-border: #e5e5ea;
+  --color-border-strong: #d1d1d6;
   --color-green: #0f7b4f;
   --color-green-dark: #0b613e;
-  --color-green-soft: #e8f4ee;
-  --color-green-line: #b5dcc7;
-  --color-red: #e5484d;
-  --color-red-soft: #fdecec;
-  --color-blue: #2563eb;
-  --color-blue-soft: #e8efff;
+  --color-green-soft: #e4f2ea;
+  --color-green-line: #cfe6da;
+  /* Apple's accessible red: it carries small text on white. */
+  --color-red: #d70015;
+  --color-red-soft: #fdeaea;
+  --color-blue: #0a6cdf;
+  --color-blue-soft: #e5f0ff;
 
-  /* Segoe UI Variable on Windows (Fluent's own face); the bundled Inter on
-     every other system, so Serbian letters never fall back to something odd. */
-  --font-sans: 'Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI', 'Inter', system-ui, -apple-system, Roboto, sans-serif;
+  /* The system font where it is San Francisco (Apple's devices; it may not be
+     shipped anywhere else), the bundled Inter on every other system, so
+     Serbian letters never fall back to something odd. */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 :root {
@@ -49,17 +52,26 @@
   --red-soft: var(--color-red-soft);
   --blue: var(--color-blue);
   --blue-soft: var(--color-blue-soft);
-  /* Fluent shapes: cards 8px, controls 4px, sheets and dialogs 12px. */
-  --radius: 8px;
-  --radius-sm: 4px;
-  --radius-lg: 12px;
-  /* Fluent elevation: an ambient ring plus a key shadow (2, 8 and 28). */
-  --shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+  /* What fills a control (a field, a switch's track, a grey button): a wash
+     of grey that works on a cell and on the ground alike. */
+  --fill: rgba(118, 118, 128, 0.12);
+  --fill-strong: rgba(118, 118, 128, 0.2);
+  /* A segmented control's thumb, and the switch that is on (iOS's own green). */
+  --seg-thumb: #ffffff;
+  --switch-on: #34c759;
+  /* Shapes: cells 22px, controls 12px, sheets and dialogs 30px; buttons,
+     chips and tags are capsules. */
+  --radius: 22px;
+  --radius-sm: 12px;
+  --radius-lg: 30px;
+  --radius-pill: 999px;
+  /* No elevation at rest: a cell is a white shape on the grey ground. Only
+     what floats over the page (a popover, a sheet, the tab bar) casts. */
+  --shadow: none;
   /* What a card the pointer is over rises to. */
-  --shadow-hover: 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14);
-  --shadow-pop: 0 0 8px rgba(0, 0, 0, 0.12), 0 14px 28px rgba(0, 0, 0, 0.14);
-  /* What a card rests at (Fluent's shadow 4). */
-  --shadow-card: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.08);
+  --shadow-pop: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 12px 40px rgba(0, 0, 0, 0.16);
+  --shadow-card: none;
   /* Fluent's durations: hover 100ms, a popover 150ms, a dialog 250ms. */
   --dur-fast: 0.15s;
   --dur-normal: 0.2s;
@@ -77,8 +89,9 @@
 
   color-scheme: light;
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 16px;
+  line-height: 1.4;
+  letter-spacing: -0.011em;
 }
 
 * {
@@ -98,7 +111,7 @@ h2,
 h3 {
   margin: 0;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.022em;
 }
 
 button,
@@ -114,10 +127,8 @@ button {
 button:disabled {
   cursor: not-allowed;
 }
-
 .mono,
 .when-value,
-.car-tile-seats,
 .section-count,
 .stepper output,
 input[type='date'],
@@ -135,4 +146,10 @@ input[type='time'] {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* The icons (components/icons.tsx): an outline glyph's line weight, which a
+   small icon thickens through --ion-line. */
+.ion-line {
+  stroke-width: var(--ion-line, 32px);
 }

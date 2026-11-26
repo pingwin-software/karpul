@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { firstName, fmtTime } from '../lib/dates'
+import { firstName, fmtDayDate, fmtDayLabel, fmtTime, shortCarName } from '../lib/dates'
 import { useT } from '../lib/i18n'
 import { drives, inRide, isMyBooking, myBooking as findMyBooking, myWaitlistEntry, placeInLine, runs, useMe } from '../lib/me'
 import { hasPins, routeUrl, stopHint } from '../lib/maps'
@@ -12,6 +12,7 @@ import { mapsOn, useMapConfig, useMapsAllowed } from '../lib/places'
 import { allStops, MAX_STOPS, type NewStop } from '../lib/stops'
 import { telHref } from '../lib/support'
 import type { CarState, Ride, RideInput, RideRequest } from '../lib/types'
+import { carModel, carPaint } from '../lib/carModels'
 import { useWide } from '../lib/useWide'
 import { AddStop } from './AddStop'
 import { PickupSheet } from './PickupSheet'
@@ -24,6 +25,7 @@ import { RideFacts } from './RideFacts'
 import { TripRoute } from './TripRoute'
 import { WaitLine } from './WaitLine'
 import { Avatar } from './Avatar'
+import { CarArt } from './CarArt'
 import {
   ArrowRightIcon,
   CalendarIcon,
@@ -38,7 +40,7 @@ import {
   PencilIcon,
   PhoneIcon,
   PinIcon,
-  PlusIcon,
+  CheckCircleIcon,
   RepeatIcon,
   ShareIcon,
   TrashIcon,
@@ -258,6 +260,8 @@ export function CarDetail({
     else onJoin(ride, place, where)
   }
   const getInLabel = switching ? t.detail.switchTo : t.detail.getIn
+  const model = carModel(ride.car_name)
+  const tagged = ride.needs_driver || ride.unconfirmed || ride.approval === 'pending' || ride.approval === 'approved' || !!ride.series_id
 
 
   function pickPassenger(person: Person) {
@@ -289,6 +293,9 @@ export function CarDetail({
           : []),
       ]
     : [
+        ...(!ride.proposal && !isPast && !isDriver && myBooking?.passenger_id != null
+          ? [{ label: t.detail.suggest, icon: <ClockIcon size={18} />, onSelect: () => setSuggesting(true) }]
+          : []),
         { label: t.detail.duplicateMine, icon: <CopyIcon size={18} />, onSelect: () => onDuplicate(ride) },
         ...shareItems,
         ...mapItems,
@@ -296,36 +303,57 @@ export function CarDetail({
 
   return (
     <div className="detail">
-      <article className="card driver-card">
-        <header className="driver-head">
-          <Avatar name={ride.driver_name} size="lg" />
-          <div className="driver-id">
-            <strong>{ride.driver_name}</strong>
-            <span className="driver-role">
-              {t.detail.driver}
-              {isDriver && <span className="tag">{t.detail.you}</span>}
-              {ride.driver_id === null && <span className="tag tag-muted">{t.detail.noAccount}</span>}
-              {ride.needs_driver && <span className="tag tag-amber">{t.detail.needsDriver}</span>}
-              {ride.unconfirmed && <span className="tag tag-amber">{t.detail.unconfirmed}</span>}
-              {ride.approval === 'pending' && <span className="tag tag-amber">{t.detail.awaiting}</span>}
-              {ride.approval === 'approved' && <span className="tag tag-green">{t.detail.approved}</span>}
-              {ride.series_id && (
-                <span className="driver-weekly" title={t.form.repeatWeekly}>
-                  <RepeatIcon size={13} /> {t.detail.weekly}
-                </span>
-              )}
-            </span>
-          </div>
-          {/* Editing is the thing whoever runs a ride does most: in plain sight, and only here (not again in the ⋮). */}
-          {runsIt && (
-            <button type="button" className="btn btn-soft driver-edit" disabled={busy} onClick={() => onEdit(ride)}>
-              <PencilIcon size={16} />
-              <span>{t.detail.editShort}</span>
-            </button>
-          )}
-          <Menu trigger={<KebabIcon />} label={t.detail.rideOptions} items={menuItems} />
-        </header>
+      {/* When, the way and the car, large; what the ride is for you under it. */}
+      <header className="ride-head">
+        <div className="ride-head-top">
+          <span className="ride-head-day">
+            {fmtDayLabel(ride.ride_date)} <small>{fmtDayDate(ride.ride_date)}</small>
+          </span>
+          <span className="ride-head-tools">
+            {/* Editing is the thing whoever runs a ride does most: in plain sight, and only here (not again in the menu). */}
+            {runsIt && (
+              <button type="button" className="btn btn-sm driver-edit" disabled={busy} onClick={() => onEdit(ride)}>
+                {t.detail.editShort}
+              </button>
+            )}
+            <Menu trigger={<KebabIcon />} label={t.detail.rideOptions} items={menuItems} />
+          </span>
+        </div>
+        <div className="ride-head-row">
+          <span className="ride-head-time">{fmtTime(ride.departure_time)}</span>
+          {model && <CarArt model={model.key} paint={carPaint(ride.car_name)} width={150} className="ride-head-car" />}
+        </div>
+        <strong className="ride-head-route">
+          {ride.origin}
+          <ArrowRightIcon size={18} weight="bold" />
+          {ride.destination}
+        </strong>
+        <span className="ride-head-sub">
+          {ride.return_time ? `${t.detail.returns} ${fmtTime(ride.return_time)}` : t.detail.oneWay} · {shortCarName(ride.car_name)}
+        </span>
+        {(isDriver || myBooking || tagged) && (
+          <span className="ride-head-tags">
+            {isDriver && <span className="ride-chip">{t.upcoming.driving}</span>}
+            {!isDriver && myBooking && (
+              <span className="ride-chip">
+                <CheckCircleIcon size={18} weight="bold" />
+                {t.upcoming.youreIn} · {myBooking.pickup || ride.origin}
+              </span>
+            )}
+            {ride.needs_driver && <span className="tag tag-amber">{t.detail.needsDriver}</span>}
+            {ride.unconfirmed && <span className="tag tag-amber">{t.detail.unconfirmed}</span>}
+            {ride.approval === 'pending' && <span className="tag tag-amber">{t.detail.awaiting}</span>}
+            {ride.approval === 'approved' && <span className="tag tag-green">{t.detail.approved}</span>}
+            {ride.series_id && (
+              <span className="driver-weekly" title={t.form.repeatWeekly}>
+                <RepeatIcon size={13} /> {t.detail.weekly}
+              </span>
+            )}
+          </span>
+        )}
+      </header>
 
+      <div className="ride-asks">
         {ride.approval === 'pending' && me.admin && !isPast && <ApprovalAsk ride={ride} busy={busy} onApprove={onApprove} onDecline={onDecline} />}
 
         {ride.proposal && !isPast && (
@@ -337,11 +365,6 @@ export function CarDetail({
           />
         )}
 
-        {!ride.proposal && !isPast && !isDriver && myBooking?.passenger_id != null && (
-          <button type="button" className="soft-action suggest-link" onClick={() => setSuggesting(true)}>
-            <ClockIcon size={15} /> {t.detail.suggest}
-          </button>
-        )}
         {suggesting && (
           <SuggestTime
             ride={ride}
@@ -381,69 +404,8 @@ export function CarDetail({
 
         {!isPast && <OfficeMailAsk ride={ride} runsIt={runsIt} isDriver={isDriver} onWrite={onOfficeMail} />}
 
-        {ride.driver_phone && !isDriver && (
-          <a className="btn btn-soft btn-block driver-call" href={telHref(ride.driver_phone)}>
-            <PhoneIcon size={18} />
-            {t.detail.callDriver}
-            <span className="driver-call-number">{ride.driver_phone}</span>
-          </a>
-        )}
-
-        <div className="driver-times">
-          <div className="when">
-            <span className="when-label">{t.detail.leaves}</span>
-            <span className="when-value">{fmtTime(ride.departure_time)}</span>
-          </div>
-          <span className="when-sep" aria-hidden="true">
-            <ArrowRightIcon size={16} />
-          </span>
-          <div className="when">
-            <span className="when-label">{t.detail.returns}</span>
-            <span className="when-value">{ride.return_time ? fmtTime(ride.return_time) : t.detail.oneWay}</span>
-          </div>
-        </div>
-
         {isDriver && <LateRow ride={ride} busy={busy} onLate={onLate} />}
-
-        <TripRoute ride={ride} />
-        {mapInline && <RideMap ride={ride} className="ride-map-inline" />}
-        {pinned && !mapInline && (
-          <button type="button" className="btn btn-block trip-map-open" onClick={() => setShowMap(true)}>
-            <MapIcon size={18} />
-            {t.map.showMap}
-            <ChevronRightIcon size={16} className="trip-map-open-chevron" />
-          </button>
-        )}
-        {showMap && <RouteMapSheet ride={ride} onClose={() => setShowMap(false)} />}
-        {/* The whole route on one screen, *Add a pickup point* included. A passenger
-            puts a new place on the route through *Get in* or their pickup's *Edit*. */}
-        {runsIt && !isPast && (
-          <span className="trip-actions">
-            <button type="button" className="soft-action" disabled={busy} onClick={() => setEditingRoute(true)}>
-              <PencilIcon size={14} /> {t.detail.editRoute}
-            </button>
-          </span>
-        )}
-        {runsIt && !isPast && editingRoute && (
-          <RouteEditor
-            ride={ride}
-            busy={busy}
-            onClose={() => setEditingRoute(false)}
-            onSave={async (patch) => {
-              if (await onSaveRoute(ride, patch)) setEditingRoute(false)
-            }}
-          />
-        )}
-
-        <DriverCar ride={ride} carState={carState} onCarState={onCarState} onGuide={onGuide} />
-
-        <RideFacts ride={ride} isDriver={isDriver} showPlate={showPlate} showMail={runsIt} />
-      </article>
-
-      {/* The kilometres: kept by whoever is in the car, read by the admins. */}
-      {keepsKm(ride) && (me.admin || inRide(ride, me)) && (!coming || ride.legs.length > 0) && (
-        <Odometer ride={ride} busy={busy} coming={coming} onOdometer={onOdometer} />
-      )}
+      </div>
 
       <section className="pax">
         <h3 className="section-title">
@@ -509,25 +471,25 @@ export function CarDetail({
           />
         )}
 
-        {ride.bookings.length === 0 && !seatOnOffer ? (
-          <div className="dropzone dropzone-still">
-            <UsersIcon size={28} />
-            <span>{isPast ? t.detail.nobodyRode : full ? t.detail.noSeatsOffered : t.detail.noPassengers}</span>
-          </div>
-        ) : null}
-
-        {ride.bookings.length === 0 && seatOnOffer && !choosingPlace ? (
-          <div className="join-box">
-            <button type="button" className="dropzone" disabled={busy} onClick={getIn}>
-              <UsersIcon size={28} />
-              <strong>{getInLabel}</strong>
-              <span>{switching ? t.detail.switchHint(firstName(switchFrom!.ride.driver_name)) : t.detail.tapSeat}</span>
-            </button>
-          </div>
-        ) : null}
-
-        {ride.bookings.length > 0 && (
-          <ul className="pax-list">
+        <ul className="group pax-list">
+          <li className="pax-slot">
+            <div className="pax-row pax-driver">
+              <Avatar name={ride.driver_name} />
+              <span className="pax-name">
+                <span className="pax-name-row">
+                  <span className="pax-name-text">{ride.driver_name}</span>
+                  {isDriver && <span className="tag">{t.detail.you}</span>}
+                  {ride.driver_id === null && <span className="tag tag-muted">{t.detail.noAccount}</span>}
+                </span>
+                <span className="pax-pickup">{t.detail.driver}</span>
+              </span>
+              {ride.driver_phone && !isDriver && (
+                <a className="icon-btn pax-call" href={telHref(ride.driver_phone)} aria-label={`${t.detail.callDriver} ${ride.driver_phone}`} title={ride.driver_phone}>
+                  <PhoneIcon size={18} />
+                </a>
+              )}
+            </div>
+          </li>
             {ride.bookings.map((b) => {
               const mine = isMyBooking(b, me)
               // Someone new grows into the list; your own row takes the place of the get-in row you tapped.
@@ -593,11 +555,6 @@ export function CarDetail({
                           )}
                         </span>
                       )}
-                      {mine && sayHere && !b.here_at && !b.no_show && !movingPickup && (
-                        <button type="button" className="btn btn-sm btn-primary pax-here" disabled={busy} onClick={() => onHere(ride, b.id, true)}>
-                          <PinIcon size={16} /> {t.detail.imHere}
-                        </button>
-                      )}
                       {runsIt && left && !mine && (
                         <button type="button" className="link link-sm pax-noshow" disabled={busy} onClick={() => onNoShow(ride, b.id, !b.no_show)}>
                           {b.no_show ? t.detail.turnedUp : t.detail.didNotTurnUp}
@@ -630,17 +587,21 @@ export function CarDetail({
                 </li>
               )
             })}
-            {seatOnOffer && !choosingPlace && (
-              <li>
-                <button type="button" className="add-row" disabled={busy} onClick={getIn}>
-                  <PlusIcon size={18} />
-                  {getInLabel}
-                </button>
-                {switching && <p className="hint hint-tight">{t.detail.switchHint(firstName(switchFrom!.ride.driver_name))}</p>}
-              </li>
-            )}
-          </ul>
-        )}
+          {(ride.free_seats > 0 || ride.bookings.length === 0) && (
+            <li className="pax-slot">
+              <div className="pax-row pax-free">
+                <span className="pax-empty" aria-hidden="true" />
+                <span className="pax-name">
+                  <span className="pax-pickup">
+                    {ride.free_seats > 0 ? t.detail.seatsFree(ride.free_seats) : isPast ? t.detail.nobodyRode : full ? t.detail.noSeatsOffered : t.detail.noPassengers}
+                  </span>
+                  {ride.bookings.length === 0 && ride.free_seats > 0 && <span className="sr-only">{isPast ? t.detail.nobodyRode : t.detail.noPassengers}</span>}
+                </span>
+              </div>
+            </li>
+          )}
+        </ul>
+        {seatOnOffer && !choosingPlace && switching && <p className="hint hint-tight">{t.detail.switchHint(firstName(switchFrom!.ride.driver_name))}</p>}
 
 
         {canAddOther && !adding && (
@@ -655,15 +616,7 @@ export function CarDetail({
 
         {full && !myBooking && !isDriver && ride.bookings.length > 0 && !myEntry && <p className="hint">{t.detail.full}</p>}
 
-        {canWait && !choosingPlace && (
-          <>
-            <button type="button" className="add-row add-row-quiet" disabled={busy} onClick={wait}>
-              <HourglassIcon size={18} />
-              {t.detail.waitFor}
-            </button>
-            <p className="hint hint-tight">{t.detail.waitHint}</p>
-          </>
-        )}
+        {canWait && !choosingPlace && <p className="hint hint-tight">{t.detail.waitHint}</p>}
         {myEntry && !isPast && (
           <div className="banner waitline-me">
             <HourglassIcon size={22} />
@@ -676,7 +629,70 @@ export function CarDetail({
         {ride.waitlist.length > 0 && <WaitLine ride={ride} isDriver={isDriver} isPast={isPast} busy={busy} onLeaveLine={onLeaveLine} />}
       </section>
 
+      <article className="card driver-card">
+        <TripRoute ride={ride} />
+        {mapInline && <RideMap ride={ride} className="ride-map-inline" />}
+        {pinned && !mapInline && (
+          <button type="button" className="btn btn-block trip-map-open" onClick={() => setShowMap(true)}>
+            <MapIcon size={18} />
+            {t.map.showMap}
+            <ChevronRightIcon size={16} className="trip-map-open-chevron" />
+          </button>
+        )}
+        {showMap && <RouteMapSheet ride={ride} onClose={() => setShowMap(false)} />}
+        {/* The whole route on one screen, *Add a pickup point* included. A passenger
+            puts a new place on the route through *Get in* or their pickup's *Edit*. */}
+        {runsIt && !isPast && (
+          <span className="trip-actions">
+            <button type="button" className="soft-action" disabled={busy} onClick={() => setEditingRoute(true)}>
+              <PencilIcon size={14} /> {t.detail.editRoute}
+            </button>
+          </span>
+        )}
+        {runsIt && !isPast && editingRoute && (
+          <RouteEditor
+            ride={ride}
+            busy={busy}
+            onClose={() => setEditingRoute(false)}
+            onSave={async (patch) => {
+              if (await onSaveRoute(ride, patch)) setEditingRoute(false)
+            }}
+          />
+        )}
+
+        <DriverCar ride={ride} carState={carState} onCarState={onCarState} onGuide={onGuide} />
+
+        <RideFacts ride={ride} isDriver={isDriver} showPlate={showPlate} showMail={runsIt} />
+      </article>
+
+      {/* The kilometres: kept by whoever is in the car, read by the admins. */}
+      {keepsKm(ride) && (me.admin || inRide(ride, me)) && (!coming || ride.legs.length > 0) && (
+        <Odometer ride={ride} busy={busy} coming={coming} onOdometer={onOdometer} />
+      )}
+
+
       <RideThread ride={ride} isDriver={isDriver} onError={onError} />
+
+      {/* The one thing your place in this ride lets you do now, pinned to the foot of the screen. */}
+      {seatOnOffer && !choosingPlace ? (
+        <div className="ride-bar">
+          <button type="button" className="btn btn-primary btn-block" disabled={busy} onClick={getIn}>
+            {getInLabel}
+          </button>
+        </div>
+      ) : canWait && !choosingPlace ? (
+        <div className="ride-bar">
+          <button type="button" className="btn btn-primary btn-block" disabled={busy} onClick={wait}>
+            {t.detail.waitFor}
+          </button>
+        </div>
+      ) : myBooking && sayHere && !myBooking.here_at && !myBooking.no_show && !movingPickup ? (
+        <div className="ride-bar">
+          <button type="button" className="btn btn-primary btn-block" disabled={busy} onClick={() => onHere(ride, myBooking.id, true)}>
+            {t.detail.imHere}
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

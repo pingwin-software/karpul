@@ -40,7 +40,9 @@ test('places are suggested, pinned and shown on the map', async ({ browser }, in
   const mira = await register(browser, `mira.${tag.toLowerCase()}`, 'Mira', `Maps ${tag}`, options)
   const toma = await register(browser, `toma.${tag.toLowerCase()}`, 'Toma', `Pins ${tag}`, options)
 
-  await mira.getByRole('button', { name: 'Schedule a ride' }).click()
+  await mira.getByRole('button', { name: 'New ride' }).click()
+
+  await mira.getByRole('button', { name: /^My car/ }).click()
   const form = mira.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Blue Clio')

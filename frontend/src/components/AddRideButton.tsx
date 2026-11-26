@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useT } from '../lib/i18n'
-import { HandIcon, PlusIcon } from './icons'
+import type { CarType } from '../lib/types'
+import { ChevronRightIcon, PlusIcon } from './icons'
+import { NavIcon, type NavName } from './NavIcon'
+import { Sheet } from './Sheet'
 
 /** How long the pressed look is held at least, so a quick tap still shows the
  * full contraction before the spring back (the CSS press takes 80ms). */
@@ -48,73 +51,77 @@ function usePressed() {
 }
 
 /**
- * The one way to add a ride: a white plus in a green circle, floating at the
- * bottom right of the column on both views whenever a ride can be added. It
- * is deliberately the only add control on a phone (no tile in the carousel,
- * no plus in the empty card, no drawer item), so there is one place to look
- * for it.
+ * The one way to add anything: *New ride*, a green capsule floating beside the
+ * tab bar on a phone and a button at the head of the list on a wide screen.
+ * Either opens the same sheet (`NewRideSheet`), which asks the one question
+ * that matters first: who drives. People who meant to book a shared car used
+ * to ask for a seat instead, because the two ways in looked alike and sat
+ * apart; one button and three plainly worded rows end that.
  */
-function PlusCircle({ size }: { size: number }) {
-  return (
-    <span className="plus-circle" style={{ width: size, height: size }} aria-hidden="true">
-      <PlusIcon size={Math.round(size * 0.5)} weight="bold" />
-    </span>
-  )
-}
-
-export function AddRideFab({ onClick }: { onClick: () => void }) {
+export function NewRideFab({ onClick }: { onClick: () => void }) {
   const t = useT()
   const { pressed, ...press } = usePressed()
   return (
-    <button
-      type="button"
-      className={pressed ? 'fab fab-pressed' : 'fab'}
-      aria-label={t.fab.addRide}
-      title={t.fab.addRide}
-      onClick={onClick}
-      {...press}
-    >
-      <PlusCircle size={60} />
+    <button type="button" className={pressed ? 'fab fab-pressed' : 'fab'} onClick={onClick} {...press}>
+      <PlusIcon size={22} weight="bold" />
+      {t.newRide.button}
     </button>
   )
 }
 
-/**
- * The same choice on a wide screen, where nothing floats: two cards at the top
- * of the list column, where the eye already is. A toolbar button at the top
- * right was easy to miss, and the one action left in the column was *Ask for a
- * ride*, so people who meant to book a shared car asked for a seat instead.
- * Side by side, each card says who drives, which is the whole difference.
- * Either card is left out when it does not apply (a past day, a day you are
- * already in a car), and the other then takes the full width.
- */
-export function RideActions({ onAdd, onAsk }: { onAdd?: () => void; onAsk?: () => void }) {
+/** The same button where nothing floats: at the head of a wide screen's list. */
+export function NewRideButton({ onClick }: { onClick: () => void }) {
   const t = useT()
-  if (!onAdd && !onAsk) return null
   return (
-    <div className="ride-actions">
-      {onAdd && (
-        <button type="button" className="ride-action ride-action-add" onClick={onAdd}>
-          <span className="ride-action-mark" aria-hidden="true">
-            <PlusIcon size={20} weight="bold" />
-          </span>
-          <span className="ride-action-text">
-            <strong>{t.fab.addRide}</strong>
-            <small>{t.fab.addHint}</small>
-          </span>
-        </button>
-      )}
-      {onAsk && (
-        <button type="button" className="ride-action ride-action-ask" onClick={onAsk}>
-          <span className="ride-action-mark" aria-hidden="true">
-            <HandIcon size={20} />
-          </span>
-          <span className="ride-action-text">
-            <strong>{t.requests.ask}</strong>
-            <small>{t.fab.askHint}</small>
-          </span>
-        </button>
-      )}
-    </div>
+    <button type="button" className="btn btn-primary new-ride-btn" onClick={onClick}>
+      <PlusIcon size={18} weight="bold" />
+      {t.newRide.button}
+    </button>
+  )
+}
+
+/** What a new ride can be: you drive a shared car, you drive your own, or you need a seat. */
+export type NewRideKind = CarType | 'ask'
+
+interface SheetProps {
+  /** Which rows to offer: a shared car needs a pool, asking needs a day you have no ride on. */
+  kinds: NewRideKind[]
+  onPick: (kind: NewRideKind) => void
+  onClose: () => void
+}
+
+const MARK: Record<NewRideKind, [NavName, string]> = {
+  corporate: ['key', 'tile-green'],
+  own: ['car', 'tile-blue'],
+  ask: ['hand', 'tile-orange'],
+}
+
+/** *New ride*: who drives? One row each, the answer in the row's own words. */
+export function NewRideSheet({ kinds, onPick, onClose }: SheetProps) {
+  const t = useT()
+  const words: Record<NewRideKind, [string, string]> = {
+    corporate: [t.newRide.shared, t.newRide.sharedHint],
+    own: [t.newRide.own, t.newRide.ownHint],
+    ask: [t.newRide.ask, t.newRide.askHint],
+  }
+  return (
+    <Sheet title={t.newRide.title} id="new-ride-title" onClose={onClose} className="panel-short">
+      <ul className="group choice-list">
+        {kinds.map((k) => (
+          <li key={k}>
+            <button type="button" className="group-row choice" onClick={() => onPick(k)}>
+              <span className={`tile ${MARK[k][1]}`} aria-hidden="true">
+                <NavIcon name={MARK[k][0]} variant="filled" size={18} />
+              </span>
+              <span className="group-text">
+                <strong>{words[k][0]}</strong>
+                <small>{words[k][1]}</small>
+              </span>
+              <ChevronRightIcon size={16} className="group-chevron" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Sheet>
   )
 }

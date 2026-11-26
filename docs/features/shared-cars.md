@@ -44,7 +44,7 @@ deadline, and a *Needs a driver* list under *Approvals* (`GET /api/admin/driverl
 badge). On screen: a *Needs a
 driver* tag and an *I'll drive* row on the card (`.approval-row`), the tag on the Upcoming row, and the
 removal confirmation says so. Tests: `tests/test_takeover.py`. **A driver who is still in the car can
-simply give it away**: *Give the car to a passenger* in the ride's ⋮ (whoever runs a shared-car ride, from
+simply give it away**: *Give the car to a passenger* in the ride's ⋯ (whoever runs a shared-car ride, from
 its day on, not while it waits for a driver or for approval; `canGive` in `CarDetail.tsx`) asks who takes
 the wheel (`GiveCarAsk` in `RideAsks.tsx`, the passengers with an account who turned up, `givable` in
 `lib/people.ts`), then "are you sure?" (`onGiveCar` in `useRideActions`). `POST /api/rides/{id}/give
@@ -58,8 +58,8 @@ driver card); it is only ever shown. On screen: the share's refusal in
 tail in `App.tsx`), a pending ride wears an amber *Awaiting approval* tag on the card, the Upcoming
 row and as a hollow stretch on the day plan (`.plan-ride-pending`, drawn *under* `.plan-free`, and
 `freeGaps` ignores it, so the stretch beneath stays bookable). The admins' own place is *Approvals*
-in the drawer (`components/Approvals.tsx`, `GET /api/admin/approvals`: pending rides from today on,
-soonest first), with an amber count on the item and a dot on the ☰ (`waiting` in `App.tsx`, asked
+in the menu (`components/Approvals.tsx`, `GET /api/admin/approvals`: pending rides from today on,
+soonest first), with an amber count on the item and a dot on the *You* tab (`waiting` in `App.tsx`, asked
 again whenever the board's rides change or a decision is made); each ask is decided there, and a tap
 on it opens the ride on the day plan. The card keeps its *Approve* / *Decline* row (`.approval-row`)
 too. `approval` is an `ADDED_COLUMNS` column. Tests: `tests/test_shared_car_share.py`.
@@ -99,9 +99,9 @@ ride whose destination is that office (`offices.needs_garage`, `GARAGE_OFFICE`; 
 for a shared car) and `Ride.plate_registered` (both `ADDED_COLUMNS`). `RideForm` shows the *Licence plate* field
 under the route only then (remembered with the last route), and the driver card shows it as a *Garage* fact to the
 driver and admins. A new task pushes `garage_plate` to every admin (category *approvals*); an edit to another plate
-or another day undoes the tick and asks again. The admins' place is *Garage list* in the drawer
+or another day undoes the tick and asks again. The admins' place is *Garage list* in the menu
 (`components/GarageList.tsx`, `GET /api/admin/garage`: from today on, the ones still to add first, with an amber
-count on the item and in the ☰ dot), where `PUT /api/admin/garage/{id} {registered}` ticks one off (or takes it
+count on the item and in the *You* tab's dot), where `PUT /api/admin/garage/{id} {registered}` ticks one off (or takes it
 back), logged as `plate_registered` / `plate_unregistered` and pushed `plate_registered` to the driver. The list
 itself is kept outside Karpul. Tests: `tests/test_garage.py`.
 
@@ -141,7 +141,7 @@ connect). **An admin puts the state right**: `PATCH /api/cars/corporate/reports/
 sent replace the report's, null clears one, a report left saying nothing is a 422; author and time stay)
 and `DELETE` of the same (the state falls back on the report before), both in the admin's log
 (`car_report_edited` / `car_report_removed`); *Mark as fixed* is an ordinary report with `issues: ""`.
-On screen: *Shared cars* in the drawer for everyone (`components/SharedCars.tsx`), one list of the
+On screen: *Shared cars* in the menu for everyone (`components/SharedCars.tsx`), one list of the
 cars: `CarStatusList` (`components/CarStatus.tsx`: a card per car with its state; the text helpers in
 `lib/carState.ts`). *Report on this car* opens `CarReportSheet` (`components/CarReportSheet.tsx`, a `Sheet`
 with `stacked`: portalled over Shared cars, Escape captured), built from the parts in
@@ -157,9 +157,9 @@ out of it), the picked one popping, and quick problems as chips. Left untouched 
 (`useIdle` in `lib/useIdle.ts`, `.report-idle`; a light along the drum, an empty battery filling itself, the cars rocking); every
 animation under `.report-parts` stops under reduced motion; the arithmetic in `lib/carReport.ts`, tested in
 `carReport.test.ts`. The pool is managed on the same cards, not a list of its
-own: an admin gets the car's ⋮ (edit, retire, delete) and its `CarEditor` handed in through `carMenu` /
+own: an admin gets the car's ⋯ (edit, retire, delete) and its `CarEditor` handed in through `carMenu` /
 `carEditor` (which also takes the odometer and battery: a changed one is sent as an ordinary report in the
-admin's name, the car's own fields only when they changed), *Mark as fixed* on a problem, a ⋮ with *Edit* / *Remove* on each recent report, *Add
+admin's name, the car's own fields only when they changed), *Mark as fixed* on a problem, a ⋯ with *Edit* / *Remove* on each recent report, *Add
 shared car* at the foot and the retired cars listed under it; the one other tab, admins only, is
 *Usage* (the tab is `sharedCars.tab` in `App.tsx`, so the driver card's car line opens it on the cars). One line under
 the car's name on the driver card of a shared-car ride (`.driver-car-state`). **Where the car is**

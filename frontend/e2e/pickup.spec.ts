@@ -42,7 +42,9 @@ test('a passenger and the driver put new pickup points on the route', async ({ b
   const vesna = await register(browser, `vesna.${tag.toLowerCase()}`, 'Vesna', `Driver ${tag}`, options)
   const goran = await register(browser, `goran.${tag.toLowerCase()}`, 'Goran', `Rider ${tag}`, options)
 
-  await vesna.getByRole('button', { name: 'Schedule a ride' }).click()
+  await vesna.getByRole('button', { name: 'New ride' }).click()
+
+  await vesna.getByRole('button', { name: /^My car/ }).click()
   const form = vesna.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Green Polo')
@@ -128,7 +130,8 @@ test('a new pickup point from the waiting list goes on the route with the seat',
   const filip = await register(browser, `filip.${tag.toLowerCase()}`, 'Filip', `Waiting ${tag}`, options)
 
   // One seat only.
-  await dara.getByRole('button', { name: 'Schedule a ride' }).click()
+  await dara.getByRole('button', { name: 'New ride' }).click()
+  await dara.getByRole('button', { name: /^My car/ }).click()
   const form = dara.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('White Up')
