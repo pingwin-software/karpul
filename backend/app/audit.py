@@ -22,6 +22,7 @@ ACTIONS = (
     "ride_declined",
     "ride_confirmed",  # a ride from the shared car's paper log, confirmed for its driver
     "driver_picked",  # a shared car whose driver cancelled, given another driver
+    "car_given",  # a ride handed from its driver to a passenger in it
     "seat_added",  # someone put in someone else's car
     "seat_removed",
     "seat_no_show",  # a passenger marked as not having turned up, or that taken back

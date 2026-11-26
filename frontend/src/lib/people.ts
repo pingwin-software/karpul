@@ -39,3 +39,8 @@ export function drivable(people: Person[], ride: Ride, query: string): Person[] 
     .filter((p) => p.id !== ride.driver_id && (!q || fold(p.display_name).includes(q)))
     .sort((a, b) => Number(seated(b)) - Number(seated(a)))
 }
+
+/** The passengers a shared car may be handed to (backend: give_car): an account, and in the car. */
+export function givable(ride: Ride) {
+  return ride.bookings.filter((b) => b.passenger_id != null && !b.no_show)
+}

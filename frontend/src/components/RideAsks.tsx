@@ -3,7 +3,7 @@ import { owesOfficeMail } from '../lib/carMail'
 import { fmtDeadline } from '../lib/dates'
 import { useT } from '../lib/i18n'
 import { mayClaim, useMe } from '../lib/me'
-import { drivable, type Person } from '../lib/people'
+import { drivable, givable, type Person } from '../lib/people'
 import type { Ride } from '../lib/types'
 import { CarIcon, CheckIcon, MailIcon, UserIcon } from './icons'
 import { PassengerPicker } from './PassengerPicker'
@@ -144,5 +144,29 @@ export function DriverAsks({ ride, busy, runsIt, isDriver, isPast, seated, onTak
         </div>
       )}
     </>
+  )
+}
+
+/**
+ * Whoever runs the ride hands the wheel to a passenger in it (`POST .../give`):
+ * one button per passenger with an account who has not been marked as not
+ * turning up; the choice then asks "are you sure?" (useRideActions `onGiveCar`).
+ */
+export function GiveCarAsk({ ride, busy, onGive, onClose }: { ride: Ride; busy: boolean; onGive: (bookingId: number) => void; onClose: () => void }) {
+  const t = useT()
+  return (
+    <div className="approval-row">
+      <span className="approval-ask">{t.detail.giveCarAsk}</span>
+      <span className="approval-actions">
+        {givable(ride).map((b) => (
+          <button key={b.id} type="button" className="btn btn-soft" disabled={busy} onClick={() => onGive(b.id)}>
+            <CarIcon size={16} /> {b.passenger_name}
+          </button>
+        ))}
+        <button type="button" className="btn" disabled={busy} onClick={onClose}>
+          {t.common.cancel}
+        </button>
+      </span>
+    </div>
   )
 }

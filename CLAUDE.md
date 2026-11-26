@@ -119,7 +119,7 @@ refreshes the account from `/api/auth/me` on start (an admin may have been made 
 **The ride routers.** All under `/api/rides`: `routers/rides.py` is the rides themselves (the
 board, add, edit, remove, `/last`, the calendar file); `routers/seats.py` the seats and pickup
 points (`/bookings`, `/stops`); `routers/proposals.py` the driver's asks and the passengers'
-answers (`/proposal/...`); `routers/drivers.py` who drives (`/approve`, `/decline`, `/takeover`,
+answers (`/proposal/...`); `routers/drivers.py` who drives (`/approve`, `/decline`, `/takeover`, `/give`,
 `/claim`); the odometer (`/legs`) is `routers/odometer.py`, the queue `routers/waitlist.py`, the
 thread `routers/thread.py`. The rules they share: the checks (`get_ride_or_404`, `is_driver`,
 `may_run`, `on_behalf`, `booking_of`, `may_manage_seats`) in `app/access.py`; an edit held to the

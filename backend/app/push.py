@@ -66,7 +66,7 @@ class Target:
 # Notifications sheet). Every `kind` notify() sends belongs to exactly one.
 CATEGORIES: dict[str, tuple[str, ...]] = {
     "seats": ("got_in", "got_out", "taken_out", "guest_taken_out", "seat_freed", "passenger_here", "no_show"),
-    "changes": ("change_asked", "change_agreed", "change_declined", "time_suggested", "suggestion_accepted", "suggestion_declined", "running_late", "ride_changed", "ride_removed", "ride_assigned", "stop_added", "driver_needed", "driver_still_needed", "driver_found", "no_driver", "car_blocked"),
+    "changes": ("change_asked", "change_agreed", "change_declined", "time_suggested", "suggestion_accepted", "suggestion_declined", "running_late", "ride_changed", "ride_removed", "ride_assigned", "ride_given", "stop_added", "driver_needed", "driver_still_needed", "driver_found", "no_driver", "car_blocked"),
     "reminders": ("leaving_soon", "note_km", "log_yours", "log_claim"),
     "messages": ("message",),
     "requests": ("request_made", "request_answered"),
@@ -142,6 +142,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "passenger_here": lambda name, place: f"{name} is at the pickup point: {place}",
         "no_show": lambda driver: f"{driver} marked that you did not turn up for the ride",
         "ride_assigned": lambda name: f"{name} put you down to drive",
+        "ride_given": lambda name: f"{name} gave you the car: you drive now",
         "approval_requested": lambda name: f"{name} asks for another shared car",
         "reset_requested": lambda name: f"{name} forgot their password: approve a new one under Approvals",
         "ride_approved": lambda name: f"{name} approved your shared car. Send the office the mail",
@@ -200,6 +201,7 @@ TEXTS: dict[str, dict[str, Any]] = {
         "passenger_here": lambda name, place: f"{name} je na mestu ulaska: {place}",
         "no_show": lambda driver: f"{driver} je označio/la da se nisi pojavio/la na vožnji",
         "ride_assigned": lambda name: f"{name} te je upisao/la kao vozača",
+        "ride_given": lambda name: f"{name} ti je predao/la auto: sada ti voziš",
         "approval_requested": lambda name: f"{name} traži još jedan zajednički auto",
         "reset_requested": lambda name: f"{name} je zaboravio/la lozinku: odobri novu pod Odobrenja",
         "ride_approved": lambda name: f"{name} je odobrio/la tvoj zajednički auto. Pošalji mejl kancelariji",

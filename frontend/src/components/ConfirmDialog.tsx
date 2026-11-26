@@ -2,19 +2,21 @@ import { useEffect, type ReactNode } from 'react'
 import { useT } from '../lib/i18n'
 import { useClosing } from '../lib/motion'
 import { useBackClose } from '../lib/useBackClose'
-import { TrashIcon } from './icons'
+import { CarIcon, TrashIcon } from './icons'
 
 interface Props {
   title: string
   body: ReactNode
   confirmLabel: string
   busy?: boolean
+  /** Not a removal (handing the car on): green, with a car, instead of the red trash. */
+  calm?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
 
 /** The "Remove this ride?" card: a red trash badge, one line of consequence, two stacked buttons. */
-export function ConfirmDialog({ title, body, confirmLabel, busy, onConfirm, onCancel }: Props) {
+export function ConfirmDialog({ title, body, confirmLabel, busy, calm, onConfirm, onCancel }: Props) {
   const t = useT()
   // Cancelling shrinks the card away first; confirming is the parent's business and closes on the spot.
   const { closing, requestClose, onAnimationEnd } = useClosing(onCancel)
@@ -39,13 +41,13 @@ export function ConfirmDialog({ title, body, confirmLabel, busy, onConfirm, onCa
         aria-describedby="confirm-body"
         onAnimationEnd={onAnimationEnd}
       >
-        <span className="confirm-badge" aria-hidden="true">
-          <TrashIcon size={26} />
+        <span className={calm ? 'confirm-badge confirm-badge-calm' : 'confirm-badge'} aria-hidden="true">
+          {calm ? <CarIcon size={26} /> : <TrashIcon size={26} />}
         </span>
         <h2 id="confirm-title">{title}</h2>
         <p id="confirm-body">{body}</p>
-        <button type="button" className="btn btn-danger btn-block" autoFocus disabled={busy} onClick={onConfirm}>
-          {busy ? t.common.removing : confirmLabel}
+        <button type="button" className={calm ? 'btn btn-primary btn-block' : 'btn btn-danger btn-block'} autoFocus disabled={busy} onClick={onConfirm}>
+          {busy && !calm ? t.common.removing : confirmLabel}
         </button>
         <button type="button" className="btn btn-soft btn-block" disabled={busy} onClick={requestClose}>
           {t.common.cancel}

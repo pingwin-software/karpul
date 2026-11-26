@@ -43,7 +43,15 @@ new driver is pushed `ride_assigned`, logged as `driver_picked`) or cancel the r
 deadline, and a *Needs a driver* list under *Approvals* (`GET /api/admin/driverless`, counted in the
 badge). On screen: a *Needs a
 driver* tag and an *I'll drive* row on the card (`.approval-row`), the tag on the Upcoming row, and the
-removal confirmation says so. Tests: `tests/test_takeover.py`. A driver may also say they would
+removal confirmation says so. Tests: `tests/test_takeover.py`. **A driver who is still in the car can
+simply give it away**: *Give the car to a passenger* in the ride's ⋮ (whoever runs a shared-car ride, from
+its day on, not while it waits for a driver or for approval; `canGive` in `CarDetail.tsx`) asks who takes
+the wheel (`GiveCarAsk` in `RideAsks.tsx`, the passengers with an account who turned up, `givable` in
+`lib/people.ts`), then "are you sure?" (`onGiveCar` in `useRideActions`). `POST /api/rides/{id}/give
+{booking_id}` (`give_car`) makes that passenger the driver and hands the old driver their seat at the same
+pickup point, so the car holds as many as before; a driver with no account just goes. No share check, as
+with a takeover. The new driver is pushed `ride_given`, the rest of the car `driver_found`; an admin doing
+it is logged as `car_given`. Tests: `tests/test_give_car.py`. A driver may also say they would
 appreciate a coffee (`Ride.coffee_please`, a switch in the form's Advanced part, a *Coffee* fact on the
 driver card); it is only ever shown. On screen: the share's refusal in
 `RideForm` grows an *Ask an admin to approve it* button (`canAskApproval`, matched on the text's

@@ -19,7 +19,7 @@ const BOSS: Me = { id: 9, name: 'Šef Šefić', admin: true }
 
 const t = () => messages().detail
 
-function card(ride: Ride, me: Me, extra: { isPast?: boolean; onJoin?: (...args: unknown[]) => void; onHere?: (...args: unknown[]) => void; onNoShow?: (...args: unknown[]) => void } = {}) {
+function card(ride: Ride, me: Me, extra: { isPast?: boolean; onJoin?: (...args: unknown[]) => void; onHere?: (...args: unknown[]) => void; onNoShow?: (...args: unknown[]) => void; onGiveCar?: (...args: unknown[]) => void } = {}) {
   const noop = vi.fn()
   const props = {
     ride,
@@ -45,6 +45,7 @@ function card(ride: Ride, me: Me, extra: { isPast?: boolean; onJoin?: (...args: 
     onClaim: noop,
     onTakeOver: noop,
     onPickDriver: vi.fn(async () => undefined),
+    onGiveCar: extra.onGiveCar ?? noop,
     onConfirmRide: noop,
     onOfficeMail: noop,
     onAnswerChange: noop,
@@ -82,6 +83,27 @@ describe('CarDetail: running the ride', () => {
     const view = card(withBojan(), BOSS)
     expect(view.host.querySelector('.driver-edit')).not.toBeNull()
     expect(view.button(t().removeName('Bojan Bojić'))).not.toBeNull()
+  })
+
+  it('lets the driver hand the car to a passenger, who is asked about first', () => {
+    const onGiveCar = vi.fn()
+    const view = card(withBojan({ car_type: 'corporate', corporate_car_id: 1 }), ANA, { onGiveCar })
+    act(() => view.button(t().rideOptions)!.click())
+    const item = Array.from(document.querySelectorAll('[role="menuitem"]')).find((el) => el.textContent?.includes(t().giveCar)) as HTMLElement
+    act(() => item.click())
+    expect(view.text()).toContain(t().giveCarAsk)
+    act(() => view.button('Bojan Bojić')!.click())
+    expect(onGiveCar).toHaveBeenCalledWith(expect.anything(), 11)
+
+    // Nobody to hand it to, or the driver's own car: no such item.
+    for (const ride of [aRide({ car_type: 'corporate', corporate_car_id: 1 }), withBojan()]) {
+      const other = card(ride, ANA)
+      const kebab = other.button(t().rideOptions)!
+      act(() => kebab.click())
+      const menu = document.getElementById(kebab.getAttribute('aria-controls')!)!
+      expect(menu.textContent).toContain(t().duplicate)
+      expect(menu.textContent).not.toContain(t().giveCar)
+    }
   })
 
   it('gives a passenger neither, only Leave for their own seat', () => {

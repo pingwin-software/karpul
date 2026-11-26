@@ -5,5 +5,7 @@ export interface Confirm {
   title: string
   body: ReactNode
   label: string
+  /** Not a removal: a green car badge and a green button instead of the red trash. */
+  calm?: boolean
   onConfirm: () => void
 }
