@@ -1,7 +1,9 @@
 """Who drives a ride: an admin letting a shared car past the share through
-(or not), a passenger taking over a car whose driver cancelled, and someone
-claiming the rides that go by a name like theirs."""
+(or not), a passenger taking over a car whose driver cancelled, the driver
+giving the car to a passenger, and someone claiming the rides that go by a
+name like theirs."""
 
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -98,6 +100,64 @@ def pick_driver(ride_id: int, payload: DriverPick, session: WriteSessionDep, cre
     _hand_to(session, ride, driver, driver.display_name)
     if driver.id != admin.id:
         notify(session, [driver.id], "ride_assigned", ride, name=admin.display_name)
+    return to_ride_read_dict(ride)
+
+
+class CarGift(BaseModel):
+    booking_id: int
+
+
+@router.post("/{ride_id}/give", response_model=RideRead)
+def give_car(ride_id: int, payload: CarGift, session: WriteSessionDep, creds: CredsDep):
+    """The driver (or an admin) gives a shared car's ride to a passenger in it: that
+    passenger drives from now on and the old driver takes their seat, at their
+    pickup point, so the car holds as many as before (getting out is then the
+    usual *leave*). Like a takeover it is no new booking of the car, so the
+    share is not checked. The new driver is told, and so is the rest of the
+    car. A ride whose driver cancelled has its own way (`take_over`)."""
+    user = require_user(session, creds)
+    ride = get_ride_or_404(session, ride_id)
+    if not may_run(user, ride):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Only the driver or an admin can give the car to someone else")
+    if ride.car_type != CarType.corporate:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Only a shared car can be given to a passenger")
+    if ride.needs_driver:
+        raise HTTPException(status.HTTP_409_CONFLICT, "This ride is waiting for a driver to take it over")
+    if ride.approval == "pending":
+        raise HTTPException(status.HTTP_409_CONFLICT, "This ride is not approved yet")
+    if ride.ride_date < date.today():
+        raise HTTPException(status.HTTP_409_CONFLICT, "That day is already over")
+    booking = next((b for b in ride.bookings if b.id == payload.booking_id), None)
+    if booking is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Booking not found")
+    driver = session.get(User, booking.passenger_id) if booking.passenger_id is not None else None
+    if driver is None or driver.disabled:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Account not found")
+    old_id, old_name = ride.driver_id, ride.driver_name
+    by_admin = on_behalf(user, ride)
+    if old_id is not None:
+        # The old driver sits where the new one did; a fresh seat in every other way.
+        booking.passenger_id = old_id
+        booking.passenger_name = old_name
+        booking.added_by_id = None
+        booking.here_at = None
+        booking.no_show = False
+        session.add(booking)
+    else:
+        # A driver with no account cannot hold a seat (join_ride refuses the name).
+        ride.bookings.remove(booking)
+        session.delete(booking)
+    ride.driver_id = driver.id
+    ride.driver_name = driver.display_name
+    session.add(ride)
+    if by_admin:
+        audit.record(session, user, "car_given", driver.display_name, ride=ride)
+    session.commit()
+    session.refresh(ride)
+    ride_saved(ride, created=False)
+    notify(session, [driver.id], "ride_given", ride, name=user.display_name)
+    others = [b.passenger_id for b in ride.bookings if b.passenger_id not in (old_id, user.id)]
+    notify(session, others, "driver_found", ride, name=driver.display_name)
     return to_ride_read_dict(ride)
 
 

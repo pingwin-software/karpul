@@ -461,6 +461,8 @@ const en = {
     driverDeadline: (time: string, day: string) =>
       `If nobody takes the car by ${time} ${day === 'today' || day === 'tomorrow' ? day : `on ${day}`}, the ride is cancelled and the car is free again.`,
     pickDriver: 'Pick a driver',
+    giveCar: 'Give the car to a passenger',
+    giveCarAsk: 'Who takes the wheel?',
     findDriver: 'Search for the driver',
     cancelDriverless: 'Cancel the ride',
     unconfirmed: 'Not confirmed',
@@ -908,6 +910,8 @@ const en = {
           return `${admin} confirmed a ride from the paper log for ${subject}`
         case 'driver_picked':
           return `${admin} picked ${subject} to drive a shared car whose driver cancelled`
+        case 'car_given':
+          return `${admin} gave a ride's car to ${subject}, a passenger in it`
         case 'seat_added':
           return `${admin} put someone in the car of ${subject}`
         case 'seat_removed':
@@ -1231,6 +1235,10 @@ const en = {
     declineBody: (driver: string) => `The ride is removed and ${driver} is told it was declined. Any passengers are told too.`,
     removeFollowingTitle: 'Remove this and the following rides?',
     removeFollowingBody: 'This ride and every later ride of this weekly series will be removed. Their passengers lose their seats.',
+    giveCarTitle: (name: string) => `Hand the car to ${name}?`,
+    giveCarBody: (name: string) => `${name} drives from now on and you take their seat. Not coming along? Just get out afterwards.`,
+    giveCarBodyFor: (name: string, driver: string) => `${name} drives from now on and ${driver} takes their seat. Both are told.`,
+    giveCarLabel: 'Hand it over',
     takeOutTitle: 'Take them out of the car?',
     takeOutBody: (name: string) => `${name} loses the seat and is told who took it away. The thread keeps a line about it.`,
     deleteCarTitle: 'Delete this car?',
@@ -1604,6 +1612,10 @@ const en = {
     done: 'Got it',
     step: (n: number, of: number) => `${n} of ${of}`,
     entries: {
+      giveCar: {
+        title: 'Pass the keys, not the buck',
+        body: "Driving, but someone in the car would rather take the wheel? Open the ride's **⋮** and tap **Give the car to a passenger**, then pick who. They drive from now on and you take their seat, so nobody loses a place. Not coming along after all? Just get out afterwards. The new driver and the rest of the car are told, and nobody has to cancel anything.",
+      },
       noDriver: {
         title: 'Nobody at the wheel? Not for long',
         body: "When a driver cancels a shared car with people in it, the passengers no longer have until the minute it leaves to sort it out. The card now shows a **deadline**: the evening before at 18:00, or an hour before it leaves when it's short notice. A few hours before, everyone in the car gets one more nudge, and admins can **Pick a driver** or **Cancel the ride** right on the card, or find it under **Approvals**. Nobody by the deadline, the ride is off and the car is free for someone who still needs it. No more finding out at 08:00 sharp.",
@@ -1751,6 +1763,8 @@ const SR_API_ERRORS: [RegExp, (m: RegExpMatchArray) => string][] = [
   [/^Only a shared car's ride goes to the office$/, () => 'Kancelariji se javlja samo za vožnju zajedničkim autom'],
   [/^Only the driver or an admin can say the office was told$/, () => 'Samo vozač ili administrator može da potvrdi da je kancelarija obaveštena'],
   [/^This ride already has a driver$/, () => 'Ova vožnja već ima vozača'],
+  [/^Only a shared car can be given to a passenger$/, () => 'Putniku se može predati samo zajednički auto'],
+  [/^This ride is waiting for a driver to take it over$/, () => 'Ova vožnja čeka da je neko preuzme kao vozač'],
   [/^This ride has no plate for the garage$/, () => 'Ova vožnja nema tablice za garažu'],
   [/^The driver is not asking for a change$/, () => 'Vozač ne traži izmenu'],
   [/^A change is already asked on this ride$/, () => 'Za ovu vožnju se već traži izmena'],
@@ -1777,6 +1791,7 @@ const SR_API_ERRORS: [RegExp, (m: RegExpMatchArray) => string][] = [
   [/^No free seats left$/, () => 'Nema više slobodnih mesta'],
   [/^The driver has not confirmed this ride yet$/, () => 'Vozač još nije potvrdio ovu vožnju'],
   [/^Only the driver or an admin can confirm this ride$/, () => 'Samo vozač ili administrator može da potvrdi ovu vožnju'],
+  [/^Only the driver or an admin can give the car to someone else$/, () => 'Samo vozač ili administrator može da preda auto nekom drugom'],
   [/^This ride is already confirmed$/, () => 'Ova vožnja je već potvrđena'],
   [/^Notice not found$/, () => 'Obaveštenje nije pronađeno'],
   [/^A line about someone taken out of the car stays$/, () => 'Zapis o tome ko je uklonjen iz auta ostaje'],
@@ -2363,6 +2378,8 @@ const sr: Messages = {
     driverDeadline: (time, day) =>
       `Ako niko ne preuzme auto do ${day === 'today' ? 'danas' : day === 'tomorrow' ? 'sutra' : day} u ${time}, vožnja se otkazuje i auto je ponovo slobodan.`,
     pickDriver: 'Izaberi vozača',
+    giveCar: 'Predaj auto putniku',
+    giveCarAsk: 'Ko preuzima volan?',
     findDriver: 'Pronađi vozača',
     cancelDriverless: 'Otkaži vožnju',
     unconfirmed: 'Nije potvrđena',
@@ -2666,6 +2683,8 @@ const sr: Messages = {
           return `${admin} je potvrdio/la vožnju iz papirnog dnevnika, vozi ${subject}`
         case 'driver_picked':
           return `${admin} je izabrao/la novog vozača za zajednički auto čiji je vozač otkazao: ${subject}`
+        case 'car_given':
+          return `${admin} je predao/la auto putniku, sada vozi ${subject}`
         case 'seat_added':
           return `${admin} je dodao/la putnika, vozi ${subject}`
         case 'seat_removed':
@@ -3113,6 +3132,10 @@ const sr: Messages = {
     declineBody: (driver) => `Vožnja se uklanja i ${driver} dobija obaveštenje da je odbijena. Putnici takođe.`,
     removeFollowingTitle: 'Ukloniti ovu i sledeće vožnje?',
     removeFollowingBody: 'Ova vožnja i sve kasnije vožnje iz ove nedeljne serije biće uklonjene. Njihovi putnici gube mesta.',
+    giveCarTitle: (name) => `Da li da ${name} preuzme auto?`,
+    giveCarBody: (name) => `Od sada vozi ${name}, a ti dobijaš to mesto u autu. Ne ideš? Posle samo izađi iz auta.`,
+    giveCarBodyFor: (name, driver) => `Od sada vozi ${name}, a ${driver} dobija to mesto u autu. Oboje dobijaju obaveštenje.`,
+    giveCarLabel: 'Predaj',
     takeOutTitle: 'Ukloniti iz auta?',
     takeOutBody: (name) => `Bez mesta ostaje: ${name}. Dobiće obaveštenje ko je to uradio, a u temi vožnje ostaje zapis.`,
     deleteCarTitle: 'Obrisati ovaj auto?',
@@ -3481,6 +3504,10 @@ const sr: Messages = {
     done: 'Važi',
     step: (n, of) => `${n} od ${of}`,
     entries: {
+      giveCar: {
+        title: 'Predaj ključeve, ne problem',
+        body: 'Voziš, a neko u autu bi radije seo za volan? Otvori **⋮** na vožnji, dodirni **Predaj auto putniku** i izaberi kome. Od tada vozi on/ona, a ti dobijaš to mesto u autu, pa niko ne ostaje bez mesta. Ipak ne ideš? Posle samo izađi iz auta. Novi vozač i ostali u autu dobijaju obaveštenje, i niko ne mora ništa da otkazuje.',
+      },
       noDriver: {
         title: 'Niko za volanom? Ne zadugo',
         body: 'Kad vozač otkaže zajednički auto u kom ima putnika, putnici više nemaju vremena do samog polaska da se snađu. Kartica sada pokazuje **rok**: veče pre u 18:00, ili sat pre polaska kad je u poslednji čas. Nekoliko sati pre roka svi u autu dobijaju još jedan podsetnik, a administratori mogu da **Izaberu vozača** ili **Otkažu vožnju** pravo sa kartice, ili da je nađu u **Odobrenjima**. Ako niko ne preuzme do roka, vožnja se otkazuje i auto je slobodan za nekog kome zaista treba. Nema više iznenađenja tačno u 08:00.',

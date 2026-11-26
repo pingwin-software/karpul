@@ -7,7 +7,7 @@ import { useArrivals } from '../lib/motion'
 import { keepsKm } from '../lib/odometer'
 import { goesToGarage } from '../lib/offices'
 import { canSayHere, hasLeft, isToday, useClock } from '../lib/pickup'
-import type { Person } from '../lib/people'
+import { givable, type Person } from '../lib/people'
 import { mapsOn, useMapConfig, useMapsAllowed } from '../lib/places'
 import { allStops, MAX_STOPS, type NewStop } from '../lib/stops'
 import { telHref } from '../lib/support'
@@ -19,7 +19,7 @@ import { RouteEditor } from './RouteEditor'
 import { ChangeAsk, SuggestTime } from './ChangeAsk'
 import { DriverCar } from './DriverCar'
 import { LateRow } from './LateRow'
-import { ApprovalAsk, DriverAsks, OfficeMailAsk } from './RideAsks'
+import { ApprovalAsk, DriverAsks, GiveCarAsk, OfficeMailAsk } from './RideAsks'
 import { RideFacts } from './RideFacts'
 import { TripRoute } from './TripRoute'
 import { WaitLine } from './WaitLine'
@@ -27,6 +27,7 @@ import { Avatar } from './Avatar'
 import {
   ArrowRightIcon,
   CalendarIcon,
+  CarIcon,
   ClockIcon,
   ChevronRightIcon,
   CopyIcon,
@@ -93,6 +94,8 @@ interface Props {
   onTakeOver: (ride: Ride) => void
   /** An admin puts someone at the wheel of a shared car whose driver cancelled. */
   onPickDriver: (ride: Ride, person: Person) => Promise<void>
+  /** The driver (or an admin) hands the wheel to the passenger with this seat (asks first). */
+  onGiveCar: (ride: Ride, bookingId: number) => void
   /** The driver (or an admin) confirms a ride from the shared car's paper log (`Ride.unconfirmed`). */
   onConfirmRide: (ride: Ride) => void
   /** Open the mail to the office about this shared car (CarMailSheet), for one nobody said went out. */
@@ -167,6 +170,7 @@ export function CarDetail({
   onClaim,
   onTakeOver,
   onPickDriver,
+  onGiveCar,
   onConfirmRide,
   onOfficeMail,
   onAnswerChange,
@@ -219,6 +223,10 @@ export function CarDetail({
   const left = hasLeft(ride, now)
 
   const [adding, setAdding] = useState(false)
+  // *Give the car to a passenger*: the row asking who takes the wheel.
+  const [giving, setGiving] = useState(false)
+  // A ride waiting for a driver or for approval is not handed on (backend: give_car).
+  const canGive = runsIt && ride.car_type === 'corporate' && !isPast && !ride.needs_driver && ride.approval !== 'pending' && givable(ride).length > 0
   // A passenger's "Suggest another time" sheet.
   const [suggesting, setSuggesting] = useState(false)
   const arrived = useArrivals(ride.bookings.map((b) => b.id))
@@ -297,6 +305,7 @@ export function CarDetail({
           onSelect: () => onTogglePassengersAddStops(ride),
           disabled: busy || isPast,
         },
+        ...(canGive ? [{ label: t.detail.giveCar, icon: <CarIcon size={18} />, onSelect: () => setGiving(true), disabled: busy }] : []),
         { label: t.detail.duplicate, icon: <CopyIcon size={18} />, onSelect: () => onDuplicate(ride), disabled: busy },
         ...shareItems,
         ...mapItems,
@@ -383,6 +392,18 @@ export function CarDetail({
           onConfirmRide={onConfirmRide}
           onClaim={onClaim}
         />
+
+        {giving && canGive && (
+          <GiveCarAsk
+            ride={ride}
+            busy={busy}
+            onGive={(bookingId) => {
+              setGiving(false)
+              onGiveCar(ride, bookingId)
+            }}
+            onClose={() => setGiving(false)}
+          />
+        )}
 
         {!isPast && <OfficeMailAsk ride={ride} runsIt={runsIt} isDriver={isDriver} onWrite={onOfficeMail} />}
 

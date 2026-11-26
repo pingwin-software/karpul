@@ -2153,6 +2153,34 @@
 /* Nobody at the wheel: the deadline bar runs down until a new driver drops
    in and the amber tag gives way to a green one. The base styles are the end:
    the driver found. */
+/* Give the car: the two avatars swap rows, the passenger rising to the wheel. */
+.wn-give .wn-here-row {
+  height: 2rem;
+}
+.wn-give-up {
+  animation: wn-give-up 5s var(--ease-out) infinite;
+}
+.wn-give-down {
+  animation: wn-give-down 5s var(--ease-out) infinite;
+}
+.wn-give-wheel {
+  width: 45%;
+  padding: 0.3rem 0.5rem;
+  animation: wn-nodriver-in 5s var(--ease-out) infinite;
+}
+.wn-give-wheel .wn-line {
+  background: currentColor;
+  opacity: 0.45;
+}
+@keyframes wn-give-up {
+  0%, 30% { transform: translateY(2.5rem); }
+  55%, 100% { transform: none; }
+}
+@keyframes wn-give-down {
+  0%, 30% { transform: translateY(-2.5rem); }
+  55%, 100% { transform: none; }
+}
+
 .wn-nodriver-seat {
   position: relative;
   display: grid;

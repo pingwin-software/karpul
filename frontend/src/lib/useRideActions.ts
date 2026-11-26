@@ -264,6 +264,26 @@ export function useRideActions({ me, rides, withBusy, upsertRide, removeRides, s
       setToast({ kind: 'ok', text: t.toasts.driverPicked(person.display_name) })
     })
 
+  /** The driver (or an admin) hands the wheel to a passenger, after "are you sure?". */
+  const onGiveCar = (ride: Ride, bookingId: number) => {
+    const booking = ride.bookings.find((b) => b.id === bookingId)
+    if (!booking) return
+    const name = booking.passenger_name
+    setConfirm({
+      title: t.confirm.giveCarTitle(name),
+      body: drives(ride, me) ? t.confirm.giveCarBody(name) : t.confirm.giveCarBodyFor(name, ride.driver_name),
+      label: t.confirm.giveCarLabel,
+      calm: true,
+      onConfirm: () => {
+        setConfirm(null)
+        void withBusy(ride.id, async () => {
+          upsertRide(await api.giveCar(ride.id, bookingId))
+          setToast({ kind: 'ok', text: t.toasts.driverPicked(name) })
+        })
+      },
+    })
+  }
+
   /** The driver (or an admin) confirms a ride from the shared car's paper log. */
   const onConfirmRide = (ride: Ride) =>
     withBusy(ride.id, async () => {
@@ -301,5 +321,5 @@ export function useRideActions({ me, rides, withBusy, upsertRide, removeRides, s
       setToast({ kind: 'ok', text: noShow ? t.toasts.noShowSaid(name) : t.toasts.noShowUndone(name) })
     })
 
-  return { onHere, onNoShow, onJoin, afterLeave, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onPickDriver, onConfirmRide, onClaim, onLate }
+  return { onHere, onNoShow, onJoin, afterLeave, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onPickDriver, onGiveCar, onConfirmRide, onClaim, onLate }
 }

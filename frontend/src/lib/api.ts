@@ -312,6 +312,9 @@ export const api = {
   takeOver: (id: number) => request<Ride>(`/api/rides/${id}/takeover`, { method: 'POST' }),
   pickDriver: (id: number, driverId: number) =>
     request<Ride>(`/api/rides/${id}/driver`, json('POST', { driver_id: driverId })),
+  /** The driver (or an admin) hands the ride to a passenger in it, who drives; the old driver takes that seat. */
+  giveCar: (id: number, bookingId: number) =>
+    request<Ride>(`/api/rides/${id}/give`, json('POST', { booking_id: bookingId })),
   confirmRide: (id: number) => request<Ride>(`/api/rides/${id}/confirm`, { method: 'POST' }),
   /** The mail to the office about this shared car went out; `series`: it covered the coming weeks too. */
   officeMailed: (id: number, series = false) =>

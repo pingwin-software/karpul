@@ -1170,6 +1170,10 @@
   color: var(--red);
   margin-bottom: 0.4rem;
 }
+.confirm-badge-calm {
+  background: var(--green-soft);
+  color: var(--green-dark);
+}
 .confirm h2 {
   font-size: 1.15rem;
 }
