@@ -75,21 +75,24 @@ test('a passenger and the driver put new pickup points on the route', async ({ b
   const trip = vesna.locator('.trip').first()
   await expect(trip.locator('.trip-place')).toHaveText(['Futog', 'Novi Sad', 'HQ', 'Novi Sad'])
 
-  // She adds Liman: Add a pickup point goes straight to the place picker, then
-  // where on the way (just after the start by default), and it is on the route.
-  await vesna.getByRole('button', { name: 'Add a pickup point' }).first().click()
-  const vesnaPlace = vesna.getByRole('dialog', { name: 'New pickup point' })
-  await vesnaPlace.getByLabel('Search places and addresses').fill('Liman')
-  await vesnaPlace.getByLabel('Search places and addresses').press('Enter')
-  await vesnaPlace.getByRole('button', { name: 'Add', exact: true }).click()
-  await expect(toast(vesna, 'Liman is on the route.')).toBeAttached()
-  await expect(vesnaPlace).toBeHidden()
-
-  // Edit the route is the whole route on its own screen: who gets in where,
-  // Kać goes in and comes off again, and nothing is sent until she saves.
+  // Edit the route is the whole route on its own screen, who gets in where
+  // included. She adds Liman (just after the start by default) and saves.
   await vesna.getByRole('button', { name: 'Edit the route' }).first().click()
   const route = vesna.getByRole('dialog', { name: 'Route' })
   await expect(route.getByText(`Getting in here: Goran Rider ${tag}`)).toBeVisible()
+  const vesnaPlace = vesna.getByRole('dialog', { name: 'New pickup point' })
+  await route.getByRole('button', { name: 'Add a pickup point' }).click()
+  await vesnaPlace.getByLabel('Search places and addresses').fill('Liman')
+  await vesnaPlace.getByLabel('Search places and addresses').press('Enter')
+  await vesnaPlace.getByRole('button', { name: 'Done' }).click()
+  await expect(vesnaPlace).toBeHidden()
+  await route.getByRole('button', { name: 'Save route' }).click()
+  await expect(toast(vesna, 'Route saved.')).toBeAttached()
+  await expect(route).toBeHidden()
+  await expect(trip.locator('.trip-place')).toHaveText(['Futog', 'Novi Sad', 'Liman', 'HQ', 'Novi Sad'])
+
+  // Kać goes in and comes off again, Futog off too, and nothing is sent until she saves.
+  await vesna.getByRole('button', { name: 'Edit the route' }).first().click()
   await route.getByRole('button', { name: 'Add a pickup point' }).click()
   await vesnaPlace.getByLabel('Search places and addresses').fill('Kać')
   await vesnaPlace.getByLabel('Search places and addresses').press('Enter')
@@ -105,9 +108,11 @@ test('a passenger and the driver put new pickup points on the route', async ({ b
   await expect(goran.locator('.trip').first().locator('.trip-place')).toHaveText(['Futog', 'Novi Sad', 'Liman', 'HQ', 'Novi Sad'])
 
   // She closes the route to new places: Goran can only pick from what is there.
-  await vesna.getByRole('button', { name: 'Ride options' }).first().click()
-  await vesna.getByRole('menuitem', { name: 'Stop passengers adding pickup points' }).click()
-  await expect(toast(vesna, 'Passengers can no longer add pickup points.')).toBeAttached()
+  await vesna.getByRole('button', { name: 'Edit', exact: true }).first().click()
+  const edit = vesna.getByRole('dialog', { name: 'Edit ride' })
+  await edit.getByRole('checkbox', { name: 'Can add their own pickup points' }).uncheck()
+  await edit.getByRole('button', { name: 'Save changes' }).click()
+  await expect(edit).toBeHidden()
   await goran.getByRole('button', { name: 'Edit', exact: true }).first().click()
   await goran.getByRole('button', { name: 'Change pickup' }).click()
   await expect(goran.getByRole('option', { name: 'Liman' })).toBeVisible()
@@ -145,9 +150,10 @@ test('a new pickup point from the waiting list goes on the route with the seat',
   await expect(filipRow).toBeVisible()
   if ((await filipRow.getAttribute('aria-expanded')) !== 'true') await filipRow.click()
   await expect(filip.getByRole('button', { name: 'Wait for a seat' })).toBeVisible()
-  // A passenger has Add a pickup point under the route too (no Edit the route).
+  // A passenger has no Edit the route: a new place comes with the seat asked for.
   await expect(filip.getByRole('button', { name: 'Edit the route' })).toHaveCount(0)
-  await filip.getByRole('button', { name: 'Add a pickup point' }).first().click()
+  await filip.getByRole('button', { name: 'Wait for a seat' }).click()
+  await filip.getByRole('dialog', { name: 'Where do you get in?' }).getByRole('button', { name: 'Somewhere else…' }).click()
   const filipPlace = filip.getByRole('dialog', { name: 'New pickup point' })
   await filipPlace.getByLabel('Search places and addresses').fill('Kać')
   await filipPlace.getByRole('button', { name: 'Use “Kać”' }).click()

@@ -81,9 +81,8 @@ gets in there; a route that is only its start with the switch off asks nothing),
 `components/AddStop.tsx`: the full-screen `PlaceDialog` of the ride form's places, with `freeText` (a *Use
 "<words>"* row, the place with no pin) and a `confirm` step after the pick that names the place and asks which
 stretch of the route it is on (`stopSlots` in `lib/stops.ts`) above the submit button,
-and the driver card has two links under the route for whoever runs the ride: *Add a pickup point* (while
-there is room) opens that same `AddStop`, straight to the place and then where on the way (`POST
-/api/rides/{id}/stops`, `onAddStop`), and *Edit the route* opens `components/RouteEditor.tsx`: the whole route full screen, the same panel as `PlaceDialog`,
+and the driver card has one link under the route for whoever runs the ride, *Edit the route*, which opens
+`components/RouteEditor.tsx`: the whole route full screen, the same panel as `PlaceDialog`,
 a row per place with who gets in there, a tap picks it again in `PlaceDialog` (a stop's `confirm` step also
 takes where on the way, which is how one moves), × takes a stop off, and *Save route* is one `PATCH` of the
 route and its pins (`onSaveRoute` in `App.tsx`; the foot says who `drop_orphaned_pickups` will move to the
@@ -116,8 +115,12 @@ under the seats, the weekly repeat under the day, the pickup points inside the r
 distance, chip-in and the note. Switching back to Simple hides those fields but keeps their
 values and still submits them, so the foot of the simple form names the ones carrying a value
 (`.form-extras`) and a tap on it goes to look; editing a ride that already has any of them opens
-on Advanced for the same reason. The driver is a line that states who it is (`.form-driver`),
-not a field, because `driver_name` can never change. The day, departure and return sit in one
+on Advanced for the same reason. Editing has no depth switch at all: an edit always shows the whole
+form, and the sheet has no *Delete* (removing a ride is the card's ⋮, with the passenger switches in
+the form only, not repeated in the ⋮). The two passenger switches (*Can add and remove each other*,
+*Can add their own pickup points*) sit together under the seats as one `.switch-group`. The driver is a line that states who it is (`.form-driver`),
+not a field, because `driver_name` can never change; it shows only when the driver is someone else
+(an admin editing a colleague's ride), since your own name says nothing. The day, departure and return sit in one
 `.when-grid` row: rides are same-day, so the return has a time and no date of its own, and
 turning on *One way* removes the return clock instead of grey-ing it out and, on a new ride,
 offers *Add the way back too*: a switch with its own day and departure that makes a second

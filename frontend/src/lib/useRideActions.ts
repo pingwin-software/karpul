@@ -86,13 +86,6 @@ export function useRideActions({ me, rides, withBusy, upsertRide, removeRides, s
       setToast({ kind: 'ok', text: t.toasts.pickupChanged(pickup || ride.origin) })
     })
 
-  /** The driver (or an admin) puts another pickup point on the route. */
-  const onAddStop = (ride: Ride, stop: string, where: NewStop) =>
-    withBusy(ride.id, async () => {
-      upsertRide(await api.addStop(ride.id, stop, where))
-      setToast({ kind: 'ok', text: t.toasts.stopAdded(stop) })
-    })
-
   /** The driver (or an admin) saves the route edited in `RouteEditor`; true when it went through. */
   const onSaveRoute = async (ride: Ride, patch: Partial<RideInput>) => {
     let saved = false
@@ -157,22 +150,6 @@ export function useRideActions({ me, rides, withBusy, upsertRide, removeRides, s
     withBusy(ride.id, async () => {
       upsertRide(await api.join(ride.id, person.display_name, '', null, person.id))
       setToast({ kind: 'ok', text: t.toasts.nameIn(person.display_name, ride.driver_name) })
-    })
-
-  /** The driver's switch: may the passengers add and remove each other? */
-  const onTogglePassengersManage = (ride: Ride) =>
-    withBusy(ride.id, async () => {
-      const on = !ride.passengers_manage
-      upsertRide(await api.updateRide(ride.id, { passengers_manage: on }))
-      setToast({ kind: 'ok', text: on ? t.toasts.manageOn : drives(ride, me) ? t.toasts.manageOff : t.toasts.manageOffFor(ride.driver_name) })
-    })
-
-  /** The driver's switch: may the passengers put new pickup points on the route? */
-  const onTogglePassengersAddStops = (ride: Ride) =>
-    withBusy(ride.id, async () => {
-      const on = !ride.passengers_add_stops
-      upsertRide(await api.updateRide(ride.id, { passengers_add_stops: on }))
-      setToast({ kind: 'ok', text: on ? t.toasts.addStopsOn : t.toasts.addStopsOff })
     })
 
   const onCancel = (ride: Ride) => {
@@ -321,5 +298,5 @@ export function useRideActions({ me, rides, withBusy, upsertRide, removeRides, s
       setToast({ kind: 'ok', text: noShow ? t.toasts.noShowSaid(name) : t.toasts.noShowUndone(name) })
     })
 
-  return { onHere, onNoShow, onJoin, afterLeave, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onPickDriver, onGiveCar, onConfirmRide, onClaim, onLate }
+  return { onHere, onNoShow, onJoin, afterLeave, onLeave, onSwitch, onMovePickup, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onPickDriver, onGiveCar, onConfirmRide, onClaim, onLate }
 }

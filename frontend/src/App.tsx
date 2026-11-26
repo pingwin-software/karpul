@@ -328,7 +328,7 @@ function Board({ session }: { session: Session }) {
   // What the ride card does (lib/useRideActions.ts): seats, the queue, the
   // route, the driver's switches, removal, asks and answers.
   const actions = useRideActions({ me, rides, withBusy, upsertRide, removeRides, setToast, setConfirm })
-  const { onJoin, onLeave, onSwitch, onMovePickup, onAddStop, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onTogglePassengersManage, onTogglePassengersAddStops, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onPickDriver, onGiveCar, onConfirmRide, onClaim, onLate, onHere, onNoShow } = actions
+  const { onJoin, onLeave, onSwitch, onMovePickup, onSaveRoute, onOdometer, onWait, onLeaveLine, onShare, onDownloadCalendar, onAddPassenger, onCancel, onCancelFollowing, onAnswerChange, onWithdrawChange, onSuggestTime, onTakeOver, onPickDriver, onGiveCar, onConfirmRide, onClaim, onLate, onHere, onNoShow } = actions
 
   const closeForm = useCallback(() => {
     setForm(null)
@@ -511,7 +511,6 @@ function Board({ session }: { session: Session }) {
       switchFrom={seatElsewhere(ride)}
       onSwitch={onSwitch}
       onMovePickup={onMovePickup}
-      onAddStop={onAddStop}
       onSaveRoute={onSaveRoute}
       onShare={(r) => void onShare(r)}
       onDownloadCalendar={onDownloadCalendar}
@@ -520,8 +519,6 @@ function Board({ session }: { session: Session }) {
       onCancel={onCancel}
       onEdit={(r) => setForm({ mode: 'edit', ride: r })}
       onDuplicate={(r) => setForm({ mode: 'create', template: r })}
-      onTogglePassengersManage={onTogglePassengersManage}
-      onTogglePassengersAddStops={onTogglePassengersAddStops}
       onApprove={onApprove}
       onDecline={onDecline}
       onClaim={(r) => void onClaim(r)}
@@ -889,15 +886,6 @@ function Board({ session }: { session: Session }) {
             error={formError}
             canAskApproval={formAsk}
             onSubmit={onSubmitForm}
-            onDelete={
-              form.mode === 'edit'
-                ? () => {
-                    const ride = form.ride
-                    closeForm()
-                    onCancel(ride)
-                  }
-                : undefined
-            }
             onClose={closeForm}
           />
         )}
