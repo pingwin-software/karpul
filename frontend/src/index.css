@@ -16,6 +16,8 @@
 @import './styles/controls.css';
 /* the page frame, popovers, cards and tags, the powertrain mark, avatars */
 @import './styles/layout.css';
+/* grouped lists, the next-ride card, the bottom bar, the You tab, the dock's view switch */
+@import './styles/grouped.css';
 /* the date strip, the car tiles, the driver card, section headings, the view switch */
 @import './styles/board.css';
 /* the day plan, its overview strip and the clock */

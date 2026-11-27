@@ -107,10 +107,6 @@
 .pax-signal-row .pax-signal {
   margin-top: 0;
 }
-.pax-here {
-  align-self: flex-start;
-  margin-top: 0.35rem;
-}
 .pax-noshow {
   align-self: flex-start;
 }
@@ -123,26 +119,6 @@
 }
 .pax-pickup-pick .control {
   flex: 1;
-}
-/* Where you get in: a pill on the control that takes the seat (Select's
-   `chip` variant), so the place reads as part of getting in, never as the
-   route. In an empty car the dashed tile wraps the button and the pill. */
-.join-box {
-  border: 1.5px dashed var(--green-line);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--green-soft) 45%, var(--surface));
-  transition: background 0.12s, border-color 0.12s;
-}
-.join-box:has(> .dropzone:hover:not(:disabled)) {
-  background: var(--green-soft);
-  border-color: var(--green);
-}
-.join-box > .dropzone,
-.join-box > .dropzone:hover:not(:disabled) {
-  min-height: 0;
-  padding: 1.4rem 1rem 0.6rem;
-  border: none;
-  background: none;
 }
 .pick-chip {
   position: relative;
@@ -196,79 +172,32 @@
   margin: 0.4rem 0 0.5rem 1.7rem;
 }
 
-/* --- Week tiles: the route line and the seat count's state ---------------- */
-.car-tile {
-  flex-basis: 104px;
-}
-.car-tile-route {
-  display: flex;
-  align-items: center;
-  gap: 0.15rem;
-  max-width: 100%;
-  font-size: 0.68rem;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.car-tile-route-arrow {
-  flex: none;
-  opacity: 0.7;
-}
-.car-tile-seats-in,
-.car-tile-seats-driving {
-  color: var(--green);
-  font-weight: 600;
-}
-.car-tile-seats-full {
-  color: var(--red);
-}
-.car-tile-selected .car-tile-seats-full {
-  color: var(--red);
-}
-
 /* --- Upcoming: filters, search, sticky day headings ----------------------- */
-.filters {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-.chips {
-  display: flex;
-  gap: 0.4rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0.1rem 0.1rem;
-}
-.chips::-webkit-scrollbar {
-  display: none;
-}
 .chip {
   flex: none;
-  min-height: 32px;
-  padding: 0.3rem 0.8rem;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  min-height: 34px;
+  padding: 0.3rem 0.9rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
   color: var(--text);
-  font-size: 0.84rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  transition: background var(--hover), border-color var(--hover), color var(--hover);
+  transition: background var(--hover), color var(--hover);
 }
 .chip:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 4%, var(--surface));
+  background: var(--fill-strong);
 }
 .chip:active:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 9%, var(--surface));
+  background: var(--fill-strong);
 }
 .chip:disabled {
   opacity: 0.5;
 }
 .chip-on,
 .chip-on:hover:not(:disabled) {
-  background: var(--green-soft);
-  border-color: var(--green-line);
-  color: var(--green-dark);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green);
   font-weight: 600;
 }
 .search > input {
@@ -276,23 +205,22 @@
 }
 .upcoming-head {
   position: sticky;
-  top: calc(3.5rem + env(safe-area-inset-top));
+  top: env(safe-area-inset-top);
   z-index: 4;
   margin: 0 -0.15rem;
-  padding: 0.45rem 0.25rem;
+  padding: 0.45rem 0.4rem;
   background: color-mix(in srgb, var(--bg) 90%, transparent);
   backdrop-filter: blur(10px);
   text-transform: none;
-  letter-spacing: -0.01em;
-  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  font-size: 1.3rem;
+  font-weight: 700;
   color: var(--text);
 }
 .upcoming-head .section-count {
+  font-size: 0.9rem;
   font-weight: 400;
-}
-.upcoming-head .section-meta {
-  font-size: 0.78rem;
-  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 /* --- Empty states ------------------------------------------------------- */
@@ -2153,6 +2081,89 @@
 /* Nobody at the wheel: the deadline bar runs down until a new driver drops
    in and the amber tag gives way to a green one. The base styles are the end:
    the driver found. */
+/* The new look: the next ride as a green card, and under it the tab bar, its
+   grey pill gliding from tab to tab beside *New ride*. The base styles are the
+   end: the pill back on the first tab. */
+.wn-look {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: min(16rem, 100%);
+}
+.wn-look-next {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  background: linear-gradient(155deg, #0f8151 0%, #095c3a 100%);
+  color: #fff;
+}
+.wn-look-next .wn-line {
+  background: currentColor;
+  opacity: 0.5;
+}
+.wn-look-cap {
+  width: 35%;
+}
+.wn-look-time {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.wn-look-bar {
+  display: flex;
+  gap: 0.4rem;
+}
+.wn-look-tabs {
+  position: relative;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 2.4rem;
+  padding: 0.2rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+.wn-look-pill {
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  left: 0.2rem;
+  width: calc((100% - 0.4rem) / 3);
+  border-radius: var(--radius-pill);
+  background: var(--fill-strong);
+  animation: wn-look-glide 6s var(--ease-out) infinite;
+}
+.wn-look-tab {
+  position: relative;
+  place-self: center;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.wn-look-new {
+  display: grid;
+  place-items: center;
+  width: 4.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--green);
+}
+.wn-look-new .wn-line {
+  width: 60%;
+  background: #fff;
+  opacity: 0.85;
+}
+@keyframes wn-look-glide {
+  0%, 18% { transform: none; }
+  30%, 50% { transform: translateX(100%); }
+  62%, 84% { transform: translateX(200%); }
+  96%, 100% { transform: none; }
+}
+
 /* Give the car: the two avatars swap rows, the passenger rising to the wheel. */
 .wn-give .wn-here-row {
   height: 2rem;

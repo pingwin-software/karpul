@@ -9,7 +9,7 @@ import type { DemoKey } from '../lib/whatsNew'
 export function WhatsNewArt({ demo }: { demo: DemoKey }) {
   return (
     <div className={`wn-art wn-${demo}`} aria-hidden="true">
-      {demo === 'giveCar' ? <GiveCarDemo /> : demo === 'noDriver' ? <NoDriverDemo /> : demo === 'passkey' ? <PasskeyDemo /> : demo === 'imHere' ? <ImHereDemo /> : demo === 'offlineRides' ? <OfflineRidesDemo /> : demo === 'forgotPassword' ? <ForgotPasswordDemo /> : demo === 'officeMail' ? <OfficeMailDemo /> : demo === 'carMail' ? <CarMailDemo /> : demo === 'tourSpotlight' ? <TourSpotlightDemo /> : demo === 'noYou' ? <NoYouDemo /> : demo === 'pickAfter' ? <PickAfterDemo /> : demo === 'whoWhere' ? <WhoWhereDemo /> : demo === 'outOfService' ? <OutOfServiceDemo /> : demo === 'fleetUpkeep' ? <FleetUpkeepDemo /> : demo === 'monthSummary' ? <MonthSummaryDemo /> : demo === 'pickColleague' ? <PickColleagueDemo /> : demo === 'impact' ? <ImpactDemo /> : demo === 'addedBy' ? <AddedByDemo /> : demo === 'seatNotice' ? <SeatNoticeDemo /> : demo === 'carWhere' ? <CarWhereDemo /> : demo === 'carBusy' ? <CarBusyDemo /> : demo === 'prefill' ? <PrefillDemo /> : <ConsentDemo />}
+      {demo === 'newLook' ? <NewLookDemo /> : demo === 'giveCar' ? <GiveCarDemo /> : demo === 'noDriver' ? <NoDriverDemo /> : demo === 'passkey' ? <PasskeyDemo /> : demo === 'imHere' ? <ImHereDemo /> : demo === 'offlineRides' ? <OfflineRidesDemo /> : demo === 'forgotPassword' ? <ForgotPasswordDemo /> : demo === 'officeMail' ? <OfficeMailDemo /> : demo === 'carMail' ? <CarMailDemo /> : demo === 'tourSpotlight' ? <TourSpotlightDemo /> : demo === 'noYou' ? <NoYouDemo /> : demo === 'pickAfter' ? <PickAfterDemo /> : demo === 'whoWhere' ? <WhoWhereDemo /> : demo === 'outOfService' ? <OutOfServiceDemo /> : demo === 'fleetUpkeep' ? <FleetUpkeepDemo /> : demo === 'monthSummary' ? <MonthSummaryDemo /> : demo === 'pickColleague' ? <PickColleagueDemo /> : demo === 'impact' ? <ImpactDemo /> : demo === 'addedBy' ? <AddedByDemo /> : demo === 'seatNotice' ? <SeatNoticeDemo /> : demo === 'carWhere' ? <CarWhereDemo /> : demo === 'carBusy' ? <CarBusyDemo /> : demo === 'prefill' ? <PrefillDemo /> : <ConsentDemo />}
     </div>
   )
 }
@@ -22,6 +22,30 @@ const Tick = () => (
 
 /** A car whose driver cancelled: the deadline runs down, a new driver drops in, the tag turns green. */
 /** The driver and a passenger swap places: the passenger rises to the wheel, the driver drops into the seat. */
+/** The new look: your next ride as a card, and the three tabs with the pill gliding between them beside *New ride*. */
+function NewLookDemo() {
+  return (
+    <div className="wn-look">
+      <div className="wn-look-next">
+        <span className="wn-line wn-look-cap" />
+        <span className="wn-look-time">08:00</span>
+        <span className="wn-line wn-line-label" />
+      </div>
+      <div className="wn-look-bar">
+        <div className="wn-look-tabs">
+          <span className="wn-look-pill" />
+          <span className="wn-look-tab" />
+          <span className="wn-look-tab" />
+          <span className="wn-look-tab" />
+        </div>
+        <span className="wn-look-new">
+          <span className="wn-line" />
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function GiveCarDemo() {
   return (
     <div className="wn-card wn-give">

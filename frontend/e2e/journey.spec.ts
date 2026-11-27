@@ -52,7 +52,8 @@ test('offer a ride, get in, leave, and the driver removes it', async ({ browser 
   const nikolaName = `Nikola Savić ${tag}`
 
   // Lena offers a ride between the offices in her own car: the distance is known.
-  await lena.getByRole('button', { name: 'Schedule a ride' }).click()
+  await lena.getByRole('button', { name: 'New ride' }).click()
+  await lena.getByRole('button', { name: /^My car/ }).click()
   const form = lena.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Red Clio')
@@ -91,7 +92,7 @@ test('offer a ride, get in, leave, and the driver removes it', async ({ browser 
 test('the shared cars sheet opens on the status for everyone', async ({ browser }, info) => {
   const tag = attempt(info).toLowerCase()
   const page = await register(browser, { username: `vuk.${tag}`, first: 'Vuk', last: `Perić ${tag}` }, info.project.use)
-  if (info.project.name === 'phone') await page.getByRole('button', { name: 'Menu' }).click()
+  if (info.project.name === 'phone') await page.getByRole('radio', { name: 'You' }).click()
   await page.getByRole('button', { name: 'Shared cars' }).click()
   const sheet = page.getByRole('dialog', { name: 'Shared cars' })
   await expect(sheet).toBeVisible()

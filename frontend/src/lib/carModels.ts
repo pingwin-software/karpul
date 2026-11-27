@@ -1,4 +1,7 @@
+import type { CarModelKey } from './carShapes'
 import { messages } from './i18n'
+
+export type { CarModelKey }
 
 /**
  * What the board knows about a car from its name alone.
@@ -11,20 +14,61 @@ import { messages } from './i18n'
  * pool's own `CorporateCar.name`, so the plate suffix and any colour or
  * chit-chat around the name must be tolerated.
  */
-export type CarModelKey = 'mazda6e'
-
 export interface CarModel {
   key: CarModelKey
   name: string
   electric: boolean
 }
 
+/** The models `lib/carShapes.ts` can draw, by how people write them. The longer number first (3008 before 308). */
 const MODELS: { test: RegExp; model: CarModel }[] = [
   { test: /mazda\s*6\s*e\b/i, model: { key: 'mazda6e', name: 'Mazda 6e', electric: true } },
+  { test: /octavia/i, model: { key: 'skodaOctavia', name: 'Škoda Octavia', electric: false } },
+  { test: /superb/i, model: { key: 'skodaSuperb', name: 'Škoda Superb', electric: false } },
+  { test: /fabia/i, model: { key: 'skodaFabia', name: 'Škoda Fabia', electric: false } },
+  { test: /kodiaq/i, model: { key: 'skodaKodiaq', name: 'Škoda Kodiaq', electric: false } },
+  { test: /\bgolf\b/i, model: { key: 'vwGolf', name: 'Volkswagen Golf', electric: false } },
+  { test: /touareg/i, model: { key: 'vwTouareg', name: 'Volkswagen Touareg', electric: false } },
+  { test: /corolla/i, model: { key: 'toyotaCorolla', name: 'Toyota Corolla', electric: false } },
+  { test: /\brav\s*-?\s*4\b/i, model: { key: 'toyotaRav4', name: 'Toyota RAV4', electric: false } },
+  { test: /\bclio\b/i, model: { key: 'renaultClio', name: 'Renault Clio', electric: false } },
+  { test: /kadjar/i, model: { key: 'renaultKadjar', name: 'Renault Kadjar', electric: false } },
+  { test: /duster/i, model: { key: 'daciaDuster', name: 'Dacia Duster', electric: false } },
+  { test: /tucson/i, model: { key: 'hyundaiTucson', name: 'Hyundai Tucson', electric: false } },
+  { test: /model\s*3\b/i, model: { key: 'teslaModel3', name: 'Tesla Model 3', electric: true } },
+  { test: /fiat\s*500\b|\bcinquecento\b/i, model: { key: 'fiat500', name: 'Fiat 500', electric: false } },
+  { test: /\b3008\b/, model: { key: 'peugeot3008', name: 'Peugeot 3008', electric: false } },
+  { test: /\b308\b/, model: { key: 'peugeot308', name: 'Peugeot 308', electric: false } },
 ]
 
 export function carModel(carName: string): CarModel | null {
   return MODELS.find((m) => m.test.test(carName))?.model ?? null
+}
+
+/**
+ * The paint a name speaks of ("grey Octavia", "plavi Golf"), in English or
+ * Serbian, any gender or case ending; null when it names no colour, and the
+ * drawing then wears its model's own. A small fixed palette, so every car on
+ * the board comes from one family of colours.
+ */
+const PAINTS: [RegExp, string][] = [
+  [/\b(white|bel[aeiou]?|beli)\b/, '#ffffff'],
+  [/\b(black|crn[aeiou]?|crni)\b/, '#2c2d31'],
+  [/\b(silver|srebrn\w*)\b/, '#c9cbd3'],
+  [/\b(gr[ae]y|graphite|siv[aeiou]?|sivi)\b/, '#62666e'],
+  [/\b(blue|plav[aeiou]?|plavi|teget)\b/, '#4a7fe0'],
+  [/\b(red|crven[aeiou]?|crveni|bordo)\b/, '#d64545'],
+  [/\b(green|zelen[aeiou]?|zeleni)\b/, '#4f8f6c'],
+  [/\b(yellow|zut[aeiou]?|zuti)\b/, '#e8c23a'],
+  [/\b(orange|narandzast\w*)\b/, '#e8703a'],
+  [/\b(brown|braon|smed[aeiou]?)\b/, '#9a7b5f'],
+  [/\b(beige|bez)\b/, '#d9d4c7'],
+]
+
+export function carPaint(carName: string): string | null {
+  // Fold the diacritics (ž, đ) so one spelling of each word is enough.
+  const folded = carName.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  return PAINTS.find(([word]) => word.test(folded))?.[1] ?? null
 }
 
 /** Keys are the `simple-icons` export names without the `si` prefix, lower-cased. */

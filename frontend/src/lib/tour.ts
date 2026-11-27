@@ -1,8 +1,8 @@
 /**
  * The first-login tour (components/Tour.tsx): three cards over a dimmed
  * screen, each opening a ringed hole round the control it is about, shown
- * once to a new account in a browser. *Take the tour* in the drawer's Help
- * group shows it again.
+ * once to a new account in a browser. *Take the tour* under *Help* (the *You*
+ * tab, or the dock) shows it again.
  */
 
 export const TOUR_STEPS = ['find', 'offer', 'cars'] as const
@@ -13,9 +13,9 @@ export const TOUR_NEW_DAYS = 14
 
 /** The element each step opens its hole round, on a phone and on a wide screen. */
 const TARGETS: Record<TourStep, [phone: string, wide: string]> = {
-  find: ['.tabbar', '.topbar-center'],
-  offer: ['.fab', '.ride-action-add'],
-  cars: ['.topbar-menu', '[data-tour="sharedCars"]'],
+  find: ['.tabbar', '.dock-views'],
+  offer: ['.fab', '.new-ride-btn'],
+  cars: ['[data-tour="tab-day"]', '[data-tour="tab-day"]'],
 }
 
 export function tourTarget(step: TourStep, wide: boolean): string {

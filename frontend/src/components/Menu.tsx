@@ -18,7 +18,7 @@ interface Props {
   className?: string
 }
 
-/** The ⋮ popover menu. */
+/** The ⋯ popover menu. */
 export function Menu({ trigger, label, items, align = 'right', className }: Props) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
   const id = useId()

@@ -10,7 +10,10 @@
     "react/only-export-components": [
       "warn",
       {
-        "allowConstantExport": true
+        "allowConstantExport": true,
+        "customHOCs": [
+          "icon"
+        ]
       }
     ]
   }

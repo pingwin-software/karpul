@@ -125,9 +125,9 @@ test('a passkey signs in with no password', async ({ browser }, info) => {
     options: { protocol: 'ctap2', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true },
   })
 
-  const menu = page.getByRole('button', { name: 'Menu', exact: true })
-  if (await menu.isVisible()) await menu.click()
-  await page.locator('.drawer-me').first().click()
+  const you = page.getByRole('radio', { name: 'You' })
+  if (await you.isVisible()) await you.click()
+  await page.locator('.drawer-me, .you-me').first().click()
   const sheet = page.getByRole('dialog', { name: 'Your account' })
   await sheet.getByRole('button', { name: 'Add a passkey on this device' }).click()
   await expect(toast(page, 'Passkey added')).toBeAttached()
@@ -139,6 +139,6 @@ test('a passkey signs in with no password', async ({ browser }, info) => {
   // No username, no password: the authenticator knows whose passkey it holds.
   await page.getByRole('button', { name: 'Sign in with a passkey' }).click()
   await expect(page.getByRole('radiogroup', { name: 'View' })).toBeVisible()
-  if (await menu.isVisible()) await menu.click()
-  await expect(page.locator('.drawer-me').first()).toContainText('Kiki')
+  if (await you.isVisible()) await you.click()
+  await expect(page.locator('.drawer-me, .you-me').first()).toContainText('Kiki')
 })

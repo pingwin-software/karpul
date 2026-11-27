@@ -4,14 +4,13 @@ select,
 textarea {
   width: 100%;
   min-height: 44px;
-  padding: 0.55rem 0.8rem;
-  border: 1px solid var(--border-strong);
-  /* Fluent: the bottom edge is the darker one, and turns into the accent. */
-  border-bottom-color: var(--muted);
+  padding: 0.55rem 0.85rem;
+  /* A filled field: no stroke until it has the focus. */
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--fill);
   color: var(--text);
-  transition: border-color var(--hover), box-shadow var(--hover);
+  transition: border-color var(--hover), box-shadow var(--hover), background var(--hover);
 }
 textarea {
   resize: vertical;
@@ -20,13 +19,14 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-bottom-color: var(--green);
-  box-shadow: inset 0 -1px 0 var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 22%, transparent);
 }
 input:disabled,
 select:disabled {
-  background: var(--surface-2);
+  background: var(--fill);
   color: var(--muted);
+  opacity: 0.7;
 }
 input[type='checkbox'] {
   width: auto;
@@ -130,12 +130,13 @@ input[type='checkbox'] {
   appearance: none;
   position: relative;
   flex: none;
-  width: 40px;
-  height: 20px;
-  border: 1px solid var(--muted);
-  border-radius: 999px;
-  background: transparent;
-  transition: background var(--hover), border-color var(--hover);
+  width: 46px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--fill-strong);
+  box-shadow: none;
+  transition: background var(--dur-normal) var(--ease-out);
 }
 .toggle input[type='checkbox']::after,
 .switch-row input[type='checkbox']::after {
@@ -143,26 +144,26 @@ input[type='checkbox'] {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 14px;
-  height: 14px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--muted);
-  transition: transform var(--dur-normal) var(--ease-out), background var(--hover);
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform var(--dur-normal) var(--ease-out);
 }
 .toggle input[type='checkbox']:checked,
 .switch-row input[type='checkbox']:checked {
-  border-color: var(--green);
-  background: var(--green);
+  background: var(--switch-on);
 }
 .toggle input[type='checkbox']:checked::after,
 .switch-row input[type='checkbox']:checked::after {
-  background: #fff;
-  transform: translateX(20px);
+  transform: translateX(18px);
 }
 .toggle input[type='checkbox']:focus-visible,
 .switch-row input[type='checkbox']:focus-visible {
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
+  border-color: transparent;
 }
 /* A switch that stands on its own line, boxed like an input: the wording on
    the left, the switch on the right, so a long explanation never pushes it
@@ -171,11 +172,11 @@ input[type='checkbox'] {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  min-height: 44px;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--border-strong);
+  min-height: 48px;
+  padding: 0.65rem 0.9rem;
+  border: none;
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--fill);
   cursor: pointer;
 }
 .switch-row-text {
@@ -203,44 +204,50 @@ input[type='checkbox'] {
 }
 /* Switches about one thing, as one box with a rule between the rows. */
 .switch-group {
-  border: 1px solid var(--border-strong);
+  border: none;
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--fill);
   overflow: hidden;
 }
 .switch-group > .switch-row {
-  border: 0;
   border-radius: 0;
+  background: none;
 }
 .switch-group > .switch-row + .switch-row {
-  border-top: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 var(--border-strong);
 }
-/* Fluent's TabList: the choices sit on the page, the picked one semibold with
-   a short accent bar under it. The bar is one element (.seg-thumb, see
+/* iOS's segmented control: the choices in a grey capsule, the picked one on a
+   white thumb. The thumb is one element (.seg-thumb, see
    components/Segmented.tsx) that slides to the next choice; the buttons only
-   change colour and weight. */
+   change weight. */
 .segmented {
   position: relative;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   gap: 2px;
-  padding-bottom: 3px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
 }
 .seg {
   position: relative;
   z-index: 1;
-  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 36px;
+  padding: 0 0.6rem;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--muted);
-  font-weight: 400;
+  color: var(--text);
+  font-weight: 500;
   font-size: 0.9rem;
   transition: color var(--hover), background var(--hover);
 }
 .seg:hover:not(:disabled):not(.seg-on) {
-  color: var(--text);
   background: color-mix(in srgb, var(--text) 5%, transparent);
 }
 .seg-on {
@@ -249,19 +256,15 @@ input[type='checkbox'] {
 }
 .seg-thumb {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  width: calc((100% - (var(--seg-n, 2) - 1) * 2px) / var(--seg-n, 2));
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px - (var(--seg-n, 2) - 1) * 2px) / var(--seg-n, 2));
+  border-radius: var(--radius-pill);
+  background: var(--seg-thumb);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
   transform: translateX(calc(var(--seg-i, 0) * (100% + 2px)));
   transition: transform var(--dur-gentle) var(--ease-out);
-}
-.seg-thumb::after {
-  content: '';
-  position: absolute;
-  inset: 0 max(14px, 34%);
-  border-radius: 2px;
-  background: var(--green);
 }
 .seg:disabled {
   opacity: 0.5;
@@ -269,24 +272,24 @@ input[type='checkbox'] {
 .stepper {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
+  border: none;
+  border-radius: var(--radius-pill);
   overflow: hidden;
-  background: var(--surface);
+  background: var(--fill);
 }
 .stepper button {
-  min-height: 44px;
+  min-height: 40px;
   border: none;
-  background: var(--surface);
+  background: none;
   color: var(--text);
   display: grid;
   place-items: center;
 }
 .stepper button:hover:not(:disabled) {
-  background: var(--surface-2);
+  background: var(--fill);
 }
 .stepper button:disabled {
-  color: var(--border-strong);
+  color: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 .stepper output {
   display: grid;
@@ -307,10 +310,10 @@ input[type='checkbox'] {
   gap: 0.5rem;
   align-self: flex-start;
   min-height: 44px;
-  padding: 0.35rem 0.8rem 0.35rem 0.4rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface-2);
+  padding: 0.35rem 0.9rem 0.35rem 0.4rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
   font-weight: 500;
 }
 
@@ -334,33 +337,33 @@ input[type='checkbox'] {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 44px;
-  padding: 0.6rem 1.1rem;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
+  min-height: 46px;
+  padding: 0.6rem 1.25rem;
+  /* The quiet button: a grey capsule with the tint's ink. */
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--green);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
   white-space: nowrap;
-  transition: background var(--hover), border-color var(--hover), color var(--hover), opacity var(--hover),
-    box-shadow var(--hover);
+  transition: background var(--hover), color var(--hover), opacity var(--hover), transform 0.12s var(--ease-smooth);
 }
-/* Fluent presses by darkening, never by shrinking. */
+/* A press darkens and gives a little, as a capsule does under a finger. */
 .btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 4%, var(--surface));
+  background: var(--fill-strong);
 }
 .btn:active:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 9%, var(--surface));
+  background: var(--fill-strong);
+  transform: scale(0.98);
 }
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 .btn-block {
   width: 100%;
 }
 .btn-primary {
-  border-color: transparent;
   background: var(--green);
   color: #fff;
 }
@@ -371,19 +374,17 @@ input[type='checkbox'] {
   background: color-mix(in srgb, #000 22%, var(--green));
 }
 .btn-soft:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 4%, var(--surface));
+  background: var(--fill-strong);
 }
 .btn-danger {
-  border-color: transparent;
   background: var(--red);
   color: #fff;
 }
 .btn-danger:hover:not(:disabled) {
-  background: #d13a3f;
+  background: color-mix(in srgb, #000 12%, var(--red));
 }
 .btn-outline-danger {
-  background: var(--surface);
-  border-color: color-mix(in srgb, var(--red) 55%, transparent);
+  background: var(--fill);
   color: var(--red);
 }
 .btn-outline-danger:hover:not(:disabled) {
@@ -406,56 +407,47 @@ input[type='checkbox'] {
   background: var(--green-soft);
   color: var(--green-dark);
 }
-/* A small action that should be seen: a green-tinted pill with its icon in a
-   filled dot. For the handful of things a card invites you to do (add a pickup
-   point, edit the route, open the car's guide); a plain .link stays for the
-   quiet ones (undo, withdraw, switch). */
+/* A small action that should be seen: a tinted capsule in the accent's ink.
+   For the handful of things a card invites you to do (add a pickup point, edit
+   the route, open the car's guide); a plain .link stays for the quiet ones
+   (undo, withdraw, switch). */
 .soft-action {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  min-height: 34px;
-  padding: 0.25rem 0.8rem 0.25rem 0.3rem;
-  border: 1px solid var(--green-line);
-  border-radius: 999px;
-  background: var(--green-soft);
-  color: var(--green-dark);
-  font-size: 0.84rem;
+  min-height: 36px;
+  padding: 0.3rem 0.95rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  color: var(--green);
+  font-size: 0.9rem;
   font-weight: 600;
   line-height: 1.25;
   text-align: left;
-  transition: background var(--hover), border-color var(--hover), box-shadow var(--hover), transform var(--hover);
+  transition: background var(--hover), transform var(--hover);
 }
 .soft-action > svg {
   flex: none;
-  box-sizing: content-box;
-  padding: 5px;
-  border-radius: 50%;
-  background: var(--green);
-  color: var(--surface);
-  stroke-width: 2.4;
 }
 .soft-action:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--green) 16%, var(--green-soft));
-  border-color: var(--green);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--green) 22%, transparent);
+  background: color-mix(in srgb, var(--green) 20%, transparent);
 }
 .soft-action:active:not(:disabled) {
   transform: scale(0.97);
-  box-shadow: none;
 }
 .soft-action:disabled {
   opacity: 0.5;
 }
 /* Without an icon: even padding. And the small one, for inside a line of text. */
 .soft-action-plain {
-  padding-inline: 0.8rem;
+  padding-inline: 0.95rem;
 }
 .soft-action-xs {
-  min-height: 24px;
+  min-height: 26px;
   padding-block: 0.05rem;
-  padding-inline: 0.55rem;
-  font-size: 0.76rem;
+  padding-inline: 0.65rem;
+  font-size: 0.8rem;
 }
 .icon-btn {
   display: inline-grid;
@@ -463,14 +455,14 @@ input[type='checkbox'] {
   width: 40px;
   height: 40px;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
   background: transparent;
   color: var(--text);
   flex: none;
   transition: background var(--hover), color var(--hover), transform 0.12s var(--ease-smooth);
 }
 .icon-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 6%, transparent);
+  background: var(--fill);
 }
 .icon-btn:active:not(:disabled) {
   transform: scale(0.9);
@@ -484,36 +476,31 @@ input[type='checkbox'] {
   color: var(--muted);
 }
 
-/* The one "add a ride" control (components/AddRideButton.tsx): a white plus
-   in a green circle, floating at the bottom right. */
-.plus-circle {
-  display: inline-grid;
-  place-items: center;
+/* *New ride* (components/AddRideButton.tsx): a green capsule beside the tab
+   bar, with its name on it. The press pulse: it contracts the moment it is
+   pressed and springs back when the finger lifts. `.fab-pressed` is set from
+   pointer and key events, deliberately not `:active`: touch browsers apply
+   that late and Chrome holds it on after the finger lifts. */
+.fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   flex: none;
-  border-radius: 50%;
+  height: 64px;
+  padding: 0 1.2rem 0 0.9rem;
+  border: none;
+  border-radius: var(--radius-pill);
   background: var(--green);
   color: #fff;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--green) 35%, transparent);
-  transition: background 0.12s, transform 0.12s, box-shadow 0.12s;
-}
-span.plus-circle svg {
-  color: #fff;
-}
-/* Pinned to the bottom right of the column, on both views, under every sheet
-   and drawer (their backdrops are z-index 10). */
-.fab {
-  position: fixed;
-  z-index: 8;
-  right: max(1rem, calc(50% - 300px + 1rem));
-  /* Above the tab bar (64px), with Fluent's 16px gap. */
-  bottom: calc(var(--tabbar) + 1rem + env(safe-area-inset-bottom));
-  padding: 0;
-  border: none;
-  background: none;
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   /* A tap must fire click at once (no double-tap zoom wait) and without the
-     platform's grey tap flash over the circle. */
+     platform's grey tap flash over the capsule. */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s, transform 0.3s var(--ease-spring);
   animation: fab-in var(--dur-gentle) var(--ease-out);
 }
 @keyframes fab-in {
@@ -522,54 +509,32 @@ span.plus-circle svg {
     transform: scale(0.6);
   }
 }
-.fab .plus-circle {
-  /* Fluent's FAB: a rounded square at elevation 16, not a circle. */
-  border-radius: 16px;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.14);
-  /* The press pulse: the circle contracts the moment it is pressed (the short
-     ease-in below) and springs back when the finger lifts, overshooting a
-     touch on the way, so the tap reads as a press even under a thumb.
-     `.fab-pressed` is set from pointer and key events (AddRideButton.tsx),
-     deliberately not `:active`: touch browsers apply that late and Chrome
-     holds it on after the finger lifts, which pinned the circle small. */
-  transition: background 0.12s, box-shadow 0.12s, transform 0.3s var(--ease-spring);
-}
-.fab:hover .plus-circle {
+.fab:hover {
   background: var(--green-dark);
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 14px 28px rgba(0, 0, 0, 0.16);
 }
-.fab.fab-pressed .plus-circle {
-  transform: scale(0.88);
-  transition: background 0.12s, box-shadow 0.12s, transform 0.08s var(--ease-in);
-}
-.fab .plus-circle {
-  transform-origin: center;
+.fab.fab-pressed {
+  transform: scale(0.94);
+  transition: background 0.12s, transform 0.08s var(--ease-in);
 }
 .fab:focus-visible {
   outline: none;
-}
-.fab:focus-visible .plus-circle {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 30%, transparent);
 }
-
-/* The phone's view switch: a dock floating over the board on a Mica-like
-   blur. The active tab's mark is filled and sits on one solid green pill
-   (.tab-glider), which slides to the picked tab, stretching as it sets off;
-   the mark it lands on jumps and settles, and a ring spreads from under it.
+/* The phone's tab bar: a capsule floating over the board on a blurred
+   material, the one translucent surface in the app. The picked tab is in the
+   tint, its mark filled, on one grey pill (.tab-glider) that slides to it,
+   stretching as it sets off; the mark it lands on settles with a small bounce.
    `--tabbar` (layout.css) is the room the dock takes, its gap below included. */
 .tabbar {
-  position: fixed;
-  z-index: 8;
-  left: max(0.75rem, calc(50% - 288px));
-  right: max(0.75rem, calc(50% - 288px));
-  bottom: calc(0.6rem + env(safe-area-inset-bottom));
-  height: 76px;
-  padding: 8px 10px;
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--surface) 82%, transparent);
-  backdrop-filter: blur(28px) saturate(1.5);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-pop);
+  flex: 1;
+  min-width: 0;
+  height: 64px;
+  padding: 5px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(22px) saturate(1.8);
+  border: none;
+  box-shadow: inset 0 0 0 0.5px var(--border-strong), 0 10px 30px rgba(0, 0, 0, 0.14);
   animation: tabbar-in 0.5s var(--ease-bounce) backwards;
 }
 .tabbar-track {
@@ -583,43 +548,33 @@ span.plus-circle svg {
   top: 0;
   left: 0;
   width: calc(100% / 3);
-  height: 40px;
+  height: 100%;
   transform: translateX(calc(var(--tab, 0) * 100%));
-  transition: transform 0.5s var(--ease-bounce);
+  transition: transform 0.45s var(--ease-bounce);
   pointer-events: none;
 }
 .tab-glider-pill {
   position: absolute;
   inset: 0;
-  width: 78px;
-  margin: 0 auto;
-  border-radius: 999px;
-  background: var(--green);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--green) 38%, transparent);
-  animation: glider-stretch 0.5s var(--ease-out);
+  border-radius: var(--radius-pill);
+  background: var(--fill-strong);
+  animation: glider-stretch 0.45s var(--ease-out);
 }
 /* The ring that spreads from the pill as it lands. */
-.tab-glider-pill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  border: 2px solid var(--green);
-  opacity: 0;
-  animation: glider-ring 0.6s 0.18s var(--ease-out);
-}
 .tab {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 2px;
   padding: 0;
   border: none;
+  border-radius: var(--radius-pill);
   background: none;
   color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   line-height: 1.2;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -628,10 +583,6 @@ span.plus-circle svg {
 .tab-pill {
   display: grid;
   place-items: center;
-  width: 78px;
-  height: 40px;
-  border-radius: 999px;
-  --icon-knock: var(--surface);
   transition: transform var(--dur-fast) var(--ease-out);
 }
 /* The press: the mark sinks under the finger before it jumps. */
@@ -643,15 +594,7 @@ span.plus-circle svg {
 }
 .tab-on {
   color: var(--green);
-  font-weight: 700;
-}
-.tab-on .tab-pill {
-  color: #fff;
-  --icon-knock: var(--green);
-}
-.tab-on .tab-label {
-  transform: translateY(-1px);
-  letter-spacing: 0.01em;
+  font-weight: 600;
 }
 .tab-on .tab-icon {
   animation: tab-pop 0.6s var(--ease-bounce);
@@ -663,7 +606,9 @@ span.plus-circle svg {
   outline: none;
 }
 .tab:focus-visible .tab-pill {
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--green);
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 @media (hover: hover) and (pointer: fine) {
   .tab:not(.tab-on):hover {
@@ -681,16 +626,13 @@ span.plus-circle svg {
     transform: translateY(120%);
   }
 }
-/* A jump with a tilt: up past its place, a small lean each way, then still. */
+/* A small bounce as the mark is picked: in a touch, out a touch, then still. */
 @keyframes tab-pop {
   0% {
-    transform: scale(0.6) translateY(6px) rotate(-14deg);
+    transform: scale(0.82);
   }
-  45% {
-    transform: scale(1.22) translateY(-5px) rotate(8deg);
-  }
-  70% {
-    transform: scale(0.95) translateY(1px) rotate(-3deg);
+  55% {
+    transform: scale(1.1);
   }
   100% {
     transform: none;
@@ -707,23 +649,12 @@ span.plus-circle svg {
     transform: scaleX(1) scaleY(1);
   }
   35% {
-    transform: scaleX(1.32) scaleY(0.82);
+    transform: scaleX(1.12) scaleY(0.92);
   }
   100% {
     transform: none;
   }
 }
-@keyframes glider-ring {
-  from {
-    opacity: 0.7;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(1.35, 1.6);
-  }
-}
-
 /* Things laid out in one grid cell, only one visible (`.is-ghost` keeps its
    space): a box as big as its biggest variant, so stepping through pages or
    swapping Next for Done never resizes or moves anything (Tour.tsx,

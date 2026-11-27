@@ -25,7 +25,7 @@ interface Props {
   onNotice: (text: string) => void
   /** A report went in or changed: the board fetches the state again (the socket brings it too). */
   onReported: () => void
-  /** Admins: the pool's controls for a car (its ⋮ menu, and its editor while open), from SharedCars. */
+  /** Admins: the pool's controls for a car (its ⋯ menu, and its editor while open), from SharedCars. */
   carMenu?: (carId: number) => ReactNode
   carEditor?: (carId: number) => ReactNode
 }

@@ -69,7 +69,7 @@ getting in or moving (`BookingCreate` / `BookingUpdate` with `new_stop: {before,
 not on the route puts it there (`add_stop`; a place already on it is just that place, the
 destination is a 422) and the driver is pushed `stop_added`; the driver or an admin adds one with
 `POST /api/rides/{id}/stops`. The driver's switch `Ride.passengers_add_stops` (on by default, in
-`RideUpdate` like `passengers_manage`; the ⋮ menu and the form's Advanced route) closes the route to
+`RideUpdate` like `passengers_manage`; the ⋯ menu and the form's Advanced route) closes the route to
 passengers' new places (a 403; picking a place already on it still works, and whoever runs the ride
 may still add one for a passenger); off, the pickup sheet drops *Somewhere else…*. The waiting list takes a
 new place too (`WaitlistJoin.new_stop`), but keeps it on the entry (`WaitlistEntry.new_stop_before`
@@ -116,8 +116,8 @@ distance, chip-in and the note. Switching back to Simple hides those fields but 
 values and still submits them, so the foot of the simple form names the ones carrying a value
 (`.form-extras`) and a tap on it goes to look; editing a ride that already has any of them opens
 on Advanced for the same reason. Editing has no depth switch at all: an edit always shows the whole
-form, and the sheet has no *Delete* (removing a ride is the card's ⋮, with the passenger switches in
-the form only, not repeated in the ⋮). The two passenger switches (*Can add and remove each other*,
+form, and the sheet has no *Delete* (removing a ride is the card's ⋯, with the passenger switches in
+the form only, not repeated in the ⋯). The two passenger switches (*Can add and remove each other*,
 *Can add their own pickup points*) sit together under the seats as one `.switch-group`. The driver is a line that states who it is (`.form-driver`),
 not a field, because `driver_name` can never change; it shows only when the driver is someone else
 (an admin editing a colleague's ride), since your own name says nothing. The day, departure and return sit in one

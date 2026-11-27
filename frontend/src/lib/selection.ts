@@ -1,5 +1,5 @@
-import { addDays, parseISODate, startOfWeek, toISODate, todayISO } from './dates'
-import { inRide, myBooking, type Me } from './me'
+import { addDays, parseISODate, toISODate, todayISO } from './dates'
+import { inRide, type Me } from './me'
 import type { Ride } from './types'
 
 /**
@@ -7,29 +7,17 @@ import type { Ride } from './types'
  * of the board, so the rules can be read in one place and tested.
  */
 
-export type View = 'upcoming' | 'week' | 'day'
-export const VIEWS: View[] = ['upcoming', 'week', 'day']
+/** The three places, in tab order: the rides ahead, the shared cars' day, and your own corner. */
+export type View = 'upcoming' | 'day' | 'you'
+export const VIEWS: View[] = ['upcoming', 'day', 'you']
 /** How far ahead the upcoming list looks. The API caps a range at 92 days. */
 export const UPCOMING_DAYS = 90
 
-/** The days a view needs: the next UPCOMING_DAYS, the one day, or the Mon-Sun week around `selected`. */
+/** The days a view needs: the one day of the plan, else the next UPCOMING_DAYS (*You* keeps the list loaded). */
 export function boardRange(view: View, selected: string): { from: string; to: string } {
-  if (view === 'upcoming') {
-    const today = parseISODate(todayISO())
-    return { from: toISODate(today), to: toISODate(addDays(today, UPCOMING_DAYS)) }
-  }
   if (view === 'day') return { from: selected, to: selected }
-  const monday = startOfWeek(parseISODate(selected))
-  return { from: toISODate(monday), to: toISODate(addDays(monday, 6)) }
-}
-
-/**
- * The open tile on a day board: an explicit pick that still exists, else
- * your own car, else the first one; null with no rides (the empty card).
- */
-export function daySelection(picked: number | null, dayRides: Ride[], me: Me): number | null {
-  if (picked !== null && dayRides.some((r) => r.id === picked)) return picked
-  return dayRides.find((r) => myBooking(r, me) !== undefined)?.id ?? dayRides[0]?.id ?? null
+  const today = parseISODate(todayISO())
+  return { from: toISODate(today), to: toISODate(addDays(today, UPCOMING_DAYS)) }
 }
 
 /**

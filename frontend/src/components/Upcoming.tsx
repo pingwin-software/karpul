@@ -2,9 +2,11 @@ import { fmtDayDate, fmtDayLabel, fmtTime, shortCarName } from '../lib/dates'
 import { useKept } from '../lib/keep'
 import { useT } from '../lib/i18n'
 import { drives, hasSeatFor, seatedIn, useMe } from '../lib/me'
+import { nextRide } from '../lib/nextRide'
 import type { Ride, RideRequest } from '../lib/types'
-import { PowertrainMark } from './CarArt'
-import { ArrowRightIcon, HandIcon, SearchIcon, XIcon } from './icons'
+import { ArrowRightIcon, CheckIcon, FilterIcon, SearchIcon, XIcon } from './icons'
+import { Menu } from './Menu'
+import { NextRide } from './NextRide'
 import { RequestList } from './RequestList'
 import { allStops } from '../lib/stops'
 
@@ -21,11 +23,10 @@ interface Props {
   /** The open requests in the same days, in board order. */
   requests: RideRequest[]
   busy: boolean
-  onAsk: () => void
-  /** The ask row above the list; a wide screen has it beside Schedule a ride instead. */
-  showAsk?: boolean
   onOffer: (request: RideRequest) => void
   onWithdraw: (request: RideRequest) => void
+  /** *I'm at the pickup point*, from the card on top. */
+  onHere: (ride: Ride, bookingId: number, here: boolean) => void
   /** The open ride: on its own screen on a phone, in the pane beside the list on a wide screen. */
   openId: number | null
   onOpen: (rideId: number | null) => void
@@ -34,11 +35,13 @@ interface Props {
 }
 
 /**
- * The next sessions as one list: a heading per day, a row per ride going that
- * day, then who is still looking for a ride that day. Tapping a row opens the
- * ride: on a screen of its own on a phone, beside the list on a wide screen.
+ * The rides ahead as one quiet list: your next ride as a card on top, then a
+ * group per day with a row per ride (when, the way, who drives, and how it
+ * stands for you), then who is still looking for a ride that day. Everything
+ * else about a ride is on its own screen: tapping a row opens it, on a screen
+ * of its own on a phone and beside the list on a wide screen.
  */
-export function Upcoming({ rides, requests, busy, onAsk, onOffer, onWithdraw, openId, onOpen, opensPage = false, showAsk = true }: Props) {
+export function Upcoming({ rides, requests, busy, onOffer, onWithdraw, onHere, openId, onOpen, opensPage = false }: Props) {
   const t = useT()
   const me = useMe()
   // Filters live here: they are a way of looking at the list, not board state.
@@ -53,7 +56,7 @@ export function Upcoming({ rides, requests, busy, onAsk, onOffer, onWithdraw, op
     return true
   }
   const shown = rides.filter(matches)
-  // Requests belong to "All": the other chips are about seats, yours or free.
+  // Requests belong to "All": the other filters are about seats, yours or free.
   const asks =
     filter === 'all' ? requests.filter((r) => !q || fold(`${r.origin} ${r.destination} ${r.name} ${r.note}`).includes(q)) : []
   const filtered = filter !== 'all' || q !== ''
@@ -66,24 +69,13 @@ export function Upcoming({ rides, requests, busy, onAsk, onOffer, onWithdraw, op
   for (const r of shown) day(r.ride_date).rides.push(r)
   for (const r of asks) day(r.request_date).asks.push(r)
   const days = [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, d]) => ({ date, ...d }))
+  const next = filtered ? null : nextRide(rides, me)
 
   return (
     <section className="upcoming" aria-label={t.upcoming.label}>
-      <div className="filters">
-        <div className="chips" role="radiogroup" aria-label={t.filters.label}>
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              role="radio"
-              aria-checked={filter === f}
-              className={filter === f ? 'chip chip-on' : 'chip'}
-              onClick={() => setFilter(f)}
-            >
-              {t.filters[f]}
-            </button>
-          ))}
-        </div>
+      {next && <NextRide ride={next} busy={busy} onOpen={() => onOpen(next.id)} onHere={onHere} />}
+
+      <div className="list-tools">
         <label className="input-icon search">
           <SearchIcon size={16} />
           <input type="search" placeholder={t.filters.search} aria-label={t.filters.search} value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -93,12 +85,21 @@ export function Upcoming({ rides, requests, busy, onAsk, onOffer, onWithdraw, op
             </button>
           )}
         </label>
+        <Menu
+          className={filter === 'all' ? 'list-filter' : 'list-filter list-filter-on'}
+          trigger={<FilterIcon size={18} />}
+          label={t.filters.filter}
+          items={FILTERS.map((f) => ({
+            label: t.filters[f],
+            icon: filter === f ? <CheckIcon size={16} /> : <span className="menu-gap" />,
+            onSelect: () => setFilter(f),
+          }))}
+        />
       </div>
-
-      {showAsk && (
-        <button type="button" className="add-row add-row-quiet upcoming-ask" onClick={onAsk}>
-          <HandIcon size={18} />
-          {t.requests.ask}
+      {filter !== 'all' && (
+        <button type="button" className="chip chip-on chip-clear" onClick={() => setFilter('all')}>
+          {t.filters[filter]}
+          <XIcon size={14} />
         </button>
       )}
 
@@ -118,73 +119,63 @@ export function Upcoming({ rides, requests, busy, onAsk, onOffer, onWithdraw, op
         </div>
       )}
 
-      {days.map((day) => {
-        const free = day.rides.reduce((n, r) => n + r.free_seats, 0)
-        return (
-          <div key={day.date} className="upcoming-day">
-            <h3 className="section-title upcoming-head">
-              <span className="upcoming-day-name">{fmtDayLabel(day.date)}</span>
-              <span className="section-count">{fmtDayDate(day.date)}</span>
-              {day.rides.length > 0 && <span className="section-meta">{t.upcoming.meta(day.rides.length, free)}</span>}
-            </h3>
-            {day.rides.length > 0 && (
-            <ul className="session-list">
+      {days.map((day) => (
+        <div key={day.date} className="upcoming-day">
+          <h3 className="section-title upcoming-head">
+            <span className="upcoming-day-name">{fmtDayLabel(day.date)}</span>
+            <span className="section-count">{fmtDayDate(day.date)}</span>
+          </h3>
+          {day.rides.length > 0 && (
+            <ul className="group session-list">
               {day.rides.map((r) => {
                 const open = r.id === openId
                 const driving = drives(r, me)
                 const riding = seatedIn(r, me)
                 const full = r.free_seats <= 0
-                const cls = ['card', 'session', open && 'session-open', (driving || riding) && 'session-mine']
-                  .filter(Boolean)
-                  .join(' ')
+                const time = fmtTime(r.departure_time)
+                // What needs someone's attention, said once under the driver.
+                const flag = r.needs_driver
+                  ? t.upcoming.needsDriver
+                  : r.approval === 'pending'
+                    ? t.upcoming.awaiting
+                    : r.unconfirmed
+                      ? t.upcoming.unconfirmed
+                      : r.proposal
+                        ? t.upcoming.changeAsked
+                        : null
+                const state = driving ? t.upcoming.driving : riding ? t.upcoming.youreIn : full ? t.upcoming.full : t.upcoming.seats(r.free_seats)
+                const cls = ['group-row', 'session', open && 'session-open', (driving || riding) && 'session-mine'].filter(Boolean).join(' ')
                 return (
                   <li key={r.id} className="session-item">
-                    <button type="button" className={cls} aria-haspopup={opensPage ? 'dialog' : undefined}
-                      aria-expanded={opensPage ? open : undefined} aria-current={!opensPage && open ? 'true' : undefined}
-                      onClick={() => onOpen(open ? null : r.id)}>
-                      {/* Three lines, each with the whole width: when (and your
-                          place in it), the way, who drives what. */}
-                      <span className="session-top">
-                        <span className="session-time">
-                          <span className="when-value">{fmtTime(r.departure_time)}</span>
-                          <small>{r.return_time ? t.upcoming.back(fmtTime(r.return_time)) : t.upcoming.oneWay}</small>
-                        </span>
-                        {r.needs_driver && <span className="tag tag-amber">{t.upcoming.needsDriver}</span>}
-                        {r.unconfirmed && <span className="tag tag-amber">{t.upcoming.unconfirmed}</span>}
-                        {r.proposal && <span className="tag tag-amber">{t.upcoming.changeAsked}</span>}
-                        {r.approval === 'pending' && <span className="tag tag-amber">{t.upcoming.awaiting}</span>}
-                        {driving ? (
-                          <span className="tag tag-green">{t.upcoming.driving}</span>
-                        ) : riding ? (
-                          <span className="tag tag-green">{t.upcoming.youreIn}</span>
-                        ) : full ? (
-                          <span className="tag tag-muted">{t.upcoming.full}</span>
-                        ) : (
-                          <span className="session-seats">{t.upcoming.seats(r.free_seats)}</span>
-                        )}
+                    <button
+                      type="button"
+                      className={cls}
+                      aria-label={`${t.upcoming.row(time, r.origin, r.destination, r.driver_name, shortCarName(r.car_name))}, ${flag ? `${flag}, ` : ''}${state}`}
+                      aria-haspopup={opensPage ? 'dialog' : undefined}
+                      aria-expanded={opensPage ? open : undefined}
+                      aria-current={!opensPage && open ? 'true' : undefined}
+                      onClick={() => onOpen(open ? null : r.id)}
+                    >
+                      <span className="session-time when-value">{time}</span>
+                      <span className="group-text">
+                        <strong className="session-route">
+                          {r.origin}
+                          <ArrowRightIcon size={14} className="session-arrow" />
+                          {r.destination}
+                        </strong>
+                        <small>{driving ? t.upcoming.you : r.driver_name}</small>
+                        {flag && <small className="session-flag">{flag}</small>}
                       </span>
-                      <strong className="session-route">
-                        {r.origin}
-                        <ArrowRightIcon size={14} className="session-arrow" />
-                        {r.destination}
-                      </strong>
-                      <span className="session-sub">
-                        <span className="session-name">
-                          {r.driver_name} · {shortCarName(r.car_name)}
-                        </span>
-                        <PowertrainMark carName={r.car_name} />
-                        {allStops(r).length > 0 && <span className="session-stops">{t.upcoming.stops(allStops(r).length)}</span>}
-                      </span>
+                      <span className={driving || riding ? 'session-state session-state-mine' : full ? 'session-state session-state-full' : 'session-state'}>{state}</span>
                     </button>
                   </li>
                 )
               })}
             </ul>
-            )}
-            <RequestList requests={day.asks} isPast={false} busy={busy} onOffer={onOffer} onWithdraw={onWithdraw} />
-          </div>
-        )
-      })}
+          )}
+          <RequestList requests={day.asks} isPast={false} busy={busy} onOffer={onOffer} onWithdraw={onWithdraw} />
+        </div>
+      ))}
     </section>
   )
 }

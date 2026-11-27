@@ -1,4 +1,4 @@
-import { carBrand, carModel, carPowertrain, powertrainLabel } from '../lib/carModels'
+import { carBrand, carModel, carPaint, carPowertrain, powertrainLabel } from '../lib/carModels'
 import { factText } from '../lib/carState'
 import { useT } from '../lib/i18n'
 import type { CarState, Ride } from '../lib/types'
@@ -24,7 +24,7 @@ export function DriverCar({ ride, carState = null, onCarState, onGuide }: Props)
     <div className={model || brand ? 'driver-car driver-car-illustrated' : 'driver-car'}>
       {model && (
         <span className="driver-car-art" aria-hidden="true">
-          <CarArt model={model.key} width={96} />
+          <CarArt model={model.key} paint={carPaint(ride.car_name)} width={96} />
         </span>
       )}
       {brand && (

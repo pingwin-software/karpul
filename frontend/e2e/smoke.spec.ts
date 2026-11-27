@@ -44,8 +44,9 @@ test('offer a ride, get in, write in its thread', async ({ browser }, info) => {
   const anaName = `Ana Petrović ${info.project.name === 'phone' ? 'P' : 'D'}`
   const markoName = `Marko Jovanović ${info.project.name === 'phone' ? 'P' : 'D'}`
 
-  // Ana adds a ride (the floating plus on a phone, Schedule a ride on a computer), in her own car.
-  await ana.getByRole('button', { name: 'Schedule a ride' }).click()
+  // Ana adds a ride (New ride, then who drives), in her own car.
+  await ana.getByRole('button', { name: 'New ride' }).click()
+  await ana.getByRole('button', { name: /^My car/ }).click()
   const form = ana.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Blue Golf')
@@ -123,10 +124,10 @@ test('a profile photo replaces the initials, for everyone', async ({ browser }, 
   const nina = await register(browser, { username: `nina.${tag}`, first: 'Nina', last: `Photo ${tag.toUpperCase()}` }, options)
   const ivan = await register(browser, { username: `ivan.${tag}`, first: 'Ivan', last: `Viewer ${tag.toUpperCase()}` }, options)
 
-  // Nina opens her account: through the ☰ on a phone, from the docked drawer on a desktop.
-  const menu = nina.getByRole('button', { name: 'Menu', exact: true })
-  if (await menu.isVisible()) await menu.click()
-  await nina.locator('.drawer-me').first().click()
+  // Nina opens her account: on the You tab on a phone, from the dock on a desktop.
+  const you = nina.getByRole('radio', { name: 'You' })
+  if (await you.isVisible()) await you.click()
+  await nina.locator('.drawer-me, .you-me').first().click()
   const sheet = nina.getByRole('dialog', { name: 'Your account' })
   await sheet.locator('input[type=file]').setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: await picture(nina) })
   // The picture opens in the cropper first (components/PhotoCropper.tsx); the middle square will do.
@@ -144,7 +145,8 @@ test('a profile photo replaces the initials, for everyone', async ({ browser }, 
   // go when she removes it, without reloading.
   await nina.keyboard.press('Escape')
   await expect(sheet).toHaveCount(0)
-  await nina.getByRole('button', { name: 'Schedule a ride' }).click()
+  await nina.getByRole('button', { name: 'New ride' }).click()
+  await nina.getByRole('button', { name: /^My car/ }).click()
   const form = nina.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Red Clio')
@@ -157,11 +159,11 @@ test('a profile photo replaces the initials, for everyone', async ({ browser }, 
   const face = ivan.locator(`.avatar img[src="${src}"]`).first()
   await expect(face).toBeVisible()
 
-  // On a phone Nina's new ride opened on its own screen, over the menu: back to the board first.
+  // On a phone Nina's new ride opened on its own screen, over the tabs: back to the board first.
   const back = nina.getByRole('dialog').getByRole('button', { name: 'Back' })
   if (await back.isVisible()) await back.click()
-  if (await menu.isVisible()) await menu.click()
-  await nina.locator('.drawer-me').first().click()
+  if (await you.isVisible()) await you.click()
+  await nina.locator('.drawer-me, .you-me').first().click()
   // And back to the initials.
   await sheet.getByRole('button', { name: 'Remove photo' }).click()
   await expect(sheet.getByRole('button', { name: 'Add a photo' })).toBeVisible()
@@ -172,8 +174,9 @@ test('a profile photo replaces the initials, for everyone', async ({ browser }, 
 test('a reload keeps the view, the open form and what was typed in it', async ({ browser }, info) => {
   const tag = info.project.name === 'phone' ? 'p' : 'd'
   const page = await register(browser, { username: `rita.${tag}`, first: 'Rita', last: `Reload ${tag.toUpperCase()}` }, info.project.use)
-  await page.getByRole('radiogroup', { name: 'View' }).getByRole('radio', { name: 'Week' }).click()
-  await page.getByRole('button', { name: 'Schedule a ride' }).click()
+  await page.getByRole('radiogroup', { name: 'View' }).getByRole('radio', { name: 'Cars' }).click()
+  await page.getByRole('button', { name: 'New ride' }).click()
+  await page.getByRole('button', { name: /^My car/ }).click()
   const form = page.getByRole('dialog', { name: 'Add ride' })
   await form.getByRole('radio', { name: 'My own car' }).click()
   await form.getByPlaceholder('e.g. grey Octavia').fill('Red Clio')
@@ -181,7 +184,7 @@ test('a reload keeps the view, the open form and what was typed in it', async ({
 
   await page.reload()
 
-  await expect(page.getByRole('radiogroup', { name: 'View' }).getByRole('radio', { name: 'Week' })).toBeChecked()
+  await expect(page.getByRole('radiogroup', { name: 'View' }).getByRole('radio', { name: 'Cars' })).toBeChecked()
   const back = page.getByRole('dialog', { name: 'Add ride' })
   await expect(back.getByPlaceholder('e.g. grey Octavia')).toHaveValue('Red Clio')
   await expect(back.getByLabel('Pickup location')).toHaveValue('Petrovaradin')

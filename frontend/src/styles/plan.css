@@ -118,10 +118,35 @@
   left: var(--plan-pad);
   width: calc(100cqi - 2 * var(--plan-pad));
   display: flex;
-  align-items: baseline;
-  gap: 0.45rem;
+  align-items: center;
+  gap: 0.6rem;
   min-width: 0;
   margin-bottom: 0.55rem;
+}
+
+/* The car's picture, then its name over when it is free, then *Book*. */
+.plan-car-art {
+  flex: none;
+}
+.plan-car-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--surface);
+}
+.plan-car-open {
+  padding: 0;
+  border: none;
+  color: inherit;
+  text-align: left;
+}
+.plan-book {
+  flex: none;
+  min-height: 34px;
+  padding: 0.2rem 0.9rem;
+  font-size: 0.9rem;
 }
 .plan-car-name {
   display: inline-flex;
@@ -144,9 +169,8 @@
   letter-spacing: 0.02em;
 }
 .plan-status {
-  margin-left: auto;
   flex: none;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }

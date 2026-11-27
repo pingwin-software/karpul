@@ -1,0 +1,323 @@
+/* --- Grouped lists --------------------------------------------------------
+   iOS's inset grouped list: a white cell with rows in it, a hairline between
+   them that starts where the row's text does (`--group-inset`). A row is a
+   button (or a link) with a leading mark or time, its text, and what trails:
+   a state, a count, a chevron. The rides ahead, the *You* tab, the *New ride*
+   sheet and the settings all sit in these. */
+.group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.group > li {
+  display: block;
+}
+.group-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 56px;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--hover);
+}
+.group > :not(:first-child) > .group-row::before,
+.group > .group-row:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--group-inset, 1rem);
+  height: 1px;
+  background: var(--border);
+}
+button.group-row:active {
+  background: var(--fill);
+}
+.group-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.group-text strong {
+  font-size: 1rem;
+  font-weight: 500;
+}
+.group-text small {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.group-chevron {
+  flex: none;
+  color: color-mix(in srgb, var(--muted) 55%, transparent);
+}
+/* A row's mark on a coloured tile, as iOS's settings draw them. */
+.tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: #fff;
+}
+.tile-green {
+  background: #34c759;
+}
+.tile-blue {
+  background: #007aff;
+}
+.tile-orange {
+  background: #ff9500;
+}
+
+/* --- New ride (components/AddRideButton.tsx) ------------------------------
+   The sheet's three rows, on the sheet's white: the group takes the grey. */
+.choice-list {
+  background: var(--fill);
+}
+.choice {
+  --group-inset: 3.75rem;
+  min-height: 64px;
+}
+.new-ride-btn {
+  align-self: flex-start;
+}
+
+/* --- The next ride (components/NextRide.tsx) -------------------------------
+   One card in the tint on top of the list: white ink on Karpul's green, the
+   time large. The same greens in light and dark, so the ink always carries. */
+.next-ride {
+  display: flex;
+  flex-direction: column;
+  border-radius: 26px;
+  background: linear-gradient(155deg, #0f8151 0%, #095c3a 100%);
+  color: #fff;
+  overflow: hidden;
+}
+.next-open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 1.15rem 1.25rem 1.2rem;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.next-open:focus-visible,
+.next-cta:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+.next-cap {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.next-time {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.next-route {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.35rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.next-line {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  opacity: 0.92;
+}
+.next-cta {
+  min-height: 50px;
+  margin: 0 1.25rem 1.25rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: #095c3a;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: transform 0.12s var(--ease-smooth), opacity var(--hover);
+}
+.next-cta:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.next-cta:disabled {
+  opacity: 0.6;
+}
+
+/* --- Finding a ride in the list (components/Upcoming.tsx) ------------------ */
+.list-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.list-tools .search {
+  flex: 1;
+  min-width: 0;
+}
+.list-tools .search > input {
+  border-radius: var(--radius-pill);
+}
+.list-filter .icon-btn {
+  background: var(--fill);
+}
+.list-filter-on .icon-btn {
+  background: var(--green);
+  color: #fff;
+}
+.chip-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+}
+.menu-gap {
+  display: inline-block;
+  width: 16px;
+}
+
+/* --- The bar at the foot of a phone ---------------------------------------
+   The tab bar and *New ride* side by side, floating over the board. */
+.bottom-bar {
+  position: fixed;
+  z-index: 8;
+  left: max(0.9rem, calc(50% - 288px));
+  right: max(0.9rem, calc(50% - 288px));
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.bottom-bar > * {
+  pointer-events: auto;
+}
+.tab-pill {
+  position: relative;
+}
+/* Something waits for an admin behind *You*. */
+.tab-dot {
+  position: absolute;
+  top: -2px;
+  right: -7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ff9500;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* --- You (components/Sidebar.tsx, `YouPage`) -------------------------------
+   A phone's third tab: who you are, then everything that is not about one
+   ride, as grouped lists. */
+.you,
+.you-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+.you-me {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.25rem 0 0;
+  border: none;
+  background: none;
+  color: inherit;
+}
+.you-me .avatar {
+  width: 84px;
+  height: 84px;
+  font-size: 1.9rem;
+}
+.you-name {
+  margin-top: 0.6rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.you-handle {
+  color: var(--muted);
+}
+.you-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.you-title {
+  margin: 0;
+  padding: 0 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.you .group-row {
+  --group-inset: 3.25rem;
+  min-height: 52px;
+  padding: 0.5rem 1rem;
+}
+.you .drawer-item-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.you-switches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* --- The dock's view switch (components/Sidebar.tsx, `Dock`) -------------- */
+.dock-views {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0.5rem 0.6rem;
+}
+.dock-view-on,
+.dock-view-on:hover:not(:disabled) {
+  background: var(--fill-strong);
+}
+.dock-view-on .drawer-item-label {
+  font-weight: 600;
+}
+.dock-view .drawer-item-icon {
+  color: var(--green);
+}
+
+/* On its own screen the ride's day is already in the bar above it. */
+.ride-page .ride-head-day {
+  visibility: hidden;
+}

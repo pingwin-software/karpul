@@ -4,171 +4,183 @@ Moved out of CLAUDE.md, which keeps a one-line pointer here. These are the
 feature notes for working on this part of Karpul: the rules, where they live
 and why. Keep them in step with the code like CLAUDE.md itself.
 
+**The idea.** One question per screen. A row says four things (when, the way, who drives, how it
+stands for you) and everything else about a ride is one tap in. The look follows Apple's
+conventions (large titles, inset grouped lists, capsule controls, sheets, one floating tab bar) in
+Karpul's own green; Karpul keeps its name, mark and colour. The owner asked for exactly this: a
+system that reads as Apple's, far less on screen at once, and icons from a proper set.
+
 **Styling.** The frontend is Tailwind v4 (via `@tailwindcss/vite`) plus a hand-written design
 system in `src/index.css` (one stylesheet in parts: it `@import`s `src/styles/*.css`: tokens,
-controls, layout, board, plan, admin-log, ride, people, sheets, feedback, extras, themes, each a
-run of sections in the order they always were, Tailwind inlining them at build; the media blocks,
-phones, wide screens, dark and hover, are in the last two and must stay last), built on Microsoft's
-Fluent 2 design language in Karpul's own green: a
-phone-first, card-based UI on Fluent's neutrals, white cards with Fluent's two-part elevation shadows
-(`--shadow`, `--shadow-hover` in the *Hover* block, `hover: hover and pointer: fine` only,
-`--shadow-pop`), Fluent's shapes (`--radius-sm` 4px for controls, `--radius` 8px for cards,
-`--radius-lg` 12px for sheets and dialogs), one green accent for "selected / go", red only for
-removal, Fluent's controls (an input's bottom edge darker and an accent underline when focused, the custom
-pickers and the route box included; the outlined switch that fills; a secondary button outlined on
-the surface, pressed by darkening rather than shrinking; cards at shadow 4 with no visible stroke;
-the top bar and the tab bar frosted with `backdrop-filter`, written unprefixed only, because the
-CSS minifier keeps just the `-webkit-` copy when both are there), and Segoe UI Variable where the
-system has it, else Inter (bundled from `@fontsource/inter`
-in `main.tsx`, because the app ships as one self-hosted container). Karpul keeps its own name, mark
-and colour: Fluent is the language, not a Microsoft brand. The semantic class names (`.card`, `.date`, `.car-tile`, `.pax-row`,
-`.panel`, `.btn`, …) are the contract the components render against. On a phone the layout is
-one 600px column. From 1024px (`lib/useWide.ts`, the *Wide screens* block in `index.css`) it is a desktop app
-that fills the window: the page never scrolls; the drawer's content is docked down the left edge
-(`Dock` in `Sidebar.tsx`, no ☰), a toolbar carries the view's name and the view switch, and each view is two full-height panes (`.split`) that scroll on their own
-(`data-scroll-pane`):
-Upcoming is the list beside the open ride (no screen of its own: `Upcoming` gets no `opensPage`,
-and the pane shows your next ride when nothing is picked), Week is the days, the day's rides as a
-vertical list (`CarCarousel vertical`) and *Ask for a ride* beside the open ride, Day is the plan with the
-ride in a column on the right. The ride pane is a container: past 760px the ride becomes one big
-card split into the driver's half and the passengers'. From 1600px the root font grows to 16px. Two media
-blocks carry the phone layout:
-`max-width: 600px` (sheets become true bottom sheets) and `pointer: coarse` (44px targets, hover
-choreography switched off, carousel arrows hidden). `lib/useCoarsePointer.ts` exposes the same
-query to components that need to change their wording. The app's own mark (the top bar, the drawer head, the favicon and the installed-app
-icons) is a car, side-on, whose back half turns into a thunderbolt: one thick white line on a tile
-that runs from mint to forest green with a soft light in its top corner, in the manner of the newer
-Fluent app icons. `public/favicon.svg` is the source, split by `<!-- tile -->` / `<!-- mark -->`
-comments that `scripts/render-icons.mjs` uses to derive the PNGs (`pwa-192`/`pwa-512` with rounded
-transparent corners, `pwa-maskable-512` full-bleed with the mark scaled into the platform's safe
-zone, `apple-touch-icon` full-bleed and opaque), and `components/Logo.tsx` repeats the same drawing
-inline (its gradient ids per instance, through `useId`). Change the mark in all three places. Icons are drawn in
-`components/icons.tsx` itself (no icon package), in Fluent 2's grammar: the 24px grid with its 3px
-margin, a 1.5px round stroke (`light` 1.25 / `regular` 1.5 / `bold` 2, a touch heavier below 16px so
-small glyphs stay crisp), rounded corners on every box, long thin chevrons and arrows, a person as a
-head over a rounded shoulder, Fluent's own shapes for the common glyphs (Dismiss, Navigation,
-Calendar, Clock, Delete, Edit, Chat, Send, Alert, Shield, Money), no fills except the dots. The named exports are the contract the components render against (`size` in px, optional
-`weight`). The drawer and the phone's tab bar use the Fluent marks in
-`components/FluentIcon.tsx` instead: a 20px grid, a 1.5px stroke, each drawing split into a body,
-details and extras so one drawing gives two styles (`regular`, and `filled` with the details cut out
-in `--icon-knock` for the selected tab). Every icon in the app is monochrome, in `currentColor`: the
-drawer's marks stand in the label's ink with no tile, and the notification centre's rows have no
-tinted tiles either. Selection is shown the Fluent way, by a brand tint and an accent bar, never by a
-solid green block: the picked day in the week strip is a tinted cell with a short bar at its foot
-(`.date-thumb`, today's number in green), a picked car tile or Upcoming row is tinted with a green
-hairline (`.car-tile-selected`, `.session-open`), a filter chip is a square-cornered toggle that tints
-when on (`.chip-on`), and the week arrows are borderless icon buttons (`.week-btn`). Adding a ride has exactly one control: `AddRideFab`
-(`components/AddRideButton.tsx`), Fluent's FAB: a white plus on a green rounded square (16px corners)
-floating at the bottom right of the column, above the tab bar, on every view whenever a ride can be added (`.fab`, under every sheet's backdrop); on a
-wide screen it is `RideActions` instead, at the top of every view's list column: a green *Schedule a ride*
-card (*You drive: a shared car or your own*) and under it a quieter *Ask for a ride* (*Someone else drives,
-you need a seat*), which then has no row of its own in the column. It used to be a small button at the top
-right of the toolbar, which people missed and asked for a seat when they meant to book a shared car; each
-card saying who drives is the point. A card is left out when it does not apply (a past day; a day you are
-already in a car, driving or have asked).
-There is deliberately no *Add ride* tile in the carousel, no plus in the empty card and no drawer
-item; the empty card says only that there is nothing yet. Avatars (`components/Avatar.tsx`) derive a stable pastel from the name.
-Known car models get a side-view illustration instead of the generic icon: `lib/carModels.ts`
-matches a car name (plate suffix and all) to a model key and an `electric` flag, and
-`components/CarArt.tsx` draws it (`CarGlyph` falls back to `CarIcon`) in Fluent's illustration
-manner: no outline, the shapes modelled by soft gradients (ids per instance through `useId`), a
-sheen across the glass and a blurred shadow under the car. Today that is only the
-white Mazda 6e, used in the ride tiles, the driver card's vehicle strip and the admin list.
-`carPowertrain()` in the same file says whether a name is *electric*, a *hybrid*, *diesel* or
-*petrol* (explicit words and engine badges first, hybrid before electric before diesel before
-petrol so "plug-in hybrid electric" is a hybrid; then models sold only one way) and
-`PowertrainMark` draws it as a 12px glyph (bolt / leaf / drop / pump) *after the car's name* on
-the tile, the Upcoming row and the admin list (`.pt-mark`). It is deliberately not on the
-picture: a sticker big enough to read on a phone hid the car. The driver card spells it out as
-"Electric" / "Hybrid" / "Diesel" / "Petrol" beside *Company car* / *Own car* under the car's name.
-Below that, `carBrand()` in the same file recognises a *make* from the name (make words and
-the models people write instead of one: "grey Golf", "Octavia"; words that are also plain
-English, like "Seat" or "Focus", must be capitalised to count) and `BrandLogo` /`CarGlyph` show
-its mark from the `simple-icons` package in `currentColor`. Only the brands listed in `LOGOS`
-are bundled (named imports tree-shake); Mercedes, Land Rover, Jaguar, Alfa Romeo and Lexus are
-not in that package, so they keep the generic icon.
+controls, layout, grouped, board, plan, admin-log, ride, people, sheets, feedback, fleet, extras,
+themes, Tailwind inlining them at build; the media blocks, phones, wide screens, dark and hover,
+are in the last two and must stay last). The tokens (`styles/tokens.css`, the dark ones in
+`themes.css`):
 
-**Motion.** Fluent's patterns, and things go back the way they came: a view slides in 40px from
-its side after the one it replaces has slid out the other way (`components/SlideSwitch.tsx`: the keyed
-content's wrapper hands its DOM to the host as it unmounts, and a `cloneNode` snapshot laid over
-the host plays `.swap-leave-*` while the real content is long gone, so nothing in it runs or
-fetches again; the entering `.swap-*` is marked `data-after` and holds, invisible, for the
-snapshot's `--swap-out` (100ms) before its own step, so the two are never on screen together:
-two layouts of text stacked at half opacity read as mud, not motion), a flyout comes 10px out of its anchor, a dialog grows a little out of the
-middle as it fades in, a toast rises 16px, on Fluent's curves (`--ease-out` decelerates in,
-`--ease-in` accelerates out, `--ease-spring` no longer overshoots; the one overshoot left is
-`--ease-bounce`, on the update screen's bolt and the phone tab bar's glide and pop) and durations (`--dur-fast` 150ms, `--dur-normal`
-200ms, `--dur-gentle` 250ms, hover 100ms). The
-keyframes are in the *Motion* and *Sheets & dialogs* sections of `index.css`, the two hooks in
-`lib/motion.ts`. `useSlideDir(value, rank)` says which side freshly keyed content enters from
-(a higher rank enters from the right, a lower one from the left, NaN means no slide) and
-`App.tsx` wraps the view (Upcoming sits left of Week), the day board (the way the calendar
-moved, only while the Week view shows) and the driver card (from the tile you tapped) in
-`SlideSwitch` (the keyed `.stack` inside carries `slideClass(dir)`); `DateCarousel` does the same for a week step.
-`useClosing(onClose)` lets `Sheet`, `Sidebar` and `ConfirmDialog` play their exit before the
-parent unmounts them: every close from inside the overlay goes through `requestClose`, which
-adds `backdrop-closing`, and `onClose` runs on the panel's `animationend` (with a fallback
-timeout); a parent that unmounts the overlay itself, after a save, still closes on the spot,
-and the drawer's `pick` closes on the spot on purpose so the sheet it opens owns the history
-entry alone. Sheets rise from the bottom edge on a phone and pop up on a desktop, the drawer
-slides from the left, confirmations grow out of the middle and popovers come out of their anchor (`Popover` sets
-`transform-origin` and measures itself with `offsetWidth`, which a transform does not change),
-the toast and the floating plus spring in (the plus also contracts while pressed and springs back on release; the pressed state comes from pointer and key events, not `:active`, which phones apply late and Chrome holds on after the finger lifts), a ride opened on a phone comes in from the right as a screen of its own and goes back the same way
-(`.ride-page`, below), a
-passenger who just got in grows into the car's list as a grid row from `0fr` (`.pax-slot-new`, `useArrivals`
-in `lib/motion.ts`: not on first render, not into an empty list, not your own row, which takes the
-place of the *Get in* row; the seat controls stay on screen, disabled, while the call is out, so
-the card never flickers through its empty state first), and
-the segmented controls (`SegThumb`, `components/Segmented.tsx`, drawn as Fluent's TabList: the
-choices on the page, the pick semibold over a short accent bar) and the date pills
-(`.date-thumb`) move one marker element instead of recolouring buttons. Reduced motion collapses
-every duration, so the exits still fire `animationend`.
+- **Colour.** iOS's grouped greys: the ground `--bg` (#f2f2f7, black in the dark), a cell
+  `--surface` (white, #1c1c1e), the labels `--text` and `--muted`, hairlines `--border`. One tint,
+  Karpul's green (`--green`), for "selected / go"; red (`--red`, Apple's accessible one, so it
+  carries small text) only for removal. `--fill` / `--fill-strong` are the grey wash that fills a
+  control (a field, a switch's track, a quiet button) on a cell and on the ground alike.
+- **No elevation at rest.** A cell is a white shape on the grey ground: no stroke and no shadow
+  (`--shadow` and `--shadow-card` are `none`). Only what floats over the page casts
+  (`--shadow-pop`: a popover, a sheet, the tab bar), and a card under a mouse (`--shadow-hover`).
+- **Shapes.** Cells 22px (`--radius`), controls 12px (`--radius-sm`), sheets and dialogs 30px
+  (`--radius-lg`); buttons, chips, tags, the segmented control and the stepper are capsules
+  (`--radius-pill`).
+- **Type.** The system font where it is San Francisco (`-apple-system`: Apple's devices; Apple
+  does not license it for shipping anywhere else), the bundled Inter (`@fontsource/inter`, in
+  `main.tsx`, because the app ships as one self-hosted container) on every other system. The root
+  is 16px with a slight negative tracking; a title is 700 and tighter.
+- **Controls** (`styles/controls.css`). A field is filled (`--fill`), with no stroke until it has
+  the focus (a tint edge and a soft ring); the custom pickers and the route box follow it. The
+  switch is iOS's: a capsule track that turns green (`--switch-on`) under a white knob. The
+  segmented control (`SegThumb`, `components/Segmented.tsx`) is a grey capsule with the picked
+  choice on a white thumb, one element that slides. Buttons come in three levels and a screen has
+  one filled one: `.btn-primary` (the tint, white ink), `.btn` (a grey capsule in the tint's ink),
+  `.link` (plain tint text); `.soft-action` is a tinted capsule for the few things a card invites
+  you to do. A press darkens and gives a little (`scale(0.98)`).
+- **Grouped lists** (`styles/grouped.css`). `.group` is iOS's inset grouped list: a white cell
+  with `.group-row`s in it and a hairline between them that starts where the row's text does
+  (`--group-inset`). A row is a button with a leading mark or time, its text (`.group-text`: a
+  title over a quiet line) and what trails (a state, a count, `.group-chevron`). `.tile` is a
+  row's mark on a coloured tile, as iOS's settings draw them. The rides ahead, the *You* tab, the
+  *New ride* sheet and a ride's people all sit in these.
+
+The semantic class names (`.card`, `.group`, `.pax-row`, `.panel`, `.btn`, …) are the contract the
+components render against. On a phone the layout is one 600px column. From 1024px
+(`lib/useWide.ts`, the *Wide screens* block in `themes.css`) it is a desktop app that fills the
+window: the page never scrolls; the menu is docked down the left edge (`Dock` in `Sidebar.tsx`),
+and each view is two full-height panes (`.split`) that scroll on their own (`data-scroll-pane`).
+Two media blocks carry the phone layout: `max-width: 600px` (sheets become true bottom sheets) and
+`pointer: coarse` (44px targets, hover choreography switched off). `lib/useCoarsePointer.ts`
+exposes the same query to components that need to change their wording.
+
+**Icons.** Glyphs from Ionicons (MIT), the open set drawn to sit beside iOS; Apple's own SF
+Symbols may not be used outside Apple's platforms. The app does not load the package at run time:
+`scripts/gen-icons.mjs` (from `frontend/`, needs the `ionicons` dev dependency) writes
+`src/components/ionicons.gen.ts` with the inner SVG of only the glyphs named in it, and
+`components/icons.tsx` maps the names the components use (`PlusIcon`, `PhoneIcon`, …, the
+contract) to glyphs through `icon('name')` and draws them in `currentColor` (`Glyph`). To use
+another glyph: add its name to the script, run it, map it. An outline glyph's line is a class
+(`.ion-line`) driven by `--ion-line`, so a small icon gets a heavier line and `weight="bold"`
+still means something. `components/NavIcon.tsx` pairs each navigation mark's outline glyph with
+its filled twin (`regular` for the dock, `filled` for the tab bar and the tiles). **Icons
+navigate, words act**: icons are for the tab bar, the corners of a screen and the rows of a list;
+a button says what it does in words.
+
+**The mark.** The app's own mark (the dock's head, the sign-in card, the favicon and the
+installed-app icons) is a car, side-on, whose back half turns into a thunderbolt: one thick white
+line on a tile that runs from mint to forest green. `public/favicon.svg` is the source, split by
+`<!-- tile -->` / `<!-- mark -->` comments that `scripts/render-icons.mjs` uses to derive the PNGs
+(`pwa-192`/`pwa-512` with rounded transparent corners, `pwa-maskable-512` full-bleed with the mark
+scaled into the platform's safe zone, `apple-touch-icon` full-bleed and opaque), and
+`components/Logo.tsx` repeats the same drawing inline (its gradient ids per instance, through
+`useId`). Change the mark in all three places.
+
+**Cars.** A car the board knows gets a picture instead of the generic icon: a flat side view,
+facing left, all models to one scale. `lib/carShapes.ts` holds each model as numbers (length,
+height, wheelbase, a dozen points of its roofline, in millimetres) and `carShape()` turns them
+into paths; `components/CarArt.tsx` draws them (`CarArt`, and `CarGlyph`, which falls back to the
+make's logo and then to `CarIcon`): one paint, a darker band along the sill, slate glass, plain
+wheels, no gradients, so a car sits in a row the way an icon does, in light and dark alike. The
+drawings are generated, not traced, so they carry no licence; the dimensions are approximate.
+`lib/carModels.ts` decides which model a car name is (`carModel`: "Mazda 6e (BG-123-XY)", "grey
+Octavia"; seventeen models, the longer number first so 3008 is not read as 308) and what colour it
+speaks of (`carPaint`: colour words in English and Serbian, any ending, from one small palette;
+with none, the model's own paint). **A new car** is an entry in `SPECS` and a pattern in `MODELS`;
+`carShapes.test.ts` checks every drawing stays inside its box. `carPowertrain()` in the same file
+says whether a name is *electric*, a *hybrid*, *diesel* or *petrol* (explicit words and engine
+badges first, hybrid before electric before diesel before petrol so "plug-in hybrid electric" is a
+hybrid; then models sold only one way) and `PowertrainMark` draws it as a 12px glyph *after the
+car's name* (`.pt-mark`), deliberately not on the picture. The driver card spells it out as
+"Electric" / "Hybrid" / "Diesel" / "Petrol" beside *Shared car* / *Own car* under the car's name.
+Below that, `carBrand()` recognises a *make* from the name (make words and the models people write
+instead of one; words that are also plain English, like "Seat" or "Focus", must be capitalised to
+count) and `BrandLogo` / `CarGlyph` show its mark from the `simple-icons` package in
+`currentColor`. Only the brands listed in `LOGOS` are bundled (named imports tree-shake);
+Mercedes, Land Rover, Jaguar, Alfa Romeo and Lexus are not in that package, so they keep the
+generic icon. Avatars (`components/Avatar.tsx`) derive a stable pastel from the name.
+
+**Motion.** Things go back the way they came: a view slides in 40px from its side after the one it
+replaces has slid out the other way (`components/SlideSwitch.tsx`: the keyed content's wrapper
+hands its DOM to the host as it unmounts, and a `cloneNode` snapshot laid over the host plays
+`.swap-leave-*` while the real content is long gone, so nothing in it runs or fetches again; the
+entering `.swap-*` is marked `data-after` and holds, invisible, for the snapshot's `--swap-out`
+(100ms) before its own step, so the two are never on screen together), a flyout comes 10px out of
+its anchor, a dialog grows a little out of the middle as it fades in, a toast rises 16px, on
+curves that decelerate in and accelerate out (`--ease-out`, `--ease-in`; the one overshoot is
+`--ease-bounce`, on the update screen's bolt and the tab bar's glide) and short durations
+(`--dur-fast` 150ms, `--dur-normal` 200ms, `--dur-gentle` 250ms, hover 100ms). The keyframes are
+in the *Motion* and *Sheets & dialogs* sections of the stylesheets, the two hooks in
+`lib/motion.ts`. `useSlideDir(value, rank)` says which side freshly keyed content enters from (a
+higher rank enters from the right, a lower one from the left, NaN means no slide) and `App.tsx`
+wraps the view (Rides sits left of Cars, Cars left of You) in `SlideSwitch`.
+`useClosing(onClose)` lets `Sheet`, `RidePage` and `ConfirmDialog` play their exit before the
+parent unmounts them: every close from inside the overlay goes through `requestClose`, which adds
+`backdrop-closing`, and `onClose` runs on the panel's `animationend` (with a fallback timeout); a
+parent that unmounts the overlay itself, after a save, still closes on the spot. Sheets rise from
+the bottom edge on a phone and pop up on a desktop, confirmations grow out of the middle and
+popovers come out of their anchor (`Popover` sets `transform-origin` and measures itself with
+`offsetWidth`, which a transform does not change), the toast and *New ride* spring in (*New ride*
+also contracts while pressed and springs back on release; the pressed state comes from pointer and
+key events, not `:active`, which phones apply late and Chrome holds on after the finger lifts), a
+ride opened on a phone comes in from the right as a screen of its own and goes back the same way
+(`.ride-page`, below), a passenger who just got in grows into the car's list as a grid row from
+`0fr` (`.pax-slot-new`, `useArrivals` in `lib/motion.ts`: not on first render, not your own row),
+and the tab bar's grey pill and the segmented control's thumb move one marker element instead of
+recolouring buttons. Reduced motion collapses every duration, so the exits still fire
+`animationend`.
 
 **Theme.** Light, dark or the system's choice: `lib/theme.ts` is an external store like the
-locale, remembered as `karpul.theme`, and puts the choice on the root as `data-theme` and what
-is on screen as `data-resolved`. The dark tokens in `index.css` live under both
-`:root[data-theme='dark']` and the `prefers-color-scheme` media query (so a dark phone never
-paints light before the script runs); the rules that were never tokens (the pastel avatars,
-the illustrations, the toast, the error text) key off `data-resolved`. The switch
-(`ThemeSwitch`) sits above the language switch in the drawer.
+locale, remembered as `karpul.theme`, and puts the choice on the root as `data-theme` and what is
+on screen as `data-resolved` (and the browser chrome's colour, `LIGHT_BAR` / `DARK_BAR`, the
+ground's own). The dark tokens live under both `:root[data-theme='dark']` and the
+`prefers-color-scheme` media query (so a dark phone never paints light before the script runs);
+the rules that were never tokens (the pastel avatars, the toast, the error text, the dark ink on
+the bright dark-theme green) key off `data-resolved`. The switch (`ThemeSwitch`) sits above the
+language switch under *Settings*.
 
-**Screen structure.** The top bar is the ☰ button, the title and the live lamp; the ☰ opens
-`Sidebar` (`components/Sidebar.tsx`), a drawer from the left edge that holds everything not
-about one particular ride: under your account, the things opened most with no heading over them
-(*Your rides*, *Shared cars*, the *Shared car guide*), then collapsible groups, *Manage* for admins (approvals, the
-people, the places, every ride, the log), *Help* (support, feedback), and *Settings*: not a group but a card of its
-own pinned to the foot (`.settings-card`, a gear, a chevron pointing up), folded by default, that unfolds
-*upwards* out of its head (the body is a grid row above the head, 0fr to 1fr; the rest of the menu is
-`.drawer-scroll` and gives way), holding *Notifications*, *Install the app* while the browser can, the
-theme and the language. What is open is remembered as `karpul.drawerGroups`; a folded *Manage* carries the approvals count on
-its heading. Each group heading is a Fluent accordion header: a full-width
-row in the text's ink, a leading chevron in its own small well that turns down when the group opens,
-a tint under a mouse and a darker one when pressed, and the open group's rows hanging off a hairline
-under the chevron. The items are one label each, no hint line. Your account is the
-identity block on top (it opens `AccountSheet`, which is also where you sign out), *Your rides* (`MyRides`: figures, history, the calendar feed address),
-*Notifications* (`NotificationsSheet`, the push switch), *Approvals* and *Admin log* (admins only, `Approvals`, `AdminLog`), *Shared cars* (`SharedCars`: the cars and how they stand for everyone, managed on
-the same cards by admins, who also get a *Usage* tab that reads `/api/cars/corporate/usage`) and the *Shared car guide* (`CarGuide`: how to charge
-with the company card, and a Mazda 6e primer for first-time EV drivers, frunk included. The words are the `guide`
-entries in `lib/i18n.ts`, one picture per entry in `components/GuideArt.tsx`, drawn like Fluent's
-own icons only bigger (a 120×80 box at 96px, so the 1.875 stroke lands on 1.5px, round corners, soft
-neutral fills, numbers and ticks on a solid green disc) with the green accent on the one thing the
-step is about; also reachable from
-the driver card of any company-car ride; its foot opens *Contact support*). The *Help* group holds *How to use Karpul* (`HowTo`: a
-Fluent accordion of topics, each a few numbered steps; the words are `howTo` in `lib/i18n.ts`, `**name**` sets a
-control's name in bold, the admin topic shows to admins only; `docs/user-guide.md` is the long version, keep them
-in step), the guide,
-*Contact support* (`SupportSheet`: car, app and organizational contacts with `tel:` / `mailto:` buttons, each by name, never the address, the list is
-`SUPPORT` in `lib/support.ts`) and *Report a bug or send feedback* (`FeedbackSheet`, also at the foot of the support
-sheet: a bug or an idea sent as a `mailto:` to the app contact from the person's own mail app, with the account, view,
-browser and screen under the text; nothing on the server). Picking an
-item closes the drawer before the sheet opens, so the two body-scroll locks never overlap. The views are switched by a floating dock on a
-phone (`.tabbar` in `App.tsx`, a radio group named *View*: a rounded bar inset from the edges over a blur, 30px marks, the active one
-filled in white on one solid green pill; the pill, `.tab-glider`, slides to the picked tab on `--ease-bounce` and its keyed inner
-`.tab-glider-pill` stretches as it sets off, a ring spreads from it as it lands, and the mark it
-lands on jumps with a tilt, keyed so the animations replay; `--tabbar` is the room the dock takes with the gap under it, which the FAB, the toast and the column's foot leave room for, and 0
-on a wide screen) and by the segmented control in the toolbar on a wide screen, and
-remembered in `localStorage` (`karpul.view`): *Upcoming* (the default), *Week* and *Day*.
-Day (`components/DayPlan.tsx`, the arithmetic in `lib/dayPlan.ts`, tested in `dayPlan.test.ts`) is
+**Screen structure: three places.** The views are `View` in `lib/selection.ts`, remembered in
+`localStorage` (`karpul.view`):
+
+- **Rides** (`upcoming`, the default). `Upcoming` (`components/Upcoming.tsx`): every ride from
+  today for the next `UPCOMING_DAYS` (90; the API caps a range at 92). On top, **your next ride**
+  as a card in the tint (`components/NextRide.tsx`, picked by `nextRide()` in `lib/nextRide.ts`:
+  the first ride you drive or sit in that is not over; today's counts until it is back): when,
+  the way, one line on who drives and where you get in, and on the day, from half an hour before
+  it leaves, a passenger's one button, *I'm at the pickup point*. Under it a search field and one
+  filter button (a menu: *All*, *Free seats*, *My rides*, *I'm in*; state local to `Upcoming`),
+  then a sticky heading per day and a `.group` under it, one row per ride: the time, the way over
+  who drives, and one trailing word (*Driving*, *You're in*, *Full*, or the free seats). What
+  needs someone (a driver, an approval, an answer) is a single amber line under the driver. The
+  return time, the car and the stops are on the ride's own screen. A row's `aria-label` still
+  reads the driver and the car, which is what the end-to-end tests match.
+- **Cars** (`day`). The shared cars' day as a timetable (below).
+- **You** (`you`, a phone's third tab). `YouPage` in `components/Sidebar.tsx`: your account on
+  top, then grouped lists of everything that is not about one ride: *Your rides* (`MyRides`),
+  *Shared cars* (`SharedCars`: how they stand, managed on the same cards by admins, who also get
+  the *Usage* tab), the *Shared car guide* (`CarGuide`), *Manage* for admins (approvals, the
+  garage list, people, places, every ride, the log), *Settings* (*Notifications*, *Install the
+  app* while the browser can, the theme and the language) and *Help* (*How to use Karpul*,
+  *What's new*, *Take the tour*, *Contact support*, *Report a bug or send feedback*). It used to
+  be a drawer behind a ☰, where half of it went unfound. On a wide screen the same menu is the
+  `Dock`, with the two views (*Rides*, *Cars*) as a radio group on top; `View` `you` then shows
+  the list (`page` in `App.tsx`). Something waiting for an admin is a dot on the *You* tab and a
+  count on its item.
+
+The phone's tab bar (`.tabbar` in `App.tsx`, a radio group named *View*) is a capsule floating
+over the board on a blurred material, the one translucent surface in the app; the picked tab is in
+the tint on a grey pill (`.tab-glider`) that glides to it. **New ride** (`NewRideFab`, a green
+capsule with its name on it) floats beside it in `.bottom-bar`; a wide screen has `NewRideButton`
+at the head of the list. Either opens `NewRideSheet` (`components/AddRideButton.tsx`), which asks
+the one question that matters first, who drives: *Shared car*, *My car* or *I need a seat*. People
+who meant to book a shared car used to ask for a seat instead; three plainly worded rows end that.
+The answer opens `RideForm` on that kind (`kind`), or the request form. It is deliberately the
+only add control. The title at the top of a phone is a large title that scrolls away with the page
+(`.topbar-title`); the live lamp sits beside it.
+
+*Cars* is the day plan (`components/DayPlan.tsx`, the arithmetic in `lib/dayPlan.ts`, tested in `dayPlan.test.ts`) is
 one day for scheduling the company cars, drawn as one *road* per car: every active pool car (free
 ones too) and then each own car going, hours across: the whole day, 00:00 to 24:00 (`DAY_AXIS`), at a
 fixed width per hour (`--plan-hour`), so the board scrolls sideways (`.plan-scroll`, the car's name
@@ -177,7 +189,7 @@ stretch of its road in the driver's colour (`avatarTone` in `lib/tone.ts`, the a
 as `.tone-*`; solid green when it is yours), from the driver's avatar at departure to a dot at the
 return, the way `CarDetail` draws a route; no return runs off the right edge, as the server holds the
 car to end of day. Now is an ink rule behind the roads (not red, which is for removal); each pool car
-says when it is next free (`rowStatus`). Switching to it jumps to today; `range` is that one day. A tapped bar
+says when it is next free (`rowStatus`). Each pool car's row is headed by its picture (`CarGlyph`), its name (a button: how the car stands, `SharedCars`), when it is next free and *Book* (the ride form on that car, `onBookCar`; left out on a past day). Switching to it jumps to today; `range` is that one day. A tapped bar
 opens the ride (on its own screen on a phone, beside the plan on a wide screen, `.split-day`); a free stretch of a pool car
 (`.plan-free`, never in the past; under a mouse a ring follows the pointer to the half hour, popping in on a spring and shrinking away where it was when the pointer leaves, per road in `pins`, and the clock's ring the same through `useLinger` in `lib/motion.ts`; a company car's hour ticks are elements, `.plan-tick`, and the ones on a free stretch are green-tinted and stand up in a wave from the pointer, `--d` delaying each by its distance) opens `RideForm` with `slot`: that car, departure at the tapped
 half hour, back by the next booking or 17:00. While the board scrolls (a phone, a narrow pane), an
@@ -192,44 +204,39 @@ rides as arcs in the driver's tone from their initials to a dot, the hours gone 
 a hand. A free arc of a pool car books like `.plan-free` (pin at the half hour under the pointer), the middle of
 the dial reads out the hovered slot, the hovered or picked ride (with *Edit* when you run it) or the time, and a
 legend beside it names the rings with each car's status. The Clock / Timeline switch sits in the plan's head,
-remembered as `karpul.planShape`; with nothing remembered a wide screen opens on the clock (its dial takes the
-pane's height) and a phone on the timeline. Upcoming is
-`Upcoming` (`components/Upcoming.tsx`): every ride from today for the next `UPCOMING_DAYS` (90;
-the API caps a range at 92) grouped under a heading per day, one row per car; a tapped row
-opens the ride. **On a phone a picked ride is a screen of its own** in every view (a row in Upcoming, a
-tile in Week, a bar in Day): `RidePage` (`components/RidePage.tsx`), a fixed full-screen layer over the
-board (z-index 9: above the tab bar and the plus, under every sheet's backdrop, so the card's own sheets
-and App's forms stack over it) with a back arrow and the day and time in its bar, and `CarDetail` in a
-body that scrolls on its own. It is open while `carSel` names a loaded ride (`pageRide` in `App.tsx`, so a
-reload, a shared `/ride/{id}` link and a just-added ride open it too), closes through `useClosing` and
-`useBackClose` (the phone's back), and the list stays mounted underneath, so it comes back where it was
-scrolled. Nothing unfolds inside the list any more; a wide screen keeps the pane beside it. Above the list sit the filter chips (*All*, *Free seats*, *My
-rides*, *I'm in*) and a search box, state local to `Upcoming`; the day headings are sticky under
-the top bar (`.upcoming-head`). `App.tsx` loads whichever range the view needs (`range`) and
-the live-event filter uses the same range. Week is the day board: `DateCarousel` (the loaded Mon–Sun week as seven pills that always fit the
-width — nothing scrolls; above them one line for the week, whose name opens a calendar
-(`DatePicker variant="title"`) with *Today* and the two arrows on the right, and a sideways swipe on
-the strip also steps a week; the days are bare text, the sliding green pill marks the picked one) →
-`CarCarousel` (one tile per ride that day with its route line, hidden when there are none; the seat count goes red when full and green when you are in or driving) →
-either `CarDetail` (driver card, times, route with the pickup points, distance and chip-in
-tags, passenger list and the *Get in this car* row, which reads *Switch to
-this car* when `switchFrom` says you are seated elsewhere that day and asks where you get in
-after the tap (`PickupSheet`); ⋮ with *Share ride*,
-*Add to calendar* and, on a series, *Remove this and following rides*) or `AddCarCard` (the
-dashed placeholder with a small car badge, deliberately no picture; `intro` adds the two-view explanation when the whole board is empty) →
-*Ask for a ride* (while you are in no car that day and not driving) and the day's requests. Every dialog is a `Sheet` (bottom sheet on a phone,
+remembered as `karpul.planShape`; with nothing remembered every screen opens on the timeline, because the timetable
+is what people book from. **A ride.** On a phone a picked ride is a screen of its own in every view: `RidePage`
+(`components/RidePage.tsx`), a fixed full-screen layer over the board (z-index 9: above the tab
+bar, under every sheet's backdrop, so the card's own sheets and App's forms stack over it) with a
+back chevron, and `CarDetail` in a body that scrolls on its own. It is open while `carSel` names a
+loaded ride (`pageRide` in `App.tsx`, so a reload, a shared `/ride/{id}` link and a just-added
+ride open it too), closes through `useClosing` and `useBackClose` (the phone's back), and the list
+stays mounted underneath, so it comes back where it was scrolled. A wide screen keeps the pane
+beside the list. `CarDetail` reads top to bottom as the decision does: the head (`.ride-head`: the
+day, the time large beside the car's picture, the way, when it returns, and a chip for your place
+in it; *Edit* for whoever runs it and the ⋯ menu, which also holds *Suggest another time*,
+*Share ride*, *Add to calendar*), then what the ride waits on (`.ride-asks`: a change, an
+approval, a driver, the mail to the office, *Running late?*), then **the people** (one `.group`:
+the driver with a call button, the passengers, and a dashed ring for the free seats), then the
+route and its map, the car, the facts, the odometer and the thread. **The one thing your place in
+the ride lets you do now is pinned to the foot** (`.ride-bar`, sticky in the scrolling pane):
+*Get in this car* / *Switch to this car*, else *Wait for a seat*, else on the day *I'm at the
+pickup point*. It asks where you get in after the tap (`PickupSheet`). *Leave* stays on your own
+row.
+
+Every dialog is a `Sheet` (bottom sheet on a phone,
 centred panel on a desktop), the one exception being `UpdateScreen`, which takes the whole screen
 because the bolt you trace on it is the screen; destructive actions go through `ConfirmDialog` instead of
-`window.confirm`. Every overlay (`Sheet`, `Sidebar`, `ConfirmDialog`, `Popover`) calls
+`window.confirm`. Every overlay (`Sheet`, `RidePage`, `ConfirmDialog`, `Popover`) calls
 `useBackClose` (`lib/useBackClose.ts`), so a phone's back button closes the topmost one instead
 of leaving the page: the first overlay to open pushes one history entry, the ones stacked on top
 join an in-memory stack, back pops the top and re-pushes while any remain, and a close by any
 other route pops the entry when it was the last, so back never lands on a dead entry. **No native pickers or dropdowns**: `Select`, `DatePicker` and `TimePicker` are
-custom controls (and `Menu` is the ⋮ menu) built on `Popover`, which portals to `<body>` and
+custom controls (and `Menu` is the ⋯ menu) built on `Popover`, which portals to `<body>` and
 positions itself against its anchor with `position: fixed`, so it is never clipped by a sheet's
 scrolling body and flips above the anchor when the viewport runs out. `TimePicker` shows hour (00–23)
-and minute columns and emits `HH:MM`. `App.tsx` resolves which tile is open (`selection`):
-an explicit pick that still exists, else your own ride, else the first ride, else nothing (the empty card).
+and minute columns and emits `HH:MM`. `App.tsx` resolves which row is open (`upcomingSelection`): only an explicit tap opens one on a
+phone; a wide pane is never empty, so with nothing picked it shows your next ride, else the first.
 **Wording:** the thing you add, edit, duplicate or remove is a *ride*; *car* is reserved for the
 vehicle (the pool, "Shared car" / "Own car", "get in this car", "in this car"). The pool cars are
 *shared cars* on screen (Serbian *zajednički auto*); the code and the API keep saying *corporate*

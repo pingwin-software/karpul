@@ -22,7 +22,7 @@ runs the ride moves one), and the waiting list keeps it on the entry (`new_stop_
 comes. A moved pin (not a first one) is the route moving: `ride_changed`, and an admin's is a `pins`
 change in the log. Pinned places become suggestions (`KnownPlace` kind `learned`, `geo.learn`); offices
 and car homes are seeded on start by `geo.seed_places`, which also pins old office rides. Admins keep them
-at `/api/admin/places` (*Places* in the drawer, `PlacesAdmin`; `place_moved` / `place_removed` in the log).
+at `/api/admin/places` (*Places* in the menu, `PlacesAdmin`; `place_moved` / `place_removed` in the log).
 **A moved office or car home takes its coming rides along** (`geo.repin` / `repin_known`, also from a
 car's `home_point` edit): rides from today on and open requests that name it and still carry its old pin
 (an office's city-centre default counts as old) get the new one; a pin dropped elsewhere for it and the
@@ -50,7 +50,7 @@ moved, `onMove`); `MapView` (Leaflet, loaded on first
 use through `lib/leaflet.ts`, so it is a chunk of its own; Karpul's own pins as `divIcon`s, the disc drawn
 in `.map-pin-body` because Leaflet owns the marker's transform; dark tiles by a CSS filter); on the card
 each place opens in Google Maps (`mapsSearchUrl`), *Show on map* opens `RouteMapSheet` (portalled to
-`<body>`: the card may clip) or, in a wide pane, `RideMap` inline; *Open the route in Maps* in the ⋮ menu
+`<body>`: the card may clip) or, in a wide pane, `RideMap` inline; *Open the route in Maps* in the ⋯ menu
 (`routeUrl`); the "on your way" hint (`stopHint`) offers your open request's pinned start as a new stop;
 Day has a *Map* shape (`DayMap`); *Shared cars* shows a pinned car's home. The service worker keeps map
 tiles (`karpul-tiles`, never anything under `/api`). Tests: `tests/test_places.py`, `maps.test.ts`.

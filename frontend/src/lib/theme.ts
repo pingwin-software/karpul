@@ -12,8 +12,8 @@ export type Theme = 'light' | 'dark' | 'system'
 export const THEMES: Theme[] = ['light', 'dark', 'system']
 
 const KEY = 'karpul.theme'
-const LIGHT_BAR = '#f5f6f8'
-const DARK_BAR = '#15171b'
+const LIGHT_BAR = '#f2f2f7'
+const DARK_BAR = '#000000'
 
 function isTheme(v: unknown): v is Theme {
   return v === 'light' || v === 'dark' || v === 'system'

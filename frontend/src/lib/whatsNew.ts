@@ -8,7 +8,7 @@
  * showing only what this account has not seen in this browser and nothing from
  * before the account existed: a newcomer is not handed the history.
  */
-export type DemoKey = 'giveCar' | 'noDriver' | 'passkey' | 'imHere' | 'offlineRides' | 'forgotPassword' | 'officeMail' | 'carMail' | 'tourSpotlight' | 'noYou' | 'pickAfter' | 'whoWhere' | 'outOfService' | 'fleetUpkeep' | 'monthSummary' | 'pickColleague' | 'impact' | 'addedBy' | 'seatNotice' | 'carWhere' | 'carBusy' | 'prefill' | 'consent'
+export type DemoKey = 'newLook' | 'giveCar' | 'noDriver' | 'passkey' | 'imHere' | 'offlineRides' | 'forgotPassword' | 'officeMail' | 'carMail' | 'tourSpotlight' | 'noYou' | 'pickAfter' | 'whoWhere' | 'outOfService' | 'fleetUpkeep' | 'monthSummary' | 'pickColleague' | 'impact' | 'addedBy' | 'seatNotice' | 'carWhere' | 'carBusy' | 'prefill' | 'consent'
 
 export type Audience = 'admins' | 'members'
 
@@ -23,6 +23,7 @@ export interface WhatsNewEntry {
 }
 
 export const WHATS_NEW: readonly WhatsNewEntry[] = [
+  { id: 'newLook', date: '2026-11-26' },
   { id: 'giveCar', date: '2026-11-26' },
   { id: 'noDriver', date: '2026-11-24' },
   { id: 'passkey', date: '2026-11-21' },

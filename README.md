@@ -18,50 +18,49 @@ in; your name and surname are what colleagues see in a car.
   going that day. Each tile shows the car and its seat count; the open ride shows the driver, when
   it leaves and returns, where from and to, and who is in the car. The switch between the two
   views is remembered in the browser.
-- **Add a ride** for a given day from the *+ Add ride* tile or the ☰ sidebar: pick a **company car** from the pool
-  or use **your own car**, set how many **passenger seats** you offer, departure and return time
+- **Add a ride** from *New ride*, which asks who drives first: a **shared car** from the pool,
+  **your own car**, or a seat in someone else's. Then set how many **passenger seats** you offer, departure and return time
   (or one-way), and pickup / drop-off locations. The wording is deliberate: you add, edit or
   remove a *ride*; the *car* is the vehicle it goes in.
 - **Repeat weekly.** A new ride can repeat every week up to a date (26 weeks at most): one ride
   per week, same weekday, all created at once or not at all if the company car is taken on one of
-  them. The driver's ⋮ menu offers *Remove this and following rides* on any ride of the series.
+  them. The driver's ⋯ menu offers *Remove this and following rides* on any ride of the series.
 - **Pickup points.** Besides the start, a driver can list up to three places on the way. A
   passenger picks where to get in and can change it later; the passenger list shows it.
 - **Distance and chip-in.** A ride can carry its one-way distance (which feeds the "km shared"
   figures) and a free-text "chip in per seat" note ("300 din"). Nothing is charged; it is the
   agreement, written where the passengers see it.
 - **Company cars can't be double-booked** – overlapping time windows on the same day are rejected.
-- **Get into a car** by tapping *Get in this car*, or **drag your chip onto a car**. Drag it to
-  another car to switch, or drop it back on *You* to get out. Works with a finger too: on a phone,
-  press and hold your chip for a moment and it lifts. Already seated in another car that day, the
-  button reads *Switch to this car* and does the drag's job without a drag.
-- **Filter the list.** Upcoming has chips for *Free seats*, *My rides* and *I'm in* and a search
-  box for a place, a driver or a car; the day headings stay pinned while their rows scroll.
-- **Share a ride.** Every ride's ⋮ menu has *Share ride* (the phone's share sheet, or the link
+- **Get into a car** by tapping *Get in this car*, the button pinned to the foot of a ride's
+  screen; it asks where you get in. Already seated in another car that day, the button reads
+  *Switch to this car*.
+- **Filter the list.** *Rides* has a search box for a place, a driver or a car and one filter
+  button (*Free seats*, *My rides*, *I'm in*); the day headings stay pinned while their rows scroll.
+- **Share a ride.** Every ride's ⋯ menu has *Share ride* (the phone's share sheet, or the link
   goes to the clipboard) and *Add to calendar* (an `.ics` file). A shared link, `/ride/{id}`,
   opens the ride and carries a preview card for chat apps.
-- **Notifications** (☰ sidebar): a push when someone gets into your car or out of it, when a
+- **Notifications** (the *You* tab): a push when someone gets into your car or out of it, when a
   driver moves or removes a ride you are in, and 30 minutes before you leave. Needs the server's
   VAPID key (see *Configuration*) and, on an iPhone, the app installed to the home screen.
-- **Your rides** (☰ sidebar): rides driven and ridden along, people carried and kilometres shared
+- **Your rides** (the *You* tab): rides driven and ridden along, people carried and kilometres shared
   this month and all time, the past rides, and a calendar feed address any calendar app can
   subscribe to.
-- **Light or dark**, or the phone's choice, at the foot of the ☰ sidebar next to the language.
-- **Company car guide** in the ☰ sidebar (and on the driver card of every company-car ride): how
+- **Light or dark**, or the phone's choice, under *Settings* on the *You* tab, next to the language.
+- **Company car guide** on the *You* tab (and on the driver card of every company-car ride): how
   to charge with the company card at the charger, and where the Mazda 6e keeps the controls a
   first-time EV driver looks for in the wrong place (the gear stalk, the frunk, the 80% rule).
-- **Add a ride** from the green plus button that floats at the bottom right on both views; the same
-  mark sits in the empty state, the *Add ride* tile and the ☰ sidebar.
-- **Manage the company car pool** from the ☰ sidebar (*Company cars*): add a car, fix a
+- **Three places**: *Rides* (every ride ahead, your next one on top), *Cars* (the shared cars' day as a
+  timetable, a tap on a free stretch books it) and *You* (your rides, settings and help).
+- **Manage the company car pool** from the *You* tab (*Company cars*): add a car, fix a
   name/plate/seat count, retire one that's been sold, or delete one that was never used.
   This is the one screen behind a password (see *Company-car admin* below). Its *Usage* tab
   shows how each pool car was used over the last 30, 90 or 365 days: rides, days out as a share
   of the working days, drivers, passengers, kilometres, when it last went out and what is booked
   ahead, with the rides themselves as history.
 - A dot under a day on the carousel means at least one ride is going that day.
-- Drivers can edit, duplicate or remove their ride from its ⋮ menu, remove passengers and put a
+- Drivers can edit, duplicate or remove their ride from its ⋯ menu, remove passengers and put a
   colleague in by name; passengers can leave. A driver can also **let the passengers manage the
-  list** (a switch in the ride form and in the ⋮ menu): with it on, anyone already in the car can
+  list** (a switch in the ride form and in the ⋯ menu): with it on, anyone already in the car can
   add or remove other passengers too.
 - Cars get a face from their name: a known model is drawn (the Mazda 6e so far), otherwise a
   recognised make shows its logo ("grey Golf" gets the VW mark, "Octavia" the Škoda one), and
