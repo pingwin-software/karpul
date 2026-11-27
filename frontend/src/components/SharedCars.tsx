@@ -58,7 +58,7 @@ export function SharedCars({ isAdmin, states, onNotice, onReported, tab: picked,
   const t = useT()
   const [editing, setEditing] = useState<number | 'new' | null>(null)
   const tab: SharedCarsTab = isAdmin ? picked : 'cars'
-  const tabIcon = { cars: <CarIcon size={16} />, upkeep: <WrenchIcon size={16} />, costs: <CoinsIcon size={16} />, usage: <ChartIcon size={16} /> }
+  const tabIcon = { cars: <CarIcon size={18} />, upkeep: <WrenchIcon size={18} />, costs: <CoinsIcon size={18} />, usage: <ChartIcon size={18} /> }
   const tabLabel = { cars: t.usage.carsTab, upkeep: t.fleet.upkeepTab, costs: t.fleet.costsTab, usage: t.usage.tab }
   const byId = new Map(cars.map((c) => [c.id, c]))
   const retired = cars.filter((c) => !c.active)
@@ -129,11 +129,12 @@ export function SharedCars({ isAdmin, states, onNotice, onReported, tab: picked,
       }
     >
       {isAdmin && (
-        <div className="segmented admin-tabs" role="radiogroup" aria-label={t.admin.title}>
+        <div className="segmented seg-stack admin-tabs" role="radiogroup" aria-label={t.admin.title}>
           <SegThumb count={TABS.length} index={TABS.indexOf(tab)} />
           {TABS.map((k) => (
             <button key={k} type="button" role="radio" aria-checked={tab === k} className={tab === k ? 'seg seg-on' : 'seg'} onClick={() => setTab(k)}>
-              {tabIcon[k]} {tabLabel[k]}
+              {tabIcon[k]}
+              <span className="seg-label">{tabLabel[k]}</span>
             </button>
           ))}
         </div>
