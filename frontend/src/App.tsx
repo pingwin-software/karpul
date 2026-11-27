@@ -663,9 +663,15 @@ function Board({ session }: { session: Session }) {
               {page === 'upcoming' &&
                 (loading ? (
                   <div className="group session-list session-skeleton" aria-busy="true">
-                    <span className="group-row session skeleton" />
-                    <span className="group-row session skeleton" />
-                    <span className="group-row session skeleton" />
+                    {[0, 1, 2, 3].map((i) => (
+                      <span key={i} className="group-row session skeleton">
+                        <span className="skel skel-time" />
+                        <span className="group-text">
+                          <span className="skel skel-line" />
+                          <span className="skel skel-line skel-short" />
+                        </span>
+                      </span>
+                    ))}
                   </div>
                 ) : rides.length === 0 && openRequests.length === 0 ? (
                   <>

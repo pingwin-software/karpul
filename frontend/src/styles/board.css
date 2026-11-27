@@ -111,10 +111,38 @@
   align-items: center;
   gap: 0.15rem;
 }
+/* Loading: the shape of what is coming, as grey bars where its words will be,
+   breathing. A row of the list, a road of the day plan. */
 .skeleton {
-  border-style: dashed;
   box-shadow: none;
   animation: live-pulse 1.4s ease-in-out infinite;
+}
+.skel {
+  display: block;
+  flex: none;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: var(--fill-strong);
+}
+.skel-time {
+  width: 3.1rem;
+  height: 1rem;
+}
+.skel-line {
+  width: 62%;
+}
+.skel-short {
+  width: 36%;
+  height: 0.65rem;
+  margin-top: 0.5rem;
+}
+.skel-car {
+  width: 3.4rem;
+  height: 1.5rem;
+}
+.skel-track {
+  width: 100%;
+  height: 6px;
 }
 
 /* --- Driver card --------------------------------------------------------- */

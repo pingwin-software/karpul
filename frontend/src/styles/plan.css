@@ -38,7 +38,20 @@
   padding: 2.75rem var(--plan-pad) 1.1rem;
 }
 .plan-skeleton {
-  height: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.5rem var(--plan-pad) 1.6rem;
+  overflow: hidden;
+}
+.plan-skel-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.7rem;
+}
+.plan-skel-row .group-text {
+  max-width: 14rem;
 }
 /* The roads and the clock share one inset, so 07:00 is the same x on both. */
 .plan-scale {
