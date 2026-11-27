@@ -216,7 +216,7 @@ def update_known_place(place_id: int, payload: KnownPlaceUpdate, session: WriteS
 @router.delete("/api/admin/places/{place_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_known_place(place_id: int, session: WriteSessionDep, creds: CredsDep):
     """Forget a known place: it is no longer suggested. The rides pinned with
-    it keep their pins. An office forgotten goes back to its city centre."""
+    it keep their pins. An office forgotten goes back to its default place."""
     admin = require_admin(session, creds)
     place = _place_or_404(session, place_id)
     audit.record(session, admin, "place_removed", place.name)

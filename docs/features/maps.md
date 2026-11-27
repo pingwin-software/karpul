@@ -15,7 +15,8 @@ stored for everyone regardless, so turning the maps back on shows them at once; 
 map the place's folded name (`fold_name` / `foldName`) to `{lat, lng}`, so reordering stops needs no
 bookkeeping: `RideBase.points` / `RideUpdate.points` (replaces them whole) are by the place as written,
 `geo.points_for` keeps only the route's places and fills in the pins everyone knows (`known_point`: an
-office, as an admin placed it in `KnownPlace` or else `offices.OFFICE_POINTS`, and a shared car's home,
+office, as an admin placed it in `KnownPlace` or else `offices.OFFICE_POINTS` (the two addresses:
+Bulevar Milutina Milankovića 11v in Beograd, Industrijska 3G in Novi Sad), and a shared car's home,
 `CorporateCar.home_lat/home_lng`, set with `home_point`). `NewStop.point` pins a new pickup point (a
 passenger's only while `passengers_add_stops`; a place already on the route keeps its pin, only whoever
 runs the ride moves one), and the waiting list keeps it on the entry (`new_stop_lat/lng`) until the seat
@@ -25,9 +26,11 @@ and car homes are seeded on start by `geo.seed_places`, which also pins old offi
 at `/api/admin/places` (*Places* in the menu, `PlacesAdmin`; `place_moved` / `place_removed` in the log).
 **A moved office or car home takes its coming rides along** (`geo.repin` / `repin_known`, also from a
 car's `home_point` edit): rides from today on and open requests that name it and still carry its old pin
-(an office's city-centre default counts as old) get the new one; a pin dropped elsewhere for it and the
-rides already driven stay, and no one is pushed. `seed_places` does the same catch-up on start for an
-office placed before this existed.
+(an office's defaults count as old, `geo.office_defaults`: today's and the former ones) get the new one; a
+pin dropped elsewhere for it and the rides already driven stay, and no one is pushed. `seed_places` does the
+same catch-up on start for an office placed before this existed. **A changed default** goes into
+`OFFICE_POINTS` with the old one added to `FORMER_OFFICE_POINTS` (the city centres are there): on start an
+office still on a former default moves to the new one with its coming rides, and one an admin placed stays.
 The server, never the browser, asks the outside services: `GET /api/places?q=` (known places, then the
 geocoder, `KARPUL_GEOCODER_URL`, the public Nominatim by default, "" off), `/api/places/reverse` (a dropped
 pin's name) and `/api/places/road?via=` (an OSRM at `KARPUL_ROUTER_URL`, off by default), all signed in,

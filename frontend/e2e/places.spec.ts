@@ -76,7 +76,7 @@ test('places are suggested, pinned and shown on the map', async ({ browser }, in
   await expect(row).toBeVisible()
   await row.click()
   const card = toma.locator('.driver-card').first()
-  await expect(card.getByRole('link', { name: 'Open Novi Sad in Maps' })).toHaveAttribute('href', /query=45\.2551%2C19\.8452/)
+  await expect(card.getByRole('link', { name: 'Open Novi Sad in Maps' })).toHaveAttribute('href', /query=45\.27311%2C19\.82367/)
   await expect(card.locator('.trip-map-pinned')).toHaveCount(2)
 
   // The route on the map: inline in a wide pane, behind "Show on map" on a phone.
