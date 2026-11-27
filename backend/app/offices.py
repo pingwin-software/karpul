@@ -22,12 +22,22 @@ OFFICES: dict[str, tuple[str, ...]] = {
     "novi sad": ("novi sad", "ns", "novi sad office", "kancelarija novi sad", "novi sad kancelarija"),
 }
 
-# Where each office is until an admin places it exactly (a `KnownPlace` of
-# kind "office", which app/geo.py seeds from these): the city centres.
+# Where each office is until an admin moves it (a `KnownPlace` of kind
+# "office", which app/geo.py seeds from these): Bulevar Milutina Milankovića
+# 11v in Beograd, Industrijska 3G in Novi Sad.
 # The frontend has no copy; it reads the pins off the rides.
 OFFICE_POINTS: dict[str, tuple[float, float]] = {
-    "beograd": (44.8125, 20.4612),
-    "novi sad": (45.2551, 19.8452),
+    "beograd": (44.81250, 20.40733),
+    "novi sad": (45.27311, 19.82367),
+}
+
+# Where each office was by default before (the city centres). An office still
+# on one was never placed by hand, so `geo.seed_places` moves it to the
+# default above, and a coming ride pinned from one follows its office. A
+# default that changes again goes on the end of its office's list here.
+FORMER_OFFICE_POINTS: dict[str, tuple[tuple[float, float], ...]] = {
+    "beograd": ((44.8125, 20.4612),),
+    "novi sad": ((45.2551, 19.8452),),
 }
 
 # Kilometres from one office to the other, by direction.

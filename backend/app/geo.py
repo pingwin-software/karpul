@@ -43,7 +43,7 @@ from sqlalchemy.engine import Engine
 from sqlmodel import Session, select
 
 from .models import CorporateCar, KnownPlace, Ride, RideRequest, utcnow
-from .offices import OFFICE_POINTS, office_of
+from .offices import FORMER_OFFICE_POINTS, OFFICE_POINTS, office_of
 
 log = logging.getLogger("karpul.geo")
 
@@ -125,8 +125,8 @@ def prune(points: dict[str, dict[str, float]], places: list[str]) -> dict[str, d
 
 def known_point(session: Session, place: str, car: CorporateCar | None = None) -> dict[str, float] | None:
     """The pin everyone gets for `place` without pinning it: the shared car's
-    home when the place is it, an office (as the admins placed it, else the
-    city centre), or a car home Karpul knows. Never a learned place."""
+    home when the place is it, an office (as the admins placed it, else its
+    default, `OFFICE_POINTS`), or a car home Karpul knows. Never a learned place."""
     key = fold(place)
     if not key:
         return None
@@ -230,17 +230,20 @@ def repin(
     return rides, requests
 
 
+def office_defaults(office: str) -> list[dict[str, float]]:
+    """Every pin `office` has had without an admin placing it: today's default
+    and the ones before it. A ride carrying one took it from the office."""
+    points = [OFFICE_POINTS[office], *FORMER_OFFICE_POINTS.get(office, ())] if office in OFFICE_POINTS else []
+    return [{"lat": lat, "lng": lng} for lat, lng in points]
+
+
 def repin_known(session: Session, place: KnownPlace, old: dict[str, float]) -> tuple[list[Ride], list[RideRequest]]:
     """`place` moved from `old`: its upcoming rides follow (`repin`). An
-    office is named under any of its names, and a ride pinned from the city
-    centre before an admin placed it moves too; anything else by its own name."""
+    office is named under any of its names, and a ride pinned from one of its
+    defaults before an admin placed it moves too; anything else by its own name."""
     new = {"lat": place.lat, "lng": place.lng}
     if place.kind == "office":
-        olds = [old]
-        if place.key in OFFICE_POINTS:
-            lat, lng = OFFICE_POINTS[place.key]
-            olds.append({"lat": lat, "lng": lng})
-        return repin(session, lambda p: office_of(p) == place.key, olds, new)
+        return repin(session, lambda p: office_of(p) == place.key, [old, *office_defaults(place.key)], new)
     return repin(session, lambda p: fold(p) == place.key, [old], new)
 
 
@@ -284,25 +287,37 @@ def keep_car_home(session: Session, car: CorporateCar) -> None:
 
 def seed_places(target: Engine) -> int:
     """On every start: the offices as known places (once; an admin may move
-    them after), the coming rides still on an office's city centre once an
-    admin has placed it, the pinned car homes, and the pins of the old rides
-    and requests that name an office. Returns how many rows changed."""
+    them after), an office still on a former default moved to today's, the
+    coming rides still on one of an office's defaults when the office is
+    somewhere else, the pinned car homes, and the pins of the old rides and
+    requests that name an office. Returns how many rows changed."""
     changed = 0
     with Session(target) as session:
         names = {"beograd": "Beograd", "novi sad": "Novi Sad"}
         for office, (lat, lng) in OFFICE_POINTS.items():
-            if session.exec(select(KnownPlace).where(KnownPlace.key == office)).first() is None:
+            row = session.exec(select(KnownPlace).where(KnownPlace.key == office)).first()
+            if row is None:
                 session.add(KnownPlace(name=names.get(office, office.title()), key=office, lat=lat, lng=lng, kind="office"))
                 changed += 1
+            elif row.kind == "office" and any(
+                _same({"lat": row.lat, "lng": row.lng}, {"lat": a, "lng": b}) for a, b in FORMER_OFFICE_POINTS.get(office, ())
+            ):
+                # Never placed by hand: it follows the default.
+                row.lat, row.lng = lat, lng
+                session.add(row)
+                changed += 1
         session.flush()
-        # An office an admin has placed: coming rides still on its city-centre
-        # pin (pinned before it was placed) move there. Safe to repeat.
-        for office, (lat, lng) in OFFICE_POINTS.items():
+        # Coming rides still on a default the office is not on (pinned before
+        # an admin placed it, or before the default changed) move to where it
+        # is. Safe to repeat.
+        for office in OFFICE_POINTS:
             row = session.exec(select(KnownPlace).where(KnownPlace.key == office, KnownPlace.kind == "office")).first()
-            if row is not None and not _same({"lat": row.lat, "lng": row.lng}, {"lat": lat, "lng": lng}):
-                rides, requests = repin(
-                    session, lambda p, o=office: office_of(p) == o, [{"lat": lat, "lng": lng}], {"lat": row.lat, "lng": row.lng}
-                )
+            if row is None:
+                continue
+            here = {"lat": row.lat, "lng": row.lng}
+            stale = [p for p in office_defaults(office) if not _same(p, here)]
+            if stale:
+                rides, requests = repin(session, lambda p, o=office: office_of(p) == o, stale, here)
                 changed += len(rides) + len(requests)
         for car in session.exec(select(CorporateCar)):
             keep_car_home(session, car)
