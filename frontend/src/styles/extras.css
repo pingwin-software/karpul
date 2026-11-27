@@ -129,6 +129,7 @@
   max-width: min(100%, 15rem);
   min-height: 30px;
   padding: 0.2rem 0.55rem 0.2rem 0.6rem;
+  border: 1px solid transparent;
   border-radius: 999px;
   background: var(--surface);
   color: var(--text);
@@ -1847,6 +1848,7 @@
   width: 100%;
   min-height: 56px;
   padding: 0.6rem 0.85rem;
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text);
@@ -1873,8 +1875,7 @@
   color: var(--green);
 }
 .pickup-row-new {
-  border-style: dashed;
-  border-color: var(--border-strong);
+  background: var(--field);
 }
 .pickup-row-new .pickup-icon {
   background: var(--surface-2);

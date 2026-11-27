@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react'
 import { track } from '../lib/usage'
 import { addDays, firstName, fmtDayDate, fmtDayLabel, fmtHour, fmtTime, parseISODate, shortCarName, toISODate, todayISO } from '../lib/dates'
 import {
@@ -339,7 +339,20 @@ export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSele
       </div>
 
       {loading ? (
-        <div className="card plan-board skeleton plan-skeleton" aria-busy="true" />
+        <div className="card plan-board skeleton plan-skeleton" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <Fragment key={i}>
+              <span className="plan-skel-row">
+                <span className="skel skel-car" />
+                <span className="group-text">
+                  <span className="skel skel-line" />
+                  <span className="skel skel-line skel-short" />
+                </span>
+              </span>
+              <span className="skel skel-track" />
+            </Fragment>
+          ))}
+        </div>
       ) : empty ? (
         <div className="card empty-card empty-card-short">
           <strong>{isPast ? t.empty.noRidesWent : t.empty.noRidesDay}</strong>
