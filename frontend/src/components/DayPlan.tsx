@@ -25,7 +25,7 @@ import { DatePicker } from './DatePicker'
 import { DayClock } from './DayClock'
 import { DayMap } from './DayMap'
 import { PlanOverview } from './PlanOverview'
-import { ChevronLeftIcon, ChevronRightIcon, ClockIcon, MapIcon, PencilIcon, TimelineIcon } from './icons'
+import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from './icons'
 import { SegThumb } from './Segmented'
 
 /** A free stretch of a company car, tapped: the ride form opens on it. */
@@ -73,7 +73,7 @@ function useNowMinutes(on: boolean): number {
 }
 
 type Shape = 'clock' | 'timeline' | 'map'
-const ALL_SHAPES: Shape[] = ['clock', 'timeline', 'map']
+const ALL_SHAPES: Shape[] = ['timeline', 'clock', 'map']
 /** The day as a clock or as roads across the hours, remembered per browser. */
 const SHAPE_KEY = 'karpul.planShape'
 
@@ -312,26 +312,10 @@ export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSele
 
   return (
     <section className="plan" aria-label={t.plan.label}>
+      {/* The day and its arrows on one line; under it, the three ways to read the day, by name. */}
       <div className="dates-head">
         <DatePicker variant="title" label={t.dates.jumpToDate} value={date} onChange={onDate} linkText={`${fmtDayLabel(date)}, ${fmtDayDate(date)}`} />
         <div className="week-nav" role="group" aria-label={t.plan.label}>
-          <div className="segmented plan-shape" role="radiogroup" aria-label={t.plan.shape}>
-            <SegThumb count={SHAPES.length} index={SHAPES.indexOf(shape)} />
-            {SHAPES.map((s) => (
-              <button
-                key={s}
-                type="button"
-                role="radio"
-                aria-checked={shape === s}
-                aria-label={t.plan[s]}
-                title={t.plan[s]}
-                className={shape === s ? 'seg seg-on' : 'seg'}
-                onClick={() => pickShape(s)}
-              >
-                {s === 'clock' ? <ClockIcon size={16} /> : s === 'map' ? <MapIcon size={16} /> : <TimelineIcon size={16} />}
-              </button>
-            ))}
-          </div>
           {!isToday && (
             <button type="button" className="today-chip" onClick={() => onDate(today)}>
               {t.common.today}
@@ -345,6 +329,14 @@ export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSele
           </button>
         </div>
       </div>
+      <div className="segmented plan-shape" role="radiogroup" aria-label={t.plan.shape}>
+        <SegThumb count={SHAPES.length} index={SHAPES.indexOf(shape)} />
+        {SHAPES.map((s) => (
+          <button key={s} type="button" role="radio" aria-checked={shape === s} className={shape === s ? 'seg seg-on' : 'seg'} onClick={() => pickShape(s)}>
+            {t.plan[s]}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div className="card plan-board skeleton plan-skeleton" aria-busy="true" />
@@ -355,7 +347,7 @@ export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSele
       ) : shape === 'map' ? (
         <DayMap rides={rides} dayLabel={`${fmtDayLabel(date)}, ${fmtDayDate(date)}`} onSelect={onSelect} />
       ) : shape === 'clock' ? (
-        <div className="card plan-board plan-board-clock">
+        <div className="plan-board-clock">
           <DayClock
             date={date}
             pool={pool}
@@ -367,6 +359,8 @@ export function DayPlan({ date, rides, cars, loading, isPast, selectedId, onSele
             status={status}
             onSelect={onSelect}
             onBook={bookAt}
+            onBookCar={isPast ? undefined : onBookCar}
+            onCar={onCar}
             onEdit={onEdit}
           />
         </div>

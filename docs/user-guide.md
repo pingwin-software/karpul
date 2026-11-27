@@ -230,8 +230,8 @@ that name become yours.
 
 **Day view tips.** Tap a ride's bar to open it beside or below the plan. Tap a free stretch of
 a shared car to start a new ride in that car at that time (it fills in the car, the start
-and the time it is free until). Use **Show the day as** to switch between **Clock** and
-**Timeline**, or **Map**: the day's pickup points in each driver's colour, a tap on one opens
+and the time it is free until). The switch under the date shows the day as a **Timetable**,
+a **Clock** (a ring per car, with **Book** beside each car under it) or a **Map**: the day's pickup points in each driver's colour, a tap on one opens
 that ride. On a phone the strip on top (**The whole day**) lets you jump around the day.
 
 ### Places on the map
@@ -290,11 +290,11 @@ so someone else can still book that time.
 ### Before you drive: the Shared car guide
 
 **You** → **Shared car guide** (also **How to charge and drive it** on any shared-car ride) explains,
-with pictures:
+with pictures, in two tabs:
 
-- **Charging with the company card**: park, hold the card on the reader, plug in, and stop
+- **Charging**: park, hold the company card on the reader, plug in, and stop
   with the card before you unplug. Put the card back in the glovebox afterwards.
-- **The Mazda 6e for first-timers**: no start button, the gear stalk, regenerative braking,
+- **Mazda 6e**, for first-timers (tap a line to read more): no start button, the gear stalk, regenerative braking,
   the touchscreen controls, the battery gauge, where the charging flap is, and the frunk
   under the bonnet where the cable lives.
 

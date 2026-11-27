@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react'
+import { useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react'
 import { firstName, fmtDayDate, fmtDayLabel, fmtHour, fmtTime, initials, shortCarName } from '../lib/dates'
 import {
   arcPath,
@@ -36,6 +36,10 @@ interface Props {
   onSelect: (rideId: number) => void
   /** A free stretch was picked; `at` is the minute under the pointer, null from the keyboard. */
   onBook: (row: PlanRow, gap: Gap, at: number | null) => void
+  /** *Book* on a shared car's row of the legend: the ride form on that car. Left out on a past day. */
+  onBookCar?: (carId: number) => void
+  /** A shared car's name opens how it stands. */
+  onCar?: () => void
   onEdit: (ride: Ride) => void
 }
 
@@ -79,10 +83,9 @@ function onKeyPress(fn: () => void) {
  * has, which a sideways timeline cannot: every hour of the day is on screen
  * at once.
  */
-export function DayClock({ date, pool, own, isPast, isToday, now, selectedId, status, onSelect, onBook, onEdit }: Props) {
+export function DayClock({ date, pool, own, isPast, isToday, now, selectedId, status, onSelect, onBook, onBookCar, onCar, onEdit }: Props) {
   const t = useT()
   const me = useMe()
-  const uid = useId()
   const svg = useRef<SVGSVGElement>(null)
   const [hoverRide, setHoverRide] = useState<Ride | null>(null)
   const [slot, setSlot] = useState<{ row: PlanRow; min: number } | null>(null)
@@ -174,7 +177,6 @@ export function DayClock({ date, pool, own, isPast, isToday, now, selectedId, st
   const ring = (row: PlanRow, i: number) => {
     const { r, band } = rings[i]
     const bookable = row.car !== null && !isPast
-    const labelPath = `${uid}-label-${i}`
     const lit = hoverRow === row.key
     // A waiting ride holds no slot, so it is drawn under the free stretch: a
     // tap there books the car (as on the timeline); the others sit on top.
@@ -189,12 +191,6 @@ export function DayClock({ date, pool, own, isPast, isToday, now, selectedId, st
       >
         <circle className="clock-ring-band" cx={CENTER} cy={CENTER} r={r} style={{ strokeWidth: band - 2 }} />
         <circle className="clock-track" cx={CENTER} cy={CENTER} r={r} />
-        <path id={labelPath} d={arcPath(r, DAY_END * 0.7, DAY_END - 8)} fill="none" stroke="none" />
-        <text className="clock-ring-label" style={{ fontSize: Math.min(band * 0.42, 19) }} dy="0.35em">
-          <textPath href={`#${labelPath}`} startOffset="100%" textAnchor="end">
-            {shortCarName(row.label)}
-          </textPath>
-        </text>
         {pending.map((b) => rideArc(row, b, r, band))}
         {bookable &&
           row.gaps.map((g) => (
@@ -277,21 +273,25 @@ export function DayClock({ date, pool, own, isPast, isToday, now, selectedId, st
 
   return (
     <div className="clock">
+      <div className="card clock-card">
       <div className="clock-dial" style={{ '--clock-inner': inner / SIZE } as CSSProperties}>
         <svg ref={svg} viewBox={`0 0 ${SIZE} ${SIZE}`} className="clock-svg" role="group" aria-label={t.plan.label}>
           <circle className="clock-face" cx={CENTER} cy={CENTER} r={R_OUT + 62} />
           {showNow && now > 0 && <path className="clock-past" d={sectorPath(inner, R_OUT, 0, now)} />}
           {Array.from({ length: 24 }, (_, h) => {
-            const a = pointAt(inner - 6, h * 60)
-            const b = pointAt(R_OUT + 8, h * 60)
-            const l = pointAt(R_OUT + 36, h * 60)
+            // A tick per hour outside the rings; only the quarters of the day carry their number.
             const main = MAIN_HOURS.has(h)
+            const a = pointAt(R_OUT + 12, h * 60)
+            const b = pointAt(R_OUT + (main ? 30 : 22), h * 60)
+            const l = pointAt(R_OUT + 58, h * 60)
             return (
               <g key={h} aria-hidden="true">
                 <line className={main ? 'clock-spoke clock-spoke-main' : 'clock-spoke'} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />
-                <text className={main ? 'clock-hour clock-hour-main' : 'clock-hour'} x={l.x} y={l.y}>
-                  {fmtHour(h)}
-                </text>
+                {main && (
+                  <text className="clock-hour clock-hour-main" x={l.x} y={l.y}>
+                    {fmtHour(h)}
+                  </text>
+                )}
               </g>
             )
           })}
@@ -310,8 +310,9 @@ export function DayClock({ date, pool, own, isPast, isToday, now, selectedId, st
           {readout()}
         </div>
       </div>
+      </div>
 
-      <ul className="clock-legend" aria-label={t.plan.label}>
+      <ul className="group clock-legend" aria-label={t.plan.label}>
         {rows.flatMap((row, i) => {
           const s = status(row)
           const free = row.car !== null && row.bars.length === 0 && !isPast
@@ -330,12 +331,25 @@ export function DayClock({ date, pool, own, isPast, isToday, now, selectedId, st
               onPointerLeave={() => setHoverRow(null)}
             >
               <RingMark index={i} count={rows.length} />
-              <span className="clock-legend-name">
-                <span>{shortCarName(row.label)}</span>
-                <PowertrainMark carName={row.label} />
-                {row.car && <span className="plan-plate">{row.car.plate}</span>}
+              <span className="clock-legend-text">
+                {row.car && onCar ? (
+                  <button type="button" className="clock-legend-name clock-legend-open" onClick={onCar}>
+                    <span>{shortCarName(row.label)}</span>
+                    <PowertrainMark carName={row.label} />
+                  </button>
+                ) : (
+                  <span className="clock-legend-name">
+                    <span>{shortCarName(row.label)}</span>
+                    <PowertrainMark carName={row.label} />
+                  </span>
+                )}
+                {s && <span className={free ? 'plan-status plan-status-free' : 'plan-status'}>{s}</span>}
               </span>
-              {s && <span className={free ? 'plan-status plan-status-free' : 'plan-status'}>{s}</span>}
+              {row.car && onBookCar && (
+                <button type="button" className="btn btn-sm plan-book" onClick={() => onBookCar(row.car!.id)}>
+                  {t.plan.bookCar}
+                </button>
+              )}
             </li>,
           ]
         })}
