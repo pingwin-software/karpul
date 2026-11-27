@@ -22,6 +22,13 @@ are in the last two and must stay last). The tokens (`styles/tokens.css`, the da
   Karpul's green (`--green`), for "selected / go"; red (`--red`, Apple's accessible one, so it
   carries small text) only for removal. `--fill` / `--fill-strong` are the grey wash that fills a
   control (a field, a switch's track, a quiet button) on a cell and on the ground alike.
+  **A sheet is the grouped ground too**: `.panel` (`styles/sheets.css`) re-points `--bg`,
+  `--surface` and `--surface-2` at `--sheet`, `--sheet-cell` and `--sheet-inset` (the grey ground,
+  a white cell, the well inside a cell; one step lighter each in the dark), so a card, a group or
+  a table in any sheet, the admins' included, is a borderless white cell with nothing restyled per
+  sheet. A field's ground is `--field`: white on a sheet's ground, back to `--fill` inside a cell
+  (`.card`, `.group`, `.switch-group`, `.route`). A box inside a sheet takes its edge from its
+  ground, never from a stroke; an *add* row (`.add-row`) is a tinted row, not a dashed outline.
 - **No elevation at rest.** A cell is a white shape on the grey ground: no stroke and no shadow
   (`--shadow` and `--shadow-card` are `none`). Only what floats over the page casts
   (`--shadow-pop`: a popover, a sheet, the tab bar), and a card under a mouse (`--shadow-hover`).
@@ -203,7 +210,10 @@ day can be drawn as a **clock** instead (`components/DayClock.tsx`, geometry in 
 rides as arcs in the driver's tone from their initials to a dot, the hours gone today as a faint wedge and now as
 a hand. A free arc of a pool car books like `.plan-free` (pin at the half hour under the pointer), the middle of
 the dial reads out the hovered slot, the hovered or picked ride (with *Edit* when you run it) or the time, and a
-legend beside it names the rings with each car's status. The Clock / Timeline switch sits in the plan's head,
+legend under it (beside it when wide) names the rings: a `.group` with a row per car, its ring's mark, its status and
+*Book* (`onBookCar`). The dial is drawn like activity rings: a grey track per car (`.clock-ring-band`), a ride a solid
+round-capped arc on it, hour ticks outside with numerals at 00, 06, 12 and 18 only. The shape is a labelled segmented
+control under the date (*Timetable*, *Clock*, *Map*; `.plan-shape`), so the date keeps the whole line on a phone,
 remembered as `karpul.planShape`; with nothing remembered every screen opens on the timeline, because the timetable
 is what people book from. **A ride.** On a phone a picked ride is a screen of its own in every view: `RidePage`
 (`components/RidePage.tsx`), a fixed full-screen layer over the board (z-index 9: above the tab
@@ -223,6 +233,14 @@ the ride lets you do now is pinned to the foot** (`.ride-bar`, sticky in the scr
 *Get in this car* / *Switch to this car*, else *Wait for a seat*, else on the day *I'm at the
 pickup point*. It asks where you get in after the tap (`PickupSheet`). *Leave* stays on your own
 row.
+
+**The shared car guide** (`components/CarGuide.tsx`) is two tabs. *Charging* is a card per step: the
+picture across the top on the tint's pale ground, a numbered disc, a title and a few lines. *Mazda 6e* is a
+`.group` whose titles are the short answers and unfold for the long ones (the how-to's grid row,
+`.howto-body`). The pictures (`components/GuideArt.tsx`) are flat like the cars, one of which the first
+picture borrows (`CarArt`): solid shapes in a palette of their own (`--ga-*` on `.guide-art`: paper, two
+greys, the dark of a screen, lines), with the tint for the one thing the step is about. The how-to's
+topics sit in one white cell the same way.
 
 Every dialog is a `Sheet` (bottom sheet on a phone,
 centred panel on a desktop), the one exception being `UpdateScreen`, which takes the whole screen

@@ -120,7 +120,7 @@ const en = {
     pick: 'Tap a ride on the plan to open it here.',
     shape: 'Show the day as',
     clock: 'Clock',
-    timeline: 'Timeline',
+    timeline: 'Timetable',
     map: 'Map',
     overview: 'The whole day',
   },
@@ -1344,8 +1344,8 @@ const en = {
 
   guide: {
     title: 'Shared car guide',
-    chargingTitle: 'Charging with the company card',
-    mazdaTitle: 'Mazda 6e, first time behind the wheel',
+    chargingTab: 'Charging',
+    mazdaTab: 'Mazda 6e',
     charging: [
       {
         art: 'park-flap',
@@ -2052,7 +2052,7 @@ const sr: Messages = {
     pick: 'Dodirni vožnju na planu da je otvoriš ovde.',
     shape: 'Prikaz dana',
     clock: 'Časovnik',
-    timeline: 'Vremenska linija',
+    timeline: 'Raspored',
     map: 'Mapa',
     overview: 'Ceo dan',
   },
@@ -3245,8 +3245,8 @@ const sr: Messages = {
 
   guide: {
     title: 'Vodič za zajednički auto',
-    chargingTitle: 'Punjenje službenom karticom',
-    mazdaTitle: 'Mazda 6e, prvi put za volanom',
+    chargingTab: 'Punjenje',
+    mazdaTab: 'Mazda 6e',
     charging: [
       {
         art: 'park-flap',

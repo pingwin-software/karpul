@@ -54,8 +54,16 @@
   --blue-soft: var(--color-blue-soft);
   /* What fills a control (a field, a switch's track, a grey button): a wash
      of grey that works on a cell and on the ground alike. */
+  /* A sheet is the grouped ground again, with white cells on it. `.panel`
+     hands these to everything inside it as --bg and --surface, so a card or a
+     row drawn in a sheet is a cell without knowing where it is. */
+  --sheet: #f2f2f7;
+  --sheet-cell: #ffffff;
+  --sheet-inset: #e9e9ee;
   --fill: rgba(118, 118, 128, 0.12);
   --fill-strong: rgba(118, 118, 128, 0.2);
+  /* What a field stands on: the grey wash on a cell, a white cell on a sheet. */
+  --field: var(--fill);
   /* A segmented control's thumb, and the switch that is on (iOS's own green). */
   --seg-thumb: #ffffff;
   --switch-on: #34c759;

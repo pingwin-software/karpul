@@ -30,16 +30,29 @@
   max-height: calc(100dvh - 2rem);
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  /* The grouped ground, and its tokens for whatever is drawn inside. */
+  --bg: var(--sheet);
+  --surface: var(--sheet-cell);
+  --surface-2: var(--sheet-inset);
+  --field: var(--sheet-cell);
+  background: var(--sheet);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-pop);
   overflow: hidden;
   animation: panel-in var(--dur-gentle) var(--ease-out);
 }
+
+/* A cell in a sheet is white, so a field inside one goes back to the wash. */
+.panel .card,
+.panel .group,
+.panel .switch-group,
+.panel .route {
+  --field: var(--fill);
+}
 .backdrop-closing .panel {
   animation: panel-out 0.18s var(--ease-in) forwards;
 }
-/* Fluent's dialog: it grows a little out of the middle as it fades in. */
+/* A dialog grows a little out of the middle as it fades in. */
 @keyframes panel-in {
   from {
     opacity: 0;
@@ -67,7 +80,9 @@
   padding: 0.9rem 0.75rem 0.6rem 1.15rem;
 }
 .panel-head h2 {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 .panel-body {
   flex: 1;
@@ -83,8 +98,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.15rem calc(1rem + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--sheet);
 }
 /* --- Add / edit ride form (components/RideForm.tsx) ----------------------- */
 /* Two depths of one form. The mode switch is sticky at the head of the sheet's
@@ -126,9 +140,8 @@
   gap: 0.6rem;
   min-height: 48px;
   padding: 0.4rem 0.8rem;
-  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  background: var(--field);
 }
 .form-driver-name {
   min-width: 0;
@@ -206,16 +219,15 @@
 .route {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-strong);
-  border-bottom-color: var(--muted);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--field);
   overflow: hidden;
   transition: border-color var(--hover), box-shadow var(--hover);
 }
 .route:focus-within {
-  border-bottom-color: var(--green);
-  box-shadow: inset 0 -1px 0 var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 22%, transparent);
 }
 .route-row {
   display: flex;
@@ -294,13 +306,13 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  min-height: 44px;
-  padding: 0.55rem 0.7rem 0.55rem 0.85rem;
-  border: 1px dashed var(--border-strong);
+  min-height: 48px;
+  padding: 0.55rem 0.9rem;
+  border: none;
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--muted);
-  font-size: 0.86rem;
+  background: var(--field);
+  color: var(--text);
+  font-size: 0.95rem;
   text-align: left;
 }
 .form-extras > span {
@@ -308,161 +320,228 @@
   min-width: 0;
 }
 .form-extras:hover {
-  border-color: var(--green);
-  color: var(--text);
+  background: var(--fill);
 }
 
-/* --- Company car guide (components/CarGuide.tsx) -------------------------- */
+/* --- Shared car guide (components/CarGuide.tsx) ---------------------------
+   Two tabs. The sheet has a height of its own, like the how-to, so neither a
+   change of tab nor an unfolding answer moves its edges. */
+.guide.panel {
+  height: min(46rem, calc(100dvh - 2rem));
+}
 .guide .panel-body {
-  gap: 1.5rem;
+  gap: 1rem;
+  overflow-anchor: none;
 }
-.guide-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+.guide-tabs {
+  flex: none;
 }
-.guide-section .section-title {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.guide-section .section-title svg {
-  color: var(--green);
-}
-.guide-hero {
-  display: flex;
-  justify-content: center;
-  padding: 0.5rem 0 0.25rem;
-}
+/* Charging: one card per step, the picture across the top. */
 .guide-steps {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.9rem;
 }
 .guide-step {
-  display: flex;
-  gap: 0.8rem;
-  align-items: flex-start;
+  overflow: hidden;
+  box-shadow: none;
 }
-/* The picture beside each entry (components/GuideArt.tsx): a small framed
-   tile, ink in the muted grey, the one thing the step is about in green. */
-.guide-art {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 96px;
-  height: 64px;
-  border-radius: var(--radius);
-  background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%);
-  box-shadow: inset 0 0 0 1px var(--border);
-  color: var(--muted);
+.guide-step-text {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.65rem;
+  row-gap: 0.3rem;
+  align-items: center;
+  padding: 0.9rem 1rem 1rem;
 }
-.guide-art-row {
-  background: var(--surface);
-}
-.guide-art svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.guide-art .accent {
-  stroke: var(--green);
-}
-.guide-art .accent-fill {
-  fill: var(--green-soft);
-  stroke: var(--green);
-}
-.guide-art .accent-solid {
-  fill: var(--green);
-  stroke: none;
-}
-.guide-art text.on-accent {
-  fill: #fff;
-}
-:root[data-resolved='dark'] .guide-art text.on-accent {
-  fill: #10141a;
-}
-.guide-art .soft {
-  fill: currentColor;
-  fill-opacity: 0.08;
-}
-.guide-art .glass {
-  fill: currentColor;
-  fill-opacity: 0.18;
-}
-.guide-art .ink {
-  fill: currentColor;
-  stroke: none;
-}
-.guide-art text {
-  stroke: none;
-  fill: currentColor;
-  font-family: var(--font-sans);
-  font-size: 8px;
+.guide-step-text h3 {
+  margin: 0;
+  font-size: 1.05rem;
   font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
 }
-.guide-art text.accent-text {
-  fill: var(--green);
-}
-.guide-art text.big {
-  font-size: 11px;
-  font-weight: 700;
-}
-.guide-art text.label {
-  font-size: 9px;
-  fill: var(--text);
+.guide-step-text p {
+  grid-column: 2;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 .guide-step-no {
-  position: absolute;
-  top: -8px;
-  left: -8px;
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 1.6rem;
+  height: 1.6rem;
   border-radius: 50%;
   background: var(--green);
   color: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  box-shadow: 0 0 0 2px var(--surface);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
-.guide-step-text,
-.guide-row-text {
+/* The pictures (components/GuideArt.tsx): flat shapes on the accent's pale
+   ground, in a palette of their own so they read the same on any surface. */
+.guide-art {
+  --ga-paper: #ffffff;
+  --ga-body: #cdd3da;
+  --ga-deep: #97a1ad;
+  --ga-ink: #2d3742;
+  --ga-line: #6b7480;
+  --ga-glow: #4ade9b;
+  --ga-on: #ffffff;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: var(--green-soft);
+}
+:root[data-resolved='dark'] .guide-step-no {
+  color: #10141a;
+}
+:root[data-resolved='dark'] .guide-art {
+  --ga-paper: #e3e7eb;
+  --ga-body: #8e98a4;
+  --ga-deep: #6b7480;
+  --ga-ink: #414b57;
+  --ga-line: #aab2bc;
+  --ga-on: #10141a;
+}
+.guide-art > svg {
+  display: block;
+  width: min(100%, 17rem);
+  height: auto;
+  overflow: hidden;
+}
+.guide-thumb {
+  flex: none;
+  width: 72px;
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.guide-art .p {
+  fill: var(--ga-paper);
+}
+.guide-art .b {
+  fill: var(--ga-body);
+}
+.guide-art .d {
+  fill: var(--ga-deep);
+}
+.guide-art .k {
+  fill: var(--ga-ink);
+}
+.guide-art .a {
+  fill: var(--green);
+}
+.guide-art .as {
+  fill: color-mix(in srgb, var(--green) 22%, var(--ga-paper));
+}
+.guide-art .gf {
+  fill: var(--ga-glow);
+}
+.guide-art .tile {
+  fill: var(--ga-paper);
+  fill-opacity: 0.14;
+}
+.guide-art .on {
+  fill: var(--ga-on);
+}
+.guide-art :is(.l, .al, .gl, .pl, .ol, .rim) {
+  fill: none;
+  stroke: var(--ga-line);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.guide-art .al {
+  stroke: var(--green);
+}
+.guide-art .gl {
+  stroke: var(--ga-glow);
+}
+.guide-art .pl {
+  stroke: var(--ga-paper);
+}
+.guide-art .ol {
+  stroke: var(--ga-on);
+}
+.guide-art .rim {
+  stroke: var(--ga-deep);
+  stroke-width: 6;
+}
+.guide-art text {
+  font-family: var(--font-sans);
+  font-size: 8.5px;
+  font-weight: 700;
+}
+.guide-art text.big {
+  font-size: 12px;
+}
+.guide-art text.glow {
+  fill: var(--ga-glow);
+  letter-spacing: 0.08em;
+}
+.guide-art text.label {
+  font-size: 10px;
+  fill: var(--text);
+}
+/* The Mazda: a grouped list, each title the short answer, unfolding (the
+   how-to's grid row) for the long one. */
+.guide-q + .guide-q {
+  box-shadow: inset 0 1px 0 var(--border);
+}
+.guide-q-head {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-  font-size: 0.92rem;
-}
-.guide-step-text span,
-.guide-row dd {
-  color: var(--muted);
-}
-.guide-list {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-.guide-row {
-  display: flex;
+  align-items: center;
   gap: 0.8rem;
-  align-items: flex-start;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  width: 100%;
+  min-height: 68px;
+  padding: 0.6rem 0.9rem 0.6rem 0.7rem;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--hover);
 }
-.guide-row dt {
+.guide-q-head:active {
+  background: var(--fill);
+}
+.guide-q-head:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: -2px;
+}
+.guide-q-title {
+  flex: 1;
+  min-width: 0;
   font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
 }
-.guide-row dd {
+.guide-q-chevron {
+  flex: none;
+  color: var(--muted);
+  transition: transform var(--dur-normal) var(--ease-out);
+}
+.howto-open .guide-q-chevron {
+  transform: rotate(180deg);
+}
+.guide-q-body {
   margin: 0;
+  padding: 0 1rem 0.95rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+@media (hover: hover) and (pointer: fine) {
+  .guide-q-head:hover {
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+  }
 }
 /* The guide's name can wrap next to the car's picture on a phone, so its pill
    is a rounded box rather than a capsule. */
@@ -490,17 +569,21 @@
 .howto-list {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.howto-topic + .howto-topic {
+  box-shadow: inset 0 1px 0 var(--border);
 }
 .howto-head {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   width: 100%;
-  min-height: 44px;
-  padding: 0.4rem 0.5rem 0.4rem 0.35rem;
+  min-height: 50px;
+  padding: 0.4rem 0.9rem 0.4rem 0.6rem;
   border: none;
-  border-radius: var(--radius-sm);
   background: none;
   color: var(--text);
   font: inherit;
@@ -536,8 +619,8 @@
 .howto-steps {
   counter-reset: howto;
   list-style: none;
-  margin: 0 0 0 1.1rem;
-  padding: 0.15rem 0 0.75rem 1.05rem;
+  margin: 0 0.9rem 0 1.35rem;
+  padding: 0.15rem 0 0.9rem 1.05rem;
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -670,9 +753,8 @@
   align-items: center;
   gap: 0.8rem;
   padding: 0.75rem 0.7rem;
-  border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface-2);
+  background: var(--surface);
 }
 .account-me-text {
   display: flex;
@@ -1194,8 +1276,8 @@
   align-items: center;
   gap: 0.7rem;
   padding: 0.5rem 0.4rem 0.5rem 0.6rem;
-  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  background: var(--surface);
 }
 .admin-row-retired .admin-row-text {
   color: var(--muted);

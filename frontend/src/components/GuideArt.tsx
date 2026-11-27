@@ -1,17 +1,19 @@
 import type { GuideArtKey } from '../lib/i18n'
+import { CarArt } from './CarArt'
 
 /**
- * One small picture per entry of the company car guide (CarGuide.tsx): the
- * flap and the charger, the card on the reader, the plug, the stalk, the P
- * button, the 80% battery, the frunk and so on. Drawn the way Fluent's own
- * icons are, only bigger: a 120×80 box shown at 96px, so the 1.875 stroke
- * lands on Fluent's 1.5px; generous round corners; soft neutral fills for the
- * surfaces; `currentColor` for the ink and the green accent (via the `accent`
- * classes in index.css) for the one thing the step is about, so a reader can
- * find it on the real car from the picture alone. Numbers and ticks sit on a
- * solid green disc, like a Fluent badge. Nothing here is
- * text that needs translating: the few letters (P, R, D, READY, 80%) are what
- * the car itself shows.
+ * One picture per entry of the shared car guide (CarGuide.tsx): the flap and
+ * the charger, the card on the reader, the plug, the stalk, the P button, the
+ * 80% battery, the frunk and so on. Drawn flat, like the cars on the board
+ * (`CarArt`, which the first picture borrows): solid shapes with round
+ * corners, no outlines and no shading, in a 120x80 box. The colours are the
+ * classes of `.guide-art` in styles/sheets.css: `p` paper (what is white on the
+ * real thing), `b` and `d` two greys, `k` the dark of a screen or a tyre, `a`
+ * the green of the one thing the step is about, so a reader can find it on the
+ * real car from the picture alone; `l` and `al` are the grey and green lines
+ * of a cable or an arrow, `gl` and `pl` lines on a dark surface. Nothing here
+ * is text that needs translating: the few letters (P, R, D, READY, 80%) are
+ * what the car itself shows.
  */
 
 interface ArtProps {
@@ -20,82 +22,35 @@ interface ArtProps {
   className?: string
 }
 
-/** A car side-on, facing left, in a 110×40 box: body, glass, two wheels and the charging flap on the rear quarter. */
-function Car({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <path className="soft" d="M5 32a2 2 0 0 1-2-2v-5.2a4 4 0 0 1 3.1-3.9L28 16.5l13.3-10.4A8 8 0 0 1 46.2 4.4H74a8 8 0 0 1 6.2 2.9L88 16.5l16.1 3.3A4.5 4.5 0 0 1 107.7 24v6a2 2 0 0 1-2 2Z" />
-      <path className="glass" d="M33 16.5l10.6-8.3A5 5 0 0 1 46.7 7H54v9.5Z" />
-      <path className="glass" d="M58 7h15.4a5 5 0 0 1 3.9 1.9L83 16.5H58Z" />
-      <Wheel cx={27} cy={32} />
-      <Wheel cx={85} cy={32} />
-    </g>
-  )
-}
-
-/** A wheel as Fluent draws one: a tyre ring over the surface and a hub ring. */
-function Wheel({ cx, cy, r = 7.5 }: { cx: number; cy: number; r?: number }) {
-  return (
-    <>
-      <circle cx={cx} cy={cy} r={r} fill="var(--surface)" />
-      <circle cx={cx} cy={cy} r={r * 0.4} />
-    </>
-  )
-}
-
-/** A CCS socket: two small pins above a wide oval with two big ones. */
-function Socket({ x, y }: { x: number; y: number }) {
-  return (
-    <g transform={`translate(${x} ${y})`}>
-      <circle cx="5" cy="4" r="3.5" />
-      <circle cx="19" cy="4" r="3.5" />
-      <rect x="-1" y="14" width="26" height="14" rx="7" />
-      <circle cx="7" cy="21" r="3" />
-      <circle cx="17" cy="21" r="3" />
-    </g>
-  )
-}
-
-/** The charging card: a rounded rectangle with a chip, tilted a little. */
+/** The charging card: green, with a pale chip, tilted a little. */
 function Card({ x, y, w = 30, tilt = -8 }: { x: number; y: number; w?: number; tilt?: number }) {
   const h = w * 0.64
   return (
     <g transform={`rotate(${tilt} ${x + w / 2} ${y + h / 2})`}>
-      <rect className="accent-fill" x={x} y={y} width={w} height={h} rx="3.5" />
-      <rect className="accent" x={x + w * 0.16} y={y + h * 0.3} width={w * 0.24} height={h * 0.28} rx="1.5" />
+      <rect className="a" x={x} y={y} width={w} height={h} rx={w * 0.12} />
+      <rect className="on" x={x + w * 0.14} y={y + h * 0.3} width={w * 0.24} height={h * 0.3} rx={w * 0.05} opacity="0.85" />
     </g>
   )
 }
 
-/** The plug: a grip, a nozzle and the cable trailing off to the left. */
-function Plug({ x, y }: { x: number; y: number }) {
-  return (
-    <g transform={`translate(${x} ${y})`}>
-      <path d="M0 10C-8 10 -8 26 4 32" />
-      <rect className="soft" x="0" y="0" width="24" height="20" rx="6" />
-      <rect x="24" y="4" width="14" height="12" rx="3.5" />
-    </g>
-  )
-}
-
-/** A numbered badge for a two-step picture: Fluent's solid brand disc. */
+/** A numbered disc for a two-step picture. */
 function Badge({ x, y, n }: { x: number; y: number; n: number }) {
   return (
     <g>
-      <circle className="accent-solid" cx={x} cy={y} r="6.5" />
-      <text className="on-accent" x={x} y={y + 3} textAnchor="middle">
+      <circle className="a" cx={x} cy={y} r="7" />
+      <text className="on" x={x} y={y + 3.2} textAnchor="middle">
         {n}
       </text>
     </g>
   )
 }
 
-/** Done: a white tick on the same solid disc. */
+/** Done: a tick on the same disc. */
 function Tick({ x, y }: { x: number; y: number }) {
   return (
     <g>
-      <circle className="accent-solid" cx={x} cy={y} r="8" />
-      <path d={`M${x - 3.5} ${y}l2.5 2.5l4.5-5`} stroke="#fff" />
+      <circle className="a" cx={x} cy={y} r="9" />
+      <path className="ol" d={`M${x - 4} ${y}l3 3l5-6`} />
     </g>
   )
 }
@@ -103,16 +58,18 @@ function Tick({ x, y }: { x: number; y: number }) {
 function ParkFlap() {
   return (
     <>
-      <path d="M4 66H116" opacity="0.4" />
-      <Car x={2} y={30} s={0.8} />
-      {/* the flap, popped open, ringed so it is the thing to look for */}
-      <circle className="accent" cx="80" cy="46" r="8" strokeDasharray="2.5 2.5" />
-      <rect className="accent-fill" x="76" y="43" width="6" height="5" rx="1" />
-      <path className="accent" d="M82 43L88 36" />
-      {/* the charger post and its short cable */}
-      <rect x="98" y="16" width="16" height="50" rx="5" />
-      <rect className="soft" x="101" y="21" width="10" height="8" rx="2.5" />
-      <path d="M98 50C92 50 88 48 84 47" />
+      <rect className="d" x="0" y="62" width="120" height="2" rx="1" opacity="0.4" />
+      {/* the charger post, its screen and its cable to the flap */}
+      <rect className="p" x="99" y="16" width="17" height="46" rx="5" />
+      <rect className="k" x="102.5" y="21" width="10" height="9" rx="2" />
+      <circle className="a" cx="107.5" cy="37" r="1.8" />
+      <g transform="translate(1 33)">
+        <CarArt model="mazda6e" width={88} />
+      </g>
+      <path className="l" d="M99 46C91 46 91 57 84 54C80 52 79 50 77 49" />
+      {/* the flap on the rear quarter, ringed so it is the thing to look for */}
+      <rect className="a" x="72.5" y="46.5" width="5" height="4" rx="1.2" />
+      <circle className="al" cx="75" cy="48.5" r="7.5" strokeDasharray="2.6 3" />
     </>
   )
 }
@@ -120,24 +77,51 @@ function ParkFlap() {
 function CardReader() {
   return (
     <>
-      <rect x="38" y="8" width="44" height="66" rx="7" />
-      <rect className="soft" x="44" y="14" width="32" height="16" rx="3.5" />
-      <rect className="accent" x="48" y="38" width="24" height="18" rx="3.5" />
-      <path className="accent" d="M64 43a5 5 0 0 1 0 8M68 40a10 10 0 0 1 0 14" />
-      <Card x={10} y={42} />
-      <Tick x={92} y={22} />
+      <rect className="p" x="42" y="6" width="46" height="68" rx="9" />
+      <rect className="k" x="49" y="13" width="32" height="17" rx="4" />
+      <rect className="gf" x="53" y="19" width="14" height="3" rx="1.5" />
+      <rect className="as" x="51" y="38" width="28" height="24" rx="6" />
+      <circle className="a" cx="59" cy="50" r="1.9" />
+      <path className="al" d="M63.5 45.5a6 6 0 0 1 0 9M68 42a11 11 0 0 1 0 16" />
+      <Card x={9} y={41} w={34} />
+      <Tick x={103} y={20} />
     </>
+  )
+}
+
+/** A CCS socket in its recess: two pins over an oval with two more. */
+function Socket({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <rect className="k" x="0" y="0" width="30" height="40" rx="8" />
+      <circle className="p" cx="9" cy="11" r="3.2" />
+      <circle className="p" cx="21" cy="11" r="3.2" />
+      <rect className="d" x="5" y="20" width="20" height="13" rx="6.5" />
+      <circle className="p" cx="11" cy="26.5" r="2.6" />
+      <circle className="p" cx="19" cy="26.5" r="2.6" />
+    </g>
+  )
+}
+
+/** The plug, nozzle to the right, its cable trailing off below. */
+function Plug({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <path className="l" strokeWidth="3.2" d="M2 11C-9 11 -10 30 0 40" />
+      <rect className="d" x="24" y="4" width="15" height="14" rx="3.5" />
+      <rect className="k" x="0" y="0" width="27" height="22" rx="7" />
+    </g>
   )
 }
 
 function PlugIn() {
   return (
     <>
-      <rect className="soft" x="70" y="14" width="42" height="52" rx="7" />
-      <Socket x={79} y={26} />
-      <circle className="accent-solid" cx="104" cy="21" r="3" />
-      <Plug x={8} y={32} />
-      <path className="accent" d="M50 42H64M60 38L64 42L60 46" />
+      <rect className="p" x="72" y="8" width="56" height="64" rx="9" />
+      <Socket x={80} y={20} />
+      <circle className="a" cx="95" cy="14" r="2" />
+      <Plug x={10} y={30} />
+      <path className="al" d="M54 41H67M62.5 36.5l4.5 4.5l-4.5 4.5" />
     </>
   )
 }
@@ -145,14 +129,16 @@ function PlugIn() {
 function CardThenUnplug() {
   return (
     <>
-      <Badge x={14} y={22} n={1} />
-      <rect x="24" y="8" width="22" height="26" rx="4.5" />
-      <Card x={27} y={16} w={17} />
-      <rect className="soft" x="72" y="10" width="42" height="60" rx="7" />
-      <Socket x={81} y={22} />
-      <Badge x={12} y={58} n={2} />
-      <Plug x={22} y={48} />
-      <path className="accent" d="M70 58H62M65 54L61 58L65 62" />
+      <rect className="p" x="24" y="12" width="27" height="56" rx="7" />
+      <rect className="k" x="28.5" y="17" width="18" height="11" rx="2.5" />
+      <rect className="as" x="29.5" y="34" width="16" height="14" rx="4" />
+      <Card x={8} y={42} w={21} tilt={-10} />
+      <Badge x={12} y={18} n={1} />
+      <rect className="p" x="97" y="12" width="30" height="56" rx="7" />
+      <Socket x={102} y={26} s={0.7} />
+      <Plug x={66} y={33} s={0.72} />
+      <path className="al" d="M92 23H76M80.5 18.5l-4.5 4.5l4.5 4.5" />
+      <Badge x={64} y={18} n={2} />
     </>
   )
 }
@@ -160,13 +146,12 @@ function CardThenUnplug() {
 function CardBack() {
   return (
     <>
-      {/* the dashboard in section, with the glovebox open under it */}
-      <path d="M4 20Q60 8 116 16" />
-      <path d="M4 20V40Q4 42 6 42H36M116 16V42H84" />
-      <rect className="glass" x="36" y="42" width="48" height="22" rx="3.5" />
-      <path className="soft" d="M36 64L40 76H80L84 64Z" />
-      <Card x={49} y={26} w={22} tilt={12} />
-      <path className="accent" d="M60 12V20M56 16L60 20L64 16" />
+      {/* the dashboard, the glovebox open under it and the card going in */}
+      <path className="b" d="M-4 16Q60 2 124 12V46H-4Z" />
+      <rect className="k" x="30" y="36" width="60" height="24" rx="5" />
+      <path className="d" d="M30 60H90L95 71Q95.5 73 93.5 73H26.5Q24.5 73 25 71Z" />
+      <Card x={48} y={40} w={24} tilt={8} />
+      <path className="al" d="M60 12V28M55.5 23.5l4.5 4.5l4.5-4.5" />
     </>
   )
 }
@@ -174,19 +159,18 @@ function CardBack() {
 function NoStartButton() {
   return (
     <>
-      <rect x="20" y="8" width="80" height="30" rx="7" />
-      <text className="accent-text big" x="60" y="27" textAnchor="middle">
+      <rect className="k" x="16" y="8" width="88" height="32" rx="9" />
+      <text className="glow big" x="60" y="28" textAnchor="middle">
         READY
       </text>
-      <path className="accent" d="M60 40V48M56 44L60 48L64 44" />
-      <path d="M60 52V56" />
-      <rect className="soft" x="44" y="56" width="32" height="16" rx="5" />
-      <path d="M50 64H70" opacity="0.5" />
+      <path className="al" d="M40 44V54M36 50l4 4l4-4" />
+      {/* the brake pedal */}
+      <rect className="d" x="22" y="56" width="36" height="18" rx="5" />
+      <path className="pl" d="M29 62H51M29 68H51" opacity="0.55" />
       {/* the start button that is not there */}
-      <g opacity="0.55">
-        <circle cx="104" cy="58" r="8" />
-        <path d="M98 52L110 64" />
-      </g>
+      <circle className="b" cx="88" cy="60" r="11" />
+      <circle className="p" cx="88" cy="60" r="6.5" opacity="0.7" />
+      <path className="l" strokeWidth="2.6" d="M78 50L98 70" />
     </>
   )
 }
@@ -194,21 +178,21 @@ function NoStartButton() {
 function Stalk() {
   return (
     <>
-      <circle cx="40" cy="44" r="26" />
-      <circle className="soft" cx="40" cy="44" r="8" />
-      <path d="M40 36V18M40 52V70M14 44H32M48 44H66" opacity="0.5" />
+      <circle className="rim" cx="38" cy="42" r="24" />
+      <path className="rim" strokeWidth="5" d="M16 42H30M46 42H60M38 50V64" />
+      <circle className="d" cx="38" cy="42" r="9" />
       {/* the selector stalk on the right, with the P button on its tip */}
-      <path d="M62 40H88" strokeWidth="4" />
-      <circle className="accent-solid" cx="94" cy="40" r="6.5" />
-      <text className="on-accent" x="94" y="43" textAnchor="middle">
+      <rect className="b" x="60" y="35" width="32" height="8" rx="4" />
+      <circle className="a" cx="97" cy="39" r="8" />
+      <text className="on" x="97" y="42.2" textAnchor="middle">
         P
       </text>
-      <path className="accent" d="M78 33V20M74 24L78 20L82 24" />
-      <text className="label" x="88" y="24">
+      <path className="al" d="M76 30V17M71.5 21.5l4.5-4.5l4.5 4.5" />
+      <text className="label" x="84" y="24">
         R
       </text>
-      <path className="accent" d="M78 47V60M74 56L78 60L82 56" />
-      <text className="label" x="88" y="63">
+      <path className="al" d="M76 48V61M71.5 56.5l4.5 4.5l4.5-4.5" />
+      <text className="label" x="84" y="61">
         D
       </text>
     </>
@@ -218,15 +202,15 @@ function Stalk() {
 function SwitchOff() {
   return (
     <>
-      <circle className="accent-solid" cx="30" cy="40" r="14" />
-      <text className="on-accent big" x="30" y="45" textAnchor="middle">
+      <circle className="a" cx="30" cy="40" r="16" />
+      <text className="on big" x="30" y="44.5" textAnchor="middle">
         P
       </text>
-      <path d="M50 40H66M62 36L66 40L62 44" />
-      <path d="M92 36V28a8 8 0 0 0-16 0v8" />
-      <rect className="soft" x="72" y="36" width="24" height="20" rx="5" />
-      <circle className="ink" cx="84" cy="44" r="2.5" />
-      <path d="M84 46V51" />
+      <path className="l" d="M54 40H68M63.5 35.5l4.5 4.5l-4.5 4.5" />
+      <path className="rim" strokeWidth="4" d="M82 38V31a9 9 0 0 1 18 0v7" />
+      <rect className="k" x="76" y="38" width="30" height="24" rx="7" />
+      <circle className="p" cx="91" cy="47.5" r="3" />
+      <rect className="p" x="89.8" y="48" width="2.4" height="7.5" rx="1.2" />
     </>
   )
 }
@@ -235,15 +219,16 @@ function Regen() {
   return (
     <>
       {/* the accelerator, foot lifting off */}
-      <rect className="soft" x="20" y="36" width="14" height="30" rx="5" transform="rotate(-18 27 51)" />
-      <path d="M27 66V72" />
-      <path className="accent" d="M46 40V24M42 28L46 24L50 28" />
-      <path className="accent" d="M52 44H66M62 40L66 44L62 48" />
-      <rect x="70" y="30" width="36" height="24" rx="5" />
-      <rect className="ink" x="106" y="38" width="4" height="8" rx="1.5" />
-      <rect className="accent-solid" x="74" y="34" width="8" height="16" rx="2" />
-      <rect className="accent-solid" x="84" y="34" width="8" height="16" rx="2" />
-      <path className="accent" d="M100 36L96 43H101L98 49" />
+      <path className="l" strokeWidth="3" d="M27 62V76" />
+      <rect className="d" x="18" y="32" width="17" height="34" rx="5.5" transform="rotate(-16 26 49)" />
+      <path className="al" d="M46 44V26M41.5 30.5l4.5-4.5l4.5 4.5" />
+      <path className="al" d="M54 50H66M61.5 45.5l4.5 4.5l-4.5 4.5" />
+      <rect className="p" x="72" y="36" width="38" height="28" rx="7" />
+      <rect className="d" x="110" y="44" width="4" height="12" rx="1.5" />
+      <rect className="a" x="76.5" y="40.5" width="8" height="19" rx="2.5" />
+      <rect className="a" x="87" y="40.5" width="8" height="19" rx="2.5" />
+      <rect className="as" x="97.5" y="40.5" width="8" height="19" rx="2.5" />
+      <path className="a" d="M93 12l-7 10h5l-2 8l8-11h-5.5z" />
     </>
   )
 }
@@ -251,18 +236,18 @@ function Regen() {
 function Touchscreen() {
   return (
     <>
-      <path d="M6 30H26M94 30H114" strokeWidth="3" />
-      <rect x="30" y="14" width="60" height="44" rx="7" />
-      <rect className="soft" x="36" y="20" width="24" height="14" rx="3.5" />
-      <rect className="soft" x="64" y="20" width="20" height="14" rx="3.5" />
-      <rect className="soft" x="36" y="38" width="24" height="14" rx="3.5" />
-      <rect className="soft" x="64" y="38" width="20" height="14" rx="3.5" />
+      <rect className="b" x="-4" y="54" width="128" height="16" rx="8" />
+      <rect className="k" x="22" y="8" width="76" height="52" rx="9" />
+      <rect className="tile" x="29" y="15" width="29" height="17" rx="4.5" />
+      <rect className="tile" x="62" y="15" width="29" height="17" rx="4.5" />
+      <rect className="tile" x="29" y="36" width="29" height="17" rx="4.5" />
+      <rect className="a" x="62" y="36" width="29" height="17" rx="4.5" />
       {/* climate, mirrors, regen strength, and the finger on the fourth tile */}
-      <path d="M44 27H52M48 23V31M45 24L51 30M51 24L45 30" />
-      <rect x="69" y="24" width="10" height="6" rx="1.5" />
-      <path className="accent" d="M41 49V44M46 49V41M51 49V38" />
-      <circle className="accent-solid" cx="74" cy="45" r="4" />
-      <path className="accent" d="M74 49V66" />
+      <path className="pl" d="M39 23.5H48M43.5 19V28" opacity="0.7" />
+      <rect className="p" x="71" y="19.5" width="11" height="8" rx="2.2" opacity="0.6" />
+      <path className="pl" d="M38 48.5V45.5M43.5 48.5V43M49 48.5V40.5" opacity="0.7" />
+      <circle className="on" cx="76.5" cy="44.5" r="4.2" />
+      <circle className="ol" cx="76.5" cy="44.5" r="7.2" opacity="0.5" strokeWidth="1.4" />
     </>
   )
 }
@@ -270,14 +255,13 @@ function Touchscreen() {
 function Battery() {
   return (
     <>
-      <rect x="14" y="24" width="84" height="32" rx="7" />
-      <rect className="ink" x="98" y="34" width="6" height="12" rx="2" />
-      <rect className="accent-fill" x="18" y="28" width="61" height="24" rx="4" />
-      <path className="accent" d="M79 20V60" strokeDasharray="2.5 2.5" />
-      <text className="accent-text big" x="48" y="44" textAnchor="middle">
+      <rect className="p" x="10" y="20" width="92" height="40" rx="10" />
+      <rect className="d" x="102" y="32" width="7" height="16" rx="3" />
+      <rect className="a" x="15.5" y="25.5" width="64" height="29" rx="5.5" />
+      <text className="on big" x="47.5" y="44.5" textAnchor="middle">
         80%
       </text>
-      <path d="M14 68H62M58 64L62 68L58 72" opacity="0.6" />
+      <path className="l" d="M79.5 12V68" strokeDasharray="2.6 3.4" />
     </>
   )
 }
@@ -286,39 +270,38 @@ function Flap() {
   return (
     <>
       {/* the rear quarter panel above the wheel arch */}
-      <path className="soft" d="M6 10H114V70H70A30 30 0 0 0 10 70H6Z" />
-      <path className="accent-fill" d="M78 24L70 14H92L100 24Z" />
-      <rect className="accent" x="78" y="24" width="22" height="18" rx="3.5" />
-      <circle cx="85" cy="31" r="2.5" />
-      <circle cx="93" cy="31" r="2.5" />
-      <rect x="82" y="35" width="14" height="5" rx="2.5" />
-      <path className="accent" d="M113 53L103 43M103 51V43H111" />
+      <path className="p" d="M-4 6H124V84H-4Z" />
+      <circle className="k" cx="40" cy="82" r="30" />
+      <circle className="d" cx="40" cy="82" r="13" />
+      <rect className="k" x="78" y="24" width="26" height="24" rx="6" />
+      <circle className="p" cx="86.5" cy="32.5" r="2.6" />
+      <circle className="p" cx="95.5" cy="32.5" r="2.6" />
+      <rect className="d" x="84" y="38" width="14" height="6.5" rx="3.2" />
+      <path className="a" d="M79 22.5L71 11.5H97L105 22.5Z" />
+      <path className="al" d="M114 62L105 52M105 60V52H113" />
       {/* unlock first: an open padlock */}
-      <rect className="soft" x="12" y="24" width="16" height="12" rx="3" />
-      <path d="M16 24V17a5 5 0 0 1 10 0v2" />
+      <path className="rim" strokeWidth="3" d="M17 28V21a6 6 0 0 1 12 0v2" />
+      <rect className="d" x="12" y="28" width="22" height="16" rx="5" />
     </>
   )
 }
 
-/** The front of the car with the bonnet up and a cable coiled in the frunk. */
+/** The front of the car with the bonnet up and the cable coiled in the frunk. */
 function Frunk() {
   return (
     <>
-      {/* body, nose to the left, wheel arch on the right */}
-      <path className="soft" d="M6 62V44Q6 38 12 36L34 32L48 20Q52 16 58 16H92Q100 16 106 22L114 34V62H74A16 16 0 0 0 42 62Z" />
-      <Wheel cx={58} cy={62} r={9} />
-      {/* the bonnet, swung open */}
-      <path className="accent-fill" d="M48 24L12 6L8 13L44 31Z" />
-      <path className="accent" d="M48 24L44 31" />
-      {/* the well underneath with the coiled cable */}
-      <rect className="accent" x="18" y="38" width="30" height="14" rx="3.5" />
-      <path className="accent" d="M24 45a4 4 0 1 0 8 0a4 4 0 1 0-8 0M32 45h10" />
-      <path className="accent" d="M42 45q4 0 4 3" />
-      {/* no engine: crossed out */}
-      <g opacity="0.55">
-        <rect x="70" y="26" width="26" height="18" rx="3.5" />
-        <path d="M66 22L100 48" />
-      </g>
+      <rect className="d" x="0" y="71" width="120" height="2" rx="1" opacity="0.4" />
+      {/* body, nose to the left, cut off behind the front door */}
+      <path className="p" d="M8 62V45Q8 39 14 37L38 33L53 20Q57 16 63 16H124V62H80A17 17 0 0 0 46 62Z" />
+      <path className="k" d="M44 33L56 22.5Q58.5 20.5 62 20.5H82V33Z" />
+      <rect className="k" x="86" y="20.5" width="34" height="12.5" rx="1.5" />
+      <circle className="k" cx="63" cy="61" r="11" />
+      <circle className="d" cx="63" cy="61" r="4.6" />
+      {/* the bonnet, swung open, and the well underneath with the coiled cable */}
+      <path className="d" d="M52 24.5L14 5.5L10.5 12L47 31.5Z" />
+      <rect className="k" x="14" y="38.5" width="30" height="13" rx="4" />
+      <circle className="gl" cx="22.5" cy="45" r="3.4" />
+      <path className="gl" d="M26 45H37" />
     </>
   )
 }
@@ -348,11 +331,6 @@ export function GuideArt({ art, width = 96, className }: ArtProps & { art: Guide
       width={width}
       height={Math.round((width * 2) / 3)}
       viewBox="0 0 120 80"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.875"
-      strokeLinecap="round"
-      strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
     >
