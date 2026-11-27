@@ -1,4 +1,5 @@
-import { CarIcon, CoffeeIcon, MinusIcon, PlusIcon } from './icons'
+import { CoffeeSwitch } from './CoffeeSwitch'
+import { CarIcon, MinusIcon, PlusIcon } from './icons'
 import { useT } from '../lib/i18n'
 import { fmtKm } from '../lib/maps'
 import type { CarType, CorporateCar } from '../lib/types'
@@ -246,14 +247,7 @@ export function ExtrasFields(p: {
         {t.form.chipInHint}
       </p>
 
-      <label className="switch-row">
-        <span className="switch-row-text">
-          <span className="switch-row-title switch-row-title-icon">
-            <CoffeeIcon size={16} /> {t.form.coffee}
-          </span>
-        </span>
-        <input type="checkbox" checked={p.coffee} onChange={(e) => p.onCoffee(e.target.checked)} />
-      </label>
+      <CoffeeSwitch on={p.coffee} onChange={p.onCoffee} />
 
       <label className="field">
         <span className="field-label">

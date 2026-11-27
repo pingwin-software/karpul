@@ -664,6 +664,7 @@ const en = {
     chipInPlaceholder: 'e.g. 300 din',
     chipInHint: 'Per seat, and only the agreement: nothing is charged here. Both optional.',
     coffee: "I'd appreciate a coffee",
+    coffeeOn: 'Your passengers will get the hint.',
     /** Pre-filled destination on the very first ride in this browser. */
     defaultDestination: 'Office',
     /** The road between the offices is a known length (lib/offices.ts). */
@@ -2582,6 +2583,7 @@ const sr: Messages = {
     chipInPlaceholder: 'npr. 300 din',
     chipInHint: 'Po mestu, i samo dogovor: ovde se ništa ne naplaćuje. Oboje nije obavezno.',
     coffee: 'Obradovao/la bih se kafi',
+    coffeeOn: 'Putnici će skapirati na šta ciljaš.',
     defaultDestination: 'Kancelarija',
     knownRoad: (km) => `${km} km, put između kancelarija. Upisano umesto tebe.`,
     consentHint: 'Izmena dana, vremena, polaska ili odredišta čeka da se putnici slože.',
