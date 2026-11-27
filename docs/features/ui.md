@@ -43,7 +43,9 @@ are in the last two and must stay last). The tokens (`styles/tokens.css`, the da
   the focus (a tint edge and a soft ring); the custom pickers and the route box follow it. The
   switch is iOS's: a capsule track that turns green (`--switch-on`) under a white knob. The
   segmented control (`SegThumb`, `components/Segmented.tsx`) is a grey capsule with the picked
-  choice on a white thumb, one element that slides. Buttons come in three levels and a screen has
+  choice on a white thumb, one element that slides; with more choices than fit side by side in a
+  sheet (the four tabs of an admin's *Shared cars*) it is `.seg-stack`, the icon over its label
+  (`.seg-label`) in equal columns, so the last one never runs out of the capsule. Buttons come in three levels and a screen has
   one filled one: `.btn-primary` (the tint, white ink), `.btn` (a grey capsule in the tint's ink),
   `.link` (plain tint text); `.soft-action` is a tinted capsule for the few things a card invites
   you to do. A press darkens and gives a little (`scale(0.98)`).

@@ -269,6 +269,27 @@ input[type='checkbox'] {
 .seg:disabled {
   opacity: 0.5;
 }
+/* More choices than fit side by side in a sheet (the four tabs of an admin's
+   Shared cars, in Serbian above all): the icon over its label, as in a tab
+   bar. The columns are held to equal shares, so a long label is cut short
+   inside its own segment and never pushes the last one out of the capsule. */
+.segmented.seg-stack {
+  grid-auto-columns: minmax(0, 1fr);
+}
+.segmented.seg-stack .seg {
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  min-height: 50px;
+  padding: 0.35rem 0.15rem;
+  font-size: 0.72rem;
+}
+.seg-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .stepper {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
