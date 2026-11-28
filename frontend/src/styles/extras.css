@@ -299,6 +299,197 @@
   background: var(--green-soft);
   box-shadow: none;
 }
+/* --- Your rides (components/MyRides.tsx) -------------------------------- */
+/* Who you are on the board: the face, the name, the title the figures earned
+   (lib/rideRank.ts), and a strip of road the car drives in on once. The base
+   styles are the end state, the car parked at the far end. */
+.mr-hero {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0.95rem 1.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--field);
+  overflow: hidden;
+}
+.mr-hero-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.mr-hero-text strong {
+  font-size: 1.02rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mr-rank {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--green);
+  animation: mr-pop 0.5s var(--ease-out) backwards;
+}
+.mr-road {
+  position: absolute;
+  inset: auto 0 0.5rem;
+  height: 2px;
+  background: repeating-linear-gradient(to right, var(--border-strong) 0 10px, transparent 10px 18px);
+}
+.mr-road-car {
+  position: absolute;
+  right: 0.9rem;
+  bottom: -3px;
+  color: var(--green);
+  animation: mr-drive 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+@keyframes mr-drive {
+  from {
+    transform: translateX(-70vw);
+  }
+}
+@keyframes mr-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+/* This month or all time: one switch, four tiles two by two. A figure still
+   at nothing goes grey, so a new account is not a wall of green zeros. */
+.mr-figures,
+.mr-impact-section {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.mr-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.mr-tile {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.1rem 0.7rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--field);
+  animation: mr-pop 0.45s var(--ease-out) backwards;
+  animation-delay: calc(var(--i) * 60ms);
+}
+.mr-tile-icon {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green);
+}
+.mr-tile strong {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--green);
+}
+.mr-tile-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--muted);
+}
+.mr-tile.is-zero strong {
+  color: var(--muted);
+}
+.mr-tile.is-zero .mr-tile-icon {
+  background: var(--fill);
+  color: var(--muted);
+}
+.mr-quiet {
+  margin: 0;
+  padding: 1.1rem 0.95rem;
+  border-radius: var(--radius-sm);
+  background: var(--field);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+  animation: mr-pop 0.45s var(--ease-out) backwards;
+}
+/* Off the road: the saved car kilometres large, what they come to beneath. */
+.mr-impact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.9rem 0.95rem;
+  border-radius: var(--radius-sm);
+  background: var(--green-soft);
+}
+.mr-impact-none {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+.mr-impact svg {
+  flex: none;
+  color: var(--green);
+}
+.mr-impact-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+.mr-impact-main svg {
+  align-self: center;
+}
+.mr-impact-main strong {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--green);
+}
+.mr-impact-main > span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.mr-impact-runs {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.mr-impact-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 0;
+  padding-top: 0.55rem;
+  box-shadow: inset 0 1px 0 var(--green-line);
+}
+/* The figure above its name on screen, the name first for a reader. */
+.mr-impact-side > div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+}
+.mr-impact-side dd {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--green);
+}
+.mr-impact-side dt {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+}
 .feed-row {
   display: flex;
   align-items: center;

@@ -191,12 +191,6 @@ input[type='checkbox'] {
   font-weight: 500;
   color: var(--text);
 }
-/* A title led by a small icon, the two on one line. */
-.switch-row-title-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
 .switch-row-desc {
   font-size: 0.82rem;
   line-height: 1.4;
@@ -215,6 +209,137 @@ input[type='checkbox'] {
 }
 .switch-group > .switch-row + .switch-row {
   box-shadow: inset 0 1px 0 var(--border-strong);
+}
+/* The driver's coffee hint (components/CoffeeSwitch.tsx), the one switch that
+   plays: on, the row warms, the mug fills and steams, and a line owns up to
+   what the switch is for. The base styles are the end state; only a tap adds
+   .is-poured, the mug's wobble. */
+.coffee-row {
+  --coffee: #8a5a33;
+  --coffee-liquid: #6f4424;
+  --coffee-crema: #c99a6b;
+  transition: background 0.4s var(--ease-out);
+}
+:root[data-theme='dark'] .coffee-row {
+  --coffee: #c58f5c;
+  --coffee-liquid: #8f5c34;
+  --coffee-crema: #e3bd92;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .coffee-row {
+    --coffee: #c58f5c;
+    --coffee-liquid: #8f5c34;
+    --coffee-crema: #e3bd92;
+  }
+}
+.coffee-row.is-on {
+  background: color-mix(in srgb, var(--coffee) 16%, var(--field));
+}
+.coffee-row input[type='checkbox']:checked {
+  background: var(--coffee);
+}
+.coffee-row input[type='checkbox']:focus-visible {
+  outline-color: var(--coffee);
+}
+.coffee-row-wink {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.35s var(--ease-out),
+    opacity 0.35s var(--ease-out);
+}
+.coffee-row-wink > * {
+  min-height: 0;
+  overflow: hidden;
+}
+.coffee-row.is-on .coffee-row-wink {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.coffee-cup {
+  flex: none;
+  margin: -0.2rem 0 -0.2rem -0.15rem;
+  overflow: visible;
+  transform-origin: 50% 90%;
+}
+.coffee-mug {
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.4s var(--ease-out);
+}
+.coffee-cup.is-full .coffee-mug {
+  stroke: var(--coffee);
+}
+.coffee-liquid {
+  transform: translateY(16px);
+  transition: transform 0.9s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.coffee-liquid rect {
+  fill: var(--coffee-liquid);
+}
+.coffee-crema {
+  stroke: var(--coffee-crema);
+  stroke-width: 2.4;
+}
+.coffee-cup.is-full .coffee-liquid {
+  transform: translateY(0);
+}
+.coffee-steam path {
+  stroke: var(--coffee);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  opacity: 0;
+}
+.coffee-cup.is-full .coffee-steam path {
+  animation: coffee-steam 2.6s ease-in-out 0.7s infinite;
+}
+.coffee-cup.is-full .coffee-steam path:nth-child(2) {
+  animation-delay: 1.15s;
+}
+.coffee-cup.is-full .coffee-steam path:nth-child(3) {
+  animation-delay: 1.6s;
+}
+.coffee-row.is-poured .coffee-cup {
+  animation: coffee-wobble 0.7s var(--ease-out);
+}
+@keyframes coffee-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  35% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes coffee-wobble {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  25% {
+    transform: rotate(-9deg) scale(1.08);
+  }
+  55% {
+    transform: rotate(6deg) scale(1.04);
+  }
+  80% {
+    transform: rotate(-2deg);
+  }
+  100% {
+    transform: rotate(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coffee-cup.is-full .coffee-steam path {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 /* iOS's segmented control: the choices in a grey capsule, the picked one on a
    white thumb. The thumb is one element (.seg-thumb, see

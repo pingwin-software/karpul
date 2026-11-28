@@ -53,7 +53,9 @@ pickup point, so the car holds as many as before; a driver with no account just 
 with a takeover. The new driver is pushed `ride_given`, the rest of the car `driver_found`; an admin doing
 it is logged as `car_given`. Tests: `tests/test_give_car.py`. A driver may also say they would
 appreciate a coffee (`Ride.coffee_please`, a switch in the form's Advanced part, a *Coffee* fact on the
-driver card); it is only ever shown. On screen: the share's refusal in
+driver card); it is only ever shown. The switch is the form's one playful control (`CoffeeSwitch`, `.coffee-row`
+in `styles/controls.css`): on, the row warms to a coffee tint, the mug fills and steams, and a line says the
+passengers will get the hint; the mug wobbles only on a tap, never when the form opens with the hint on. On screen: the share's refusal in
 `RideForm` grows an *Ask an admin to approve it* button (`canAskApproval`, matched on the text's
 tail in `App.tsx`), a pending ride wears an amber *Awaiting approval* tag on the card, the Upcoming
 row and as a hollow stretch on the day plan (`.plan-ride-pending`, drawn *under* `.plan-free`, and
